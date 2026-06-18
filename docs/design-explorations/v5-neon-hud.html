@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GYMTRACK · HUD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A16;
+    --bg-2:#0D0D1F;
+    --panel:rgba(18,20,40,0.55);
+    --panel-edge:rgba(120,160,255,0.16);
+    --cyan:#22D3EE;
+    --cyan-dim:#0e7e90;
+    --magenta:#E84BD0;
+    --magenta-dim:#7c2a72;
+    --violet:#7C5CFF;
+    --txt:#E6ECFF;
+    --txt-dim:#8C95C4;
+    --txt-faint:#5A6394;
+    --good:#3DF5A8;
+    --warn:#FFC857;
+    --grid:rgba(120,160,255,0.05);
+    --mono:'Share Tech Mono',monospace;
+    --disp:'Chakra Petch',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:var(--disp);
+    background:var(--bg);
+    color:var(--txt);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* atmospheric background layers */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx .glow-a{position:absolute;top:-15%;left:8%;width:620px;height:620px;border-radius:50%;
+    background:radial-gradient(circle,rgba(34,211,238,0.16),transparent 65%);filter:blur(30px);
+    animation:drift1 22s ease-in-out infinite}
+  .bg-fx .glow-b{position:absolute;bottom:-20%;right:5%;width:680px;height:680px;border-radius:50%;
+    background:radial-gradient(circle,rgba(232,75,208,0.14),transparent 65%);filter:blur(40px);
+    animation:drift2 26s ease-in-out infinite}
+  .bg-fx .glow-c{position:absolute;top:35%;left:45%;width:500px;height:500px;border-radius:50%;
+    background:radial-gradient(circle,rgba(124,92,255,0.10),transparent 70%);filter:blur(50px);
+    animation:drift1 30s ease-in-out infinite reverse}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:46px 46px;mask-image:radial-gradient(ellipse 90% 80% at 50% 40%,#000 30%,transparent 100%)}
+  .scanlines{position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.4;
+    background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(10,12,30,0.35) 3px,rgba(10,12,30,0.35) 4px);
+    mix-blend-mode:overlay}
+  .vignette{position:fixed;inset:0;z-index:55;pointer-events:none;
+    box-shadow:inset 0 0 240px 40px rgba(0,0,0,0.75)}
+  @keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,40px)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,-30px)}}
+
+  .app{position:relative;z-index:2;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+  /* ---------------- SIDEBAR ---------------- */
+  .sidebar{
+    position:sticky;top:0;height:100vh;padding:26px 18px 22px;
+    display:flex;flex-direction:column;gap:24px;
+    border-right:1px solid var(--panel-edge);
+    background:linear-gradient(180deg,rgba(12,14,30,0.7),rgba(8,9,20,0.85));
+    backdrop-filter:blur(14px);
+  }
+  .brand{display:flex;align-items:center;gap:12px;padding:4px 6px}
+  .brand .glyph{width:38px;height:38px;display:grid;place-items:center;border-radius:9px;
+    border:1px solid rgba(34,211,238,0.4);background:rgba(34,211,238,0.07);
+    box-shadow:0 0 18px rgba(34,211,238,0.35),inset 0 0 10px rgba(34,211,238,0.2)}
+  .brand .glyph svg{filter:drop-shadow(0 0 4px var(--cyan))}
+  .brand .wm{display:flex;flex-direction:column;line-height:1}
+  .brand .wm b{font-weight:700;font-size:18px;letter-spacing:2px;
+    background:linear-gradient(90deg,#fff,var(--cyan) 60%,var(--magenta));-webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 18px rgba(34,211,238,0.25)}
+  .brand .wm span{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--txt-faint);margin-top:5px}
+
+  .nav{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+  .nav .lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--txt-faint);padding:0 10px 8px}
+  .nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:9px;
+    color:var(--txt-dim);text-decoration:none;font-size:13.5px;letter-spacing:.6px;font-weight:500;
+    position:relative;transition:.25s;border:1px solid transparent}
+  .nav a svg{width:17px;height:17px;opacity:.8;flex-shrink:0}
+  .nav a:hover{color:var(--txt);background:rgba(120,160,255,0.05);border-color:rgba(120,160,255,0.1)}
+  .nav a.active{color:#fff;background:linear-gradient(90deg,rgba(34,211,238,0.16),rgba(34,211,238,0.02));
+    border-color:rgba(34,211,238,0.4);box-shadow:0 0 18px rgba(34,211,238,0.18),inset 0 0 12px rgba(34,211,238,0.08)}
+  .nav a.active svg{opacity:1;color:var(--cyan);filter:drop-shadow(0 0 5px var(--cyan))}
+  .nav a.active::before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:3px;border-radius:3px;
+    background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+
+  .start-btn{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:9px;
+    padding:14px;border-radius:11px;border:1px solid rgba(232,75,208,0.5);cursor:pointer;
+    font-family:var(--disp);font-weight:600;font-size:13px;letter-spacing:1.5px;color:#fff;
+    background:linear-gradient(100deg,rgba(232,75,208,0.28),rgba(34,211,238,0.18));
+    box-shadow:0 0 22px rgba(232,75,208,0.3),inset 0 0 14px rgba(232,75,208,0.12);transition:.25s}
+  .start-btn svg{width:16px;height:16px}
+  .start-btn:hover{transform:translateY(-1px);box-shadow:0 0 34px rgba(232,75,208,0.5),inset 0 0 16px rgba(34,211,238,0.2)}
+
+  /* ---------------- HEADER ---------------- */
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:16px 34px;border-bottom:1px solid var(--panel-edge);
+    background:rgba(10,11,24,0.55);backdrop-filter:blur(12px);position:sticky;top:0;z-index:40}
+  .topbar .prog{display:flex;align-items:center;gap:13px}
+  .topbar .prog .pcode{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--cyan);
+    padding:5px 9px;border:1px solid rgba(34,211,238,0.35);border-radius:6px;background:rgba(34,211,238,0.06)}
+  .topbar .prog .ptxt b{font-size:14px;font-weight:600;letter-spacing:.5px}
+  .topbar .prog .ptxt span{display:block;font-family:var(--mono);font-size:9px;color:var(--txt-faint);letter-spacing:2px;margin-top:3px}
+  .resume-btn{display:flex;align-items:center;gap:10px;padding:10px 18px;border-radius:10px;cursor:pointer;
+    border:1px solid rgba(61,245,168,0.45);background:rgba(61,245,168,0.08);color:#d6ffec;
+    font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:1.5px;
+    box-shadow:0 0 18px rgba(61,245,168,0.18);transition:.25s}
+  .resume-btn:hover{box-shadow:0 0 28px rgba(61,245,168,0.4);transform:translateY(-1px)}
+  .pulse{width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good);
+    animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--good)}50%{opacity:.45;box-shadow:0 0 16px var(--good)}}
+
+  /* ---------------- CONTENT ---------------- */
+  .content{padding:30px 34px 50px;max-width:1320px}
+  .page-head{margin-bottom:26px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:var(--cyan);
+    text-shadow:0 0 12px rgba(34,211,238,0.5);display:inline-flex;align-items:center;gap:9px}
+  .eyebrow::before{content:"";width:22px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan))}
+  .page-head h1{font-size:42px;font-weight:700;letter-spacing:1px;margin:8px 0 6px;
+    background:linear-gradient(180deg,#fff,#aab8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .page-head p{color:var(--txt-dim);font-size:13.5px;letter-spacing:.5px}
+  .page-head p b{color:var(--magenta);font-weight:600;text-shadow:0 0 10px rgba(232,75,208,0.4)}
+
+  /* HUD card base */
+  .hud{position:relative;border:1px solid var(--panel-edge);border-radius:14px;
+    background:var(--panel);backdrop-filter:blur(12px);
+    box-shadow:0 8px 30px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)}
+  .hud::before,.hud::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none;opacity:.7}
+  .hud::before{top:7px;left:7px;border-top:1.5px solid var(--cyan);border-left:1.5px solid var(--cyan)}
+  .hud::after{bottom:7px;right:7px;border-bottom:1.5px solid var(--magenta);border-right:1.5px solid var(--magenta)}
+
+  /* STATS STRIP */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:22px}
+  .stat{padding:20px 20px 18px;overflow:hidden}
+  .stat .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .stat .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:2px;color:var(--txt-faint)}
+  .stat .ico{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+    border:1px solid rgba(34,211,238,0.3);background:rgba(34,211,238,0.06)}
+  .stat .ico svg{width:14px;height:14px;color:var(--cyan);filter:drop-shadow(0 0 4px var(--cyan))}
+  .stat .val{font-size:34px;font-weight:700;letter-spacing:.5px;line-height:1;
+    font-variant-numeric:tabular-nums}
+  .stat .val small{font-size:14px;color:var(--txt-dim);font-weight:500;margin-left:4px}
+  .stat .sub{font-family:var(--mono);font-size:10px;color:var(--txt-faint);margin-top:9px;letter-spacing:1px}
+  .xpbar{height:5px;border-radius:5px;background:rgba(120,160,255,0.12);margin-top:13px;overflow:hidden;position:relative}
+  .xpbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;
+    background:linear-gradient(90deg,var(--cyan),var(--magenta));box-shadow:0 0 12px rgba(34,211,238,0.6);
+    width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+  /* ring stat */
+  .ring{width:62px;height:62px;position:relative;flex-shrink:0}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);
+    font-size:13px;color:var(--cyan);text-shadow:0 0 8px var(--cyan)}
+  .stat.ringstat{display:flex;align-items:center;gap:18px}
+  .stat.ringstat .info .val{font-size:28px}
+
+  /* MAIN GRID */
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;margin-bottom:22px}
+
+  /* TODAY panel */
+  .today{padding:24px 26px;position:relative;overflow:hidden}
+  .today .sheen{position:absolute;top:-40%;right:-10%;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle,rgba(34,211,238,0.18),transparent 70%);filter:blur(20px);pointer-events:none}
+  .today .head{display:flex;align-items:center;gap:16px;margin-bottom:22px;position:relative}
+  .daycode{width:58px;height:58px;border-radius:12px;display:grid;place-items:center;
+    font-weight:700;font-size:22px;letter-spacing:1px;color:#fff;
+    border:1px solid rgba(34,211,238,0.5);background:linear-gradient(145deg,rgba(34,211,238,0.2),rgba(232,75,208,0.12));
+    box-shadow:0 0 22px rgba(34,211,238,0.35),inset 0 0 14px rgba(34,211,238,0.15)}
+  .today .head .ht .k{font-family:var(--mono);font-size:9.5px;letter-spacing:3px;color:var(--cyan)}
+  .today .head .ht h2{font-size:24px;font-weight:600;letter-spacing:.5px;margin-top:3px}
+  .today .head .meta{margin-left:auto;text-align:right;font-family:var(--mono);font-size:10px;color:var(--txt-faint);letter-spacing:1px}
+  .today .head .meta b{color:var(--txt);font-size:13px;display:block;margin-top:3px}
+  .ex-list{display:flex;flex-direction:column;gap:2px;margin-bottom:22px}
+  .ex{display:flex;align-items:center;gap:14px;padding:13px 12px;border-radius:9px;position:relative;
+    transition:.2s;border:1px solid transparent}
+  .ex:hover{background:rgba(34,211,238,0.05);border-color:rgba(34,211,238,0.18)}
+  .ex .n{font-family:var(--mono);font-size:11px;color:var(--txt-faint);width:20px}
+  .ex .nm{font-size:14.5px;letter-spacing:.4px;flex:1;font-weight:500}
+  .ex .sr{font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:1px;
+    padding:4px 10px;border:1px solid rgba(34,211,238,0.25);border-radius:6px;background:rgba(34,211,238,0.05)}
+  .ex .sr b{color:#fff;font-weight:400}
+  .ex+.ex{border-top:1px solid rgba(120,160,255,0.06)}
+  .cta{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;padding:15px;
+    border-radius:11px;cursor:pointer;font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:2px;color:#04141a;
+    border:none;background:linear-gradient(100deg,var(--cyan),#5be8ff);
+    box-shadow:0 0 26px rgba(34,211,238,0.45);transition:.25s}
+  .cta:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(34,211,238,0.7)}
+  .cta svg{width:17px;height:17px}
+
+  /* THIS WEEK */
+  .panel-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px}
+  .panel-h h3{font-size:13px;font-weight:600;letter-spacing:2.5px;color:var(--txt)}
+  .panel-h .badge{font-family:var(--mono);font-size:9.5px;letter-spacing:2px;color:var(--txt-faint)}
+  .week{padding:0 16px 16px}
+  .wrow{display:flex;align-items:center;gap:14px;padding:12px 12px;border-radius:9px;
+    border:1px solid transparent;transition:.2s}
+  .wrow+.wrow{border-top:1px solid rgba(120,160,255,0.05)}
+  .wrow .day{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--txt-dim);width:34px}
+  .chip{width:36px;height:30px;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:600;
+    font-family:var(--mono);letter-spacing:.5px;flex-shrink:0}
+  .wrow .nm{flex:1;font-size:13.5px;letter-spacing:.4px;color:var(--txt)}
+  .wrow .sets{font-family:var(--mono);font-size:10.5px;color:var(--txt-faint);letter-spacing:1px}
+  .wrow .stt{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:3px 8px;border-radius:5px}
+  /* states */
+  .s-done .chip{color:var(--good);border:1px solid rgba(61,245,168,0.4);background:rgba(61,245,168,0.08);box-shadow:0 0 10px rgba(61,245,168,0.15)}
+  .s-done .stt{color:var(--good);border:1px solid rgba(61,245,168,0.3);background:rgba(61,245,168,0.06)}
+  .s-today{background:rgba(34,211,238,0.07);border-color:rgba(34,211,238,0.4)!important;box-shadow:0 0 18px rgba(34,211,238,0.12)}
+  .s-today .chip{color:#04141a;background:var(--cyan);box-shadow:0 0 14px rgba(34,211,238,0.6)}
+  .s-today .stt{color:#04141a;background:var(--cyan);font-weight:700}
+  .s-up .chip{color:var(--magenta);border:1px solid rgba(232,75,208,0.35);background:rgba(232,75,208,0.07)}
+  .s-up .stt{color:var(--magenta);border:1px solid rgba(232,75,208,0.25);background:rgba(232,75,208,0.05)}
+  .s-up .nm,.s-rest .nm{color:var(--txt-dim)}
+  .s-rest .chip{color:var(--txt-faint);border:1px dashed rgba(120,160,255,0.18);background:transparent}
+  .s-rest .stt{color:var(--txt-faint)}
+
+  /* bottom grid */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  /* CALENDAR */
+  .cal{padding:18px 22px 22px}
+  .cal .wk{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:8px}
+  .cal .wk span{text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--txt-faint)}
+  .cal .days{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+  .cell{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:12px;color:var(--txt-dim);position:relative;
+    border:1px solid rgba(120,160,255,0.06);background:rgba(120,160,255,0.02);transition:.2s}
+  .cell.pad{border:none;background:transparent}
+  .cell .dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);margin-top:4px;
+    box-shadow:0 0 7px var(--cyan)}
+  .cell.done{color:var(--txt);border-color:rgba(34,211,238,0.2);background:rgba(34,211,238,0.05)}
+  .cell.today{color:#04141a;font-weight:700;background:var(--cyan);border-color:var(--cyan);
+    box-shadow:0 0 18px rgba(34,211,238,0.6);animation:todayp 2.2s ease-in-out infinite}
+  @keyframes todayp{0%,100%{box-shadow:0 0 14px rgba(34,211,238,0.5)}50%{box-shadow:0 0 26px rgba(34,211,238,0.85)}}
+  .legend{display:flex;gap:18px;margin-top:16px;flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:1px;color:var(--txt-faint)}
+  .legend i{width:9px;height:9px;border-radius:3px;display:block}
+  .lg-done{background:rgba(34,211,238,0.5);box-shadow:0 0 6px var(--cyan)}
+  .lg-today{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+  .lg-rest{border:1px solid rgba(120,160,255,0.2);background:transparent}
+
+  /* RECENT */
+  .recent{padding:6px 0 12px}
+  .rrow{display:flex;align-items:center;gap:14px;padding:13px 22px;transition:.2s;border-left:2px solid transparent}
+  .rrow:hover{background:rgba(232,75,208,0.05);border-left-color:var(--magenta)}
+  .rchip{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1px;padding:5px 11px;border-radius:6px;
+    color:var(--magenta);border:1px solid rgba(232,75,208,0.35);background:rgba(232,75,208,0.06);
+    box-shadow:0 0 10px rgba(232,75,208,0.12)}
+  .rrow .rnm{flex:1;font-size:14px;letter-spacing:.4px}
+  .rrow .rdate{font-family:var(--mono);font-size:11px;color:var(--txt-faint);letter-spacing:1px}
+  .rrow .arr{color:var(--txt-faint);transition:.2s}
+  .rrow:hover .arr{color:var(--magenta);transform:translateX(3px)}
+
+  /* load-in animation */
+  .anim{opacity:0;transform:translateY(16px);animation:rise .7s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+  <div class="bg-fx"><div class="glow-a"></div><div class="glow-b"></div><div class="glow-c"></div></div>
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="glyph">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6.5 6.5 17.5 17.5"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/>
+          </svg>
+        </div>
+        <div class="wm"><b>GYMTRACK</b><span>TRAINING LOG</span></div>
+      </div>
+
+      <nav class="nav">
+        <div class="lbl">// NAVIGATION</div>
+        <a href="#" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          Dashboard</a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></svg>
+          Workout</a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+          Programs</a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+          Log</a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Progress</a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Exercises</a>
+      </nav>
+
+      <button class="start-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        START WORKOUT</button>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <header class="topbar">
+        <div class="prog">
+          <span class="pcode">PRG · ULPB</span>
+          <div class="ptxt"><b>Upper/Lower Power Build</b><span>ACTIVE PROGRAM</span></div>
+        </div>
+        <button class="resume-btn"><span class="pulse"></span>RESUME SESSION</button>
+      </header>
+
+      <main class="content">
+        <div class="page-head anim" style="animation-delay:.05s">
+          <span class="eyebrow">THURSDAY · JUNE 18</span>
+          <h1>Dashboard</h1>
+          <p>Training on <b>Upper/Lower Power Build</b></p>
+        </div>
+
+        <!-- STATS STRIP -->
+        <section class="stats">
+          <div class="hud stat anim" style="animation-delay:.12s">
+            <div class="top"><span class="tag">CURRENT STREAK</span>
+              <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5 0 7-3 7-6.5 0-1.6-.6-3-1.6-4.2-.4-.5-1-1.2-1.4-2-.5-1.1-.5-2.3-.5-3.3 0-1 .3-2.2-.5-3-.7-.7-1.7-.9-2.6-.5C9.4 3.2 8 5.5 8 8c0 1.3.4 2.5 1 3.5-.9.5-2 1.6-2 3.5C7 18.5 9 22 12 22"/></svg></div>
+            </div>
+            <div class="val">4<small>WKS</small></div>
+            <div class="xpbar"><i data-w="80"></i></div>
+            <div class="sub">+1 TO NEXT BADGE</div>
+          </div>
+
+          <div class="hud stat ringstat anim" style="animation-delay:.19s">
+            <div class="ring">
+              <svg width="62" height="62" viewBox="0 0 62 62">
+                <circle cx="31" cy="31" r="26" fill="none" stroke="rgba(120,160,255,0.12)" stroke-width="6"/>
+                <circle class="ringfill" cx="31" cy="31" r="26" fill="none" stroke="url(#g1)" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="163.4"/>
+                <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#E84BD0"/></linearGradient></defs>
+              </svg>
+              <span class="pct">50%</span>
+            </div>
+            <div class="info">
+              <div class="tag" style="font-family:var(--mono);font-size:9.5px;letter-spacing:2px;color:var(--txt-faint);margin-bottom:6px">THIS WEEK</div>
+              <div class="val">2<small>/ 4 SESSIONS</small></div>
+              <div class="sub">2 REMAINING</div>
+            </div>
+          </div>
+
+          <div class="hud stat anim" style="animation-delay:.26s">
+            <div class="top"><span class="tag">WEEKLY VOLUME</span>
+              <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg></div>
+            </div>
+            <div class="val">48,250<small>LB</small></div>
+            <div class="xpbar"><i data-w="68"></i></div>
+            <div class="sub">+12% VS LAST WEEK</div>
+          </div>
+
+          <div class="hud stat anim" style="animation-delay:.33s">
+            <div class="top"><span class="tag">TOTAL SESSIONS</span>
+              <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg></div>
+            </div>
+            <div class="val">137</div>
+            <div class="xpbar"><i data-w="91"></i></div>
+            <div class="sub">LVL 14 · ELITE TIER</div>
+          </div>
+        </section>
+
+        <!-- MAIN GRID -->
+        <section class="grid">
+          <!-- TODAY -->
+          <div class="hud today anim" style="animation-delay:.4s">
+            <div class="sheen"></div>
+            <div class="head">
+              <div class="daycode">UB</div>
+              <div class="ht"><div class="k">// TODAY'S WORKOUT</div><h2>Upper B</h2></div>
+              <div class="meta">EST. DURATION<b>~62 MIN</b></div>
+            </div>
+            <div class="ex-list">
+              <div class="ex"><span class="n">01</span><span class="nm">Incline Bench Press</span><span class="sr">4<b>×</b>8</span></div>
+              <div class="ex"><span class="n">02</span><span class="nm">Weighted Pull-up</span><span class="sr">4<b>×</b>6</span></div>
+              <div class="ex"><span class="n">03</span><span class="nm">Seated DB Press</span><span class="sr">3<b>×</b>10</span></div>
+              <div class="ex"><span class="n">04</span><span class="nm">Cable Row</span><span class="sr">3<b>×</b>12</span></div>
+              <div class="ex"><span class="n">05</span><span class="nm">Face Pull</span><span class="sr">3<b>×</b>15</span></div>
+            </div>
+            <button class="cta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+              START WORKOUT</button>
+          </div>
+
+          <!-- THIS WEEK -->
+          <div class="hud anim" style="animation-delay:.47s">
+            <div class="panel-h"><h3>THIS WEEK</h3><span class="badge">WK 23 · 2026</span></div>
+            <div class="week">
+              <div class="wrow s-done"><span class="day">MON</span><span class="chip">UA</span><span class="nm">Upper A</span><span class="sets">18 SETS</span><span class="stt">DONE</span></div>
+              <div class="wrow s-done"><span class="day">TUE</span><span class="chip">LA</span><span class="nm">Lower A</span><span class="sets">16 SETS</span><span class="stt">DONE</span></div>
+              <div class="wrow s-rest"><span class="day">WED</span><span class="chip">—</span><span class="nm">Rest Day</span><span class="sets"></span><span class="stt">REST</span></div>
+              <div class="wrow s-today"><span class="day">THU</span><span class="chip">UB</span><span class="nm">Upper B</span><span class="sets">17 SETS</span><span class="stt">TODAY</span></div>
+              <div class="wrow s-up"><span class="day">FRI</span><span class="chip">LB</span><span class="nm">Lower B</span><span class="sets">16 SETS</span><span class="stt">UPCOMING</span></div>
+              <div class="wrow s-rest"><span class="day">SAT</span><span class="chip">—</span><span class="nm">Rest Day</span><span class="sets"></span><span class="stt">REST</span></div>
+              <div class="wrow s-rest"><span class="day">SUN</span><span class="chip">—</span><span class="nm">Rest Day</span><span class="sets"></span><span class="stt">REST</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BOTTOM GRID -->
+        <section class="grid2">
+          <!-- CALENDAR -->
+          <div class="hud cal anim" style="animation-delay:.54s">
+            <div class="panel-h" style="padding-left:0;padding-right:0"><h3>TRAINING CALENDAR</h3><span class="badge">JUNE 2026</span></div>
+            <div class="wk"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+            <div class="days" id="cal"></div>
+            <div class="legend">
+              <span><i class="lg-done"></i>COMPLETED</span>
+              <span><i class="lg-today"></i>TODAY</span>
+              <span><i class="lg-rest"></i>REST / EMPTY</span>
+            </div>
+          </div>
+
+          <!-- RECENT -->
+          <div class="hud anim" style="animation-delay:.61s">
+            <div class="panel-h"><h3>RECENT SESSIONS</h3><span class="badge">LAST 5</span></div>
+            <div class="recent">
+              <div class="rrow"><span class="rchip">UA</span><span class="rnm">Upper A</span><span class="rdate">JUN 16</span><span class="arr">→</span></div>
+              <div class="rrow"><span class="rchip">LA</span><span class="rnm">Lower A</span><span class="rdate">JUN 15</span><span class="arr">→</span></div>
+              <div class="rrow"><span class="rchip">UB</span><span class="rnm">Upper B</span><span class="rdate">JUN 11</span><span class="arr">→</span></div>
+              <div class="rrow"><span class="rchip">LB</span><span class="rnm">Lower B</span><span class="rdate">JUN 09</span><span class="arr">→</span></div>
+              <div class="rrow"><span class="rchip">UA</span><span class="rnm">Upper A</span><span class="rdate">JUN 08</span><span class="arr">→</span></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+<script>
+  // XP bars fill
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{document.querySelectorAll('.xpbar i').forEach(b=>b.style.width=b.dataset.w+'%');},400);
+    const r=document.querySelector('.ringfill');
+    if(r){const c=2*Math.PI*26; r.style.strokeDasharray=c; setTimeout(()=>{r.style.transition='stroke-dashoffset 1.5s cubic-bezier(.2,.8,.2,1)'; r.style.strokeDashoffset=c*0.5;},500);}
+  });
+
+  // Build June 2026 calendar (Mon-start). June 1 2026 is a Monday.
+  const done=[1,2,4,5,8,9,11,12,15,16], today=18, daysInMonth=30, firstDow=0; // 0 = Monday col
+  const cal=document.getElementById('cal');
+  for(let i=0;i<firstDow;i++){const p=document.createElement('div');p.className='cell pad';cal.appendChild(p);}
+  for(let d=1;d<=daysInMonth;d++){
+    const c=document.createElement('div');c.className='cell';
+    let html='<span>'+d+'</span>';
+    if(d===today){c.classList.add('today');}
+    else if(done.includes(d)){c.classList.add('done');html+='<span class="dot"></span>';}
+    c.innerHTML=html;cal.appendChild(c);
+  }
+</script>
+</body>
+</html>

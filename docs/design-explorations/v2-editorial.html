@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GymTrack — Training Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,500&family=Archivo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F3EC;
+    --paper-2:#F0ECE1;
+    --paper-3:#EAE5D7;
+    --ink:#1A1714;
+    --ink-soft:#4A443C;
+    --ink-faint:#8A8174;
+    --hair:#D8D1C0;
+    --hair-strong:#C7BEA8;
+    --ox:#8C2B22;
+    --ox-deep:#6F1F18;
+    --ox-tint:#EEDAD3;
+    --gold:#9A8240;
+    --serif:"Fraunces", Georgia, serif;
+    --grot:"Archivo", system-ui, sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--grot);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    /* subtle paper grain */
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(140,43,34,0.018), transparent 38%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  }
+
+  /* small caps label */
+  .eyebrow{
+    font-family:var(--grot);
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .num-marker{
+    font-family:var(--grot);
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:.18em;
+    color:var(--ox);
+  }
+
+  /* ===== APP SHELL ===== */
+  .app{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:100vh;
+    max-width:1440px;
+    margin:0 auto;
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    border-right:1px solid var(--hair);
+    padding:34px 26px 26px;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+    background:linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+  }
+  .brand{display:flex;gap:12px;align-items:flex-start;}
+  .brand-mark{
+    width:38px;height:38px;flex:none;margin-top:2px;
+    border:1.5px solid var(--ink);
+    border-radius:50%;
+    display:grid;place-items:center;
+    position:relative;
+  }
+  .brand-mark::after{
+    content:"";position:absolute;width:14px;height:14px;
+    border:1.5px solid var(--ox);border-radius:50%;
+  }
+  .brand-mark span{
+    position:relative;z-index:2;width:5px;height:5px;border-radius:50%;background:var(--ink);
+  }
+  .wordmark{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:24px;
+    letter-spacing:-.01em;
+    line-height:1;
+  }
+  .wordmark em{font-style:italic;font-weight:500;color:var(--ox);}
+  .brand-sub{
+    font-family:var(--grot);
+    font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--ink-faint);margin-top:7px;
+  }
+
+  .nav{margin-top:46px;display:flex;flex-direction:column;gap:1px;}
+  .nav-label{
+    font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:16px;padding-left:2px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:13px;
+    padding:9px 12px;margin:0 -12px;
+    border-radius:7px;
+    text-decoration:none;color:var(--ink-soft);
+    font-size:14px;font-weight:500;
+    letter-spacing:.01em;
+    transition:background .25s ease, color .25s ease, padding .25s ease;
+    position:relative;
+  }
+  .nav a svg{width:18px;height:18px;stroke:var(--ink-soft);flex:none;transition:stroke .25s;}
+  .nav a:hover{background:var(--paper-3);color:var(--ink);padding-left:16px;}
+  .nav a:hover svg{stroke:var(--ink);}
+  .nav a.active{color:var(--ink);font-weight:600;}
+  .nav a.active svg{stroke:var(--ox);}
+  .nav a.active::before{
+    content:"";position:absolute;left:-26px;top:50%;transform:translateY(-50%);
+    width:3px;height:20px;background:var(--ox);border-radius:0 2px 2px 0;
+  }
+  .nav a.active{background:var(--paper-3);}
+
+  .start-btn{
+    margin-top:auto;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    background:var(--ink);color:var(--paper);
+    border:none;cursor:pointer;
+    font-family:var(--grot);font-size:13px;font-weight:600;letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:15px;border-radius:9px;
+    transition:background .25s, transform .2s;
+  }
+  .start-btn svg{width:16px;height:16px;stroke:var(--paper);}
+  .start-btn:hover{background:var(--ox);transform:translateY(-1px);}
+
+  /* ---- Main ---- */
+  .main{display:flex;flex-direction:column;min-width:0;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 44px;
+    border-bottom:1px solid var(--hair);
+    background:rgba(246,243,236,0.82);
+    backdrop-filter:blur(6px);
+    position:sticky;top:0;z-index:20;
+  }
+  .topbar-left{display:flex;align-items:center;gap:16px;}
+  .topbar-left .dot{width:7px;height:7px;border-radius:50%;background:var(--ox);box-shadow:0 0 0 3px var(--ox-tint);}
+  .topbar-program{font-family:var(--serif);font-size:17px;font-weight:500;letter-spacing:-.01em;}
+  .topbar-tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);}
+  .resume-btn{
+    display:flex;align-items:center;gap:8px;
+    background:transparent;border:1.5px solid var(--ink);
+    color:var(--ink);cursor:pointer;
+    font-family:var(--grot);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    padding:9px 18px;border-radius:30px;
+    transition:all .25s;
+  }
+  .resume-btn svg{width:14px;height:14px;stroke:var(--ink);transition:stroke .25s;}
+  .resume-btn .live{width:6px;height:6px;border-radius:50%;background:var(--ox);animation:pulse 1.8s infinite;}
+  .resume-btn:hover{background:var(--ink);color:var(--paper);}
+  .resume-btn:hover svg{stroke:var(--paper);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .content{padding:44px 44px 70px;}
+
+  /* page header */
+  .page-head{
+    display:grid;grid-template-columns:1fr auto;align-items:end;
+    gap:30px;padding-bottom:30px;margin-bottom:40px;
+    border-bottom:2px solid var(--ink);
+  }
+  .page-head .eyebrow{margin-bottom:14px;display:block;}
+  .page-title{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:74px;
+    line-height:.92;
+    letter-spacing:-.025em;
+  }
+  .page-title .amp{font-style:italic;font-weight:400;color:var(--ox);}
+  .page-sub{
+    font-family:var(--serif);font-style:italic;font-size:19px;color:var(--ink-soft);
+    text-align:right;max-width:230px;line-height:1.35;
+  }
+
+  /* ===== STATS STRIP ===== */
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);
+    margin-bottom:46px;
+  }
+  .stat{
+    padding:24px 26px 26px;
+    border-left:1px solid var(--hair);
+    position:relative;
+  }
+  .stat:first-child{border-left:none;padding-left:2px;}
+  .stat .eyebrow{display:block;margin-bottom:14px;}
+  .stat-fig{
+    font-family:var(--serif);font-weight:500;
+    font-size:46px;line-height:.9;letter-spacing:-.02em;
+    display:flex;align-items:baseline;gap:6px;
+  }
+  .stat-fig .unit{font-size:16px;font-weight:400;color:var(--ink-faint);letter-spacing:0;font-style:italic;}
+  .stat-fig .slash{color:var(--hair-strong);font-weight:300;}
+  .stat .meta{font-size:12px;color:var(--ink-faint);margin-top:10px;letter-spacing:.02em;}
+  .stat .meta b{color:var(--ox);font-weight:600;}
+
+  /* ===== EDITORIAL GRID ===== */
+  .spread{
+    display:grid;
+    grid-template-columns:1.55fr 1fr;
+    gap:46px;
+  }
+  .col{display:flex;flex-direction:column;gap:46px;}
+
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px;}
+  .sec-head .num-marker{flex:none;}
+  .sec-head h2{
+    font-family:var(--serif);font-weight:600;font-size:26px;letter-spacing:-.01em;line-height:1;
+  }
+  .sec-head .rule{flex:1;height:1px;background:var(--hair);align-self:center;margin-top:3px;}
+  .sec-head .aside{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
+
+  /* ---- Today's lead block ---- */
+  .lead{
+    border:1px solid var(--hair-strong);
+    background:linear-gradient(165deg, var(--paper) 0%, var(--paper-2) 100%);
+    position:relative;
+    overflow:hidden;
+  }
+  .lead::before{
+    content:"";position:absolute;top:0;left:0;width:5px;height:100%;background:var(--ox);
+  }
+  .lead-top{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    padding:30px 34px 24px;border-bottom:1px solid var(--hair);
+  }
+  .lead-code{
+    font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.05em;
+    color:var(--paper);background:var(--ox);
+    width:52px;height:52px;border-radius:50%;display:grid;place-items:center;flex:none;
+  }
+  .lead-title{font-family:var(--serif);font-weight:600;font-size:38px;line-height:.95;letter-spacing:-.02em;}
+  .lead-title .eyebrow{display:block;margin-bottom:10px;color:var(--ox);}
+  .lead-vol{text-align:right;}
+  .lead-vol .big{font-family:var(--serif);font-size:30px;font-weight:500;letter-spacing:-.02em;}
+  .lead-vol .lab{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);}
+
+  .lead-list{padding:8px 34px 8px;}
+  .ex-row{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;
+    padding:16px 0;border-bottom:1px solid var(--hair);
+    transition:padding-left .3s ease;
+  }
+  .ex-row:last-child{border-bottom:none;}
+  .ex-row:hover{padding-left:8px;}
+  .ex-idx{
+    font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-faint);width:24px;
+  }
+  .ex-name{font-family:var(--serif);font-size:20px;font-weight:500;letter-spacing:-.01em;}
+  .ex-scheme{
+    font-family:var(--grot);font-variant-numeric:tabular-nums;
+    font-size:14px;font-weight:600;letter-spacing:.04em;color:var(--ink-soft);
+    border:1px solid var(--hair-strong);border-radius:30px;padding:5px 13px;
+    transition:all .25s;
+  }
+  .ex-row:hover .ex-scheme{border-color:var(--ox);color:var(--ox);}
+
+  .lead-cta{padding:24px 34px 30px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+  .lead-cta .note{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink-faint);}
+  .big-start{
+    display:inline-flex;align-items:center;gap:11px;
+    background:var(--ink);color:var(--paper);border:none;cursor:pointer;
+    font-family:var(--grot);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    padding:14px 26px;border-radius:9px;transition:background .25s, transform .2s;
+  }
+  .big-start svg{width:16px;height:16px;stroke:var(--paper);}
+  .big-start:hover{background:var(--ox);transform:translateY(-2px);}
+
+  /* ---- This week ---- */
+  .week{display:flex;flex-direction:column;}
+  .wk-row{
+    display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:16px;
+    padding:15px 4px;border-bottom:1px solid var(--hair);
+    transition:background .25s;
+  }
+  .wk-row:hover{background:var(--paper-2);}
+  .wk-day{
+    font-family:var(--grot);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .wk-main{display:flex;align-items:center;gap:13px;}
+  .wk-code{
+    font-family:var(--serif);font-weight:700;font-size:11px;letter-spacing:.04em;
+    width:34px;height:34px;border-radius:8px;display:grid;place-items:center;flex:none;
+    border:1px solid var(--hair-strong);color:var(--ink-soft);
+  }
+  .wk-name{font-family:var(--serif);font-size:18px;font-weight:500;letter-spacing:-.01em;}
+  .wk-sets{font-size:12px;color:var(--ink-faint);letter-spacing:.02em;font-variant-numeric:tabular-nums;}
+  .wk-state{
+    font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    padding:5px 11px;border-radius:30px;
+  }
+  /* states */
+  .st-done .wk-code{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .st-done .wk-state{color:var(--ink-faint);border:1px solid var(--hair);}
+  .st-today{background:var(--ox-tint)!important;margin:0 -8px;padding:15px 12px;border-radius:8px;border-bottom-color:transparent;}
+  .st-today .wk-code{background:var(--ox);color:var(--paper);border-color:var(--ox);}
+  .st-today .wk-name{color:var(--ox-deep);}
+  .st-today .wk-state{background:var(--ox);color:var(--paper);}
+  .st-up .wk-code{border-style:dashed;}
+  .st-up .wk-state{color:var(--ink-faint);border:1px solid var(--hair-strong);}
+  .st-rest{opacity:.55;}
+  .st-rest .wk-code{border-style:dotted;background:transparent;color:var(--ink-faint);}
+  .st-rest .wk-name{font-style:italic;color:var(--ink-faint);font-weight:400;}
+
+  /* ---- Calendar ---- */
+  .cal{border:1px solid var(--hair-strong);padding:24px 24px 20px;background:var(--paper-2);}
+  .cal-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;}
+  .cal-month{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-.01em;}
+  .cal-month em{font-style:italic;color:var(--ink-faint);font-weight:400;font-size:16px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-dow{
+    font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-faint);text-align:center;padding-bottom:6px;
+  }
+  .cal-cell{
+    aspect-ratio:1;display:grid;place-items:center;
+    font-family:var(--serif);font-size:14px;font-weight:500;
+    border-radius:7px;color:var(--ink-soft);position:relative;
+    transition:transform .2s, background .2s;
+  }
+  .cal-cell.empty{visibility:hidden;}
+  .cal-cell.done{background:var(--paper-3);color:var(--ink);}
+  .cal-cell.done::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--ox);}
+  .cal-cell.today{background:var(--ox);color:var(--paper);font-weight:700;box-shadow:0 4px 14px rgba(140,43,34,.3);}
+  .cal-cell:not(.empty):hover{transform:scale(1.1);}
+  .cal-legend{display:flex;gap:20px;margin-top:18px;padding-top:16px;border-top:1px solid var(--hair);}
+  .cal-legend span{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}
+  .lg-dot{width:11px;height:11px;border-radius:4px;}
+  .lg-done{background:var(--paper-3);position:relative;}
+  .lg-done::after{content:"";position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--ox);}
+  .lg-today{background:var(--ox);}
+  .lg-rest{border:1px solid var(--hair-strong);}
+
+  /* ---- Recent sessions ---- */
+  .recent{display:flex;flex-direction:column;}
+  .rc-row{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;
+    padding:16px 4px;border-bottom:1px solid var(--hair);text-decoration:none;color:inherit;
+    transition:padding-left .3s, background .25s;
+  }
+  .rc-row:hover{padding-left:10px;background:var(--paper-2);}
+  .rc-code{
+    font-family:var(--serif);font-weight:700;font-size:11px;letter-spacing:.04em;
+    width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;
+    border:1px solid var(--ink);color:var(--ink);
+  }
+  .rc-name{font-family:var(--serif);font-size:18px;font-weight:500;}
+  .rc-date{font-size:12px;color:var(--ink-faint);letter-spacing:.06em;text-transform:uppercase;}
+  .rc-arrow{width:16px;height:16px;stroke:var(--ink-faint);transition:transform .25s, stroke .25s;}
+  .rc-row:hover .rc-arrow{transform:translateX(4px);stroke:var(--ox);}
+
+  .colophon{
+    margin-top:54px;padding-top:22px;border-top:2px solid var(--ink);
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);
+  }
+  .colophon em{font-family:var(--serif);font-style:italic;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-soft);}
+
+  /* ===== load-in stagger ===== */
+  .reveal{opacity:0;transform:translateY(16px);animation:rise .8s cubic-bezier(.22,.61,.36,1) forwards;}
+  @keyframes rise{to{opacity:1;transform:none;}}
+  .d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}
+  .d4{animation-delay:.35s}.d5{animation-delay:.45s}.d6{animation-delay:.55s}.d7{animation-delay:.65s}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><span></span></div>
+      <div>
+        <div class="wordmark">Gym<em>Track</em></div>
+        <div class="brand-sub">Training Log</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Index</div>
+      <a href="#" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M14.5 9.5l-5 5"/></svg>
+        Workout
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 012-2h13v18H6a2 2 0 01-2-2z"/><path d="M9 3v18M19 16H6"/></svg>
+        Programs
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>
+        Log
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+        Progress
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Exercises
+      </a>
+    </nav>
+
+    <button class="start-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8V4z"/></svg>
+      Start workout
+    </button>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="dot"></span>
+        <div>
+          <div class="topbar-program">Upper/Lower Power Build</div>
+          <div class="topbar-tag">Active Program · Week 4</div>
+        </div>
+      </div>
+      <button class="resume-btn">
+        <span class="live"></span>
+        Resume
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </header>
+
+    <div class="content">
+
+      <!-- PAGE HEAD -->
+      <div class="page-head reveal d1">
+        <div>
+          <span class="eyebrow">Thursday, June 18 · 2026</span>
+          <h1 class="page-title">Dash<span class="amp">b</span>oard</h1>
+        </div>
+        <p class="page-sub">Training on Upper / Lower Power Build</p>
+      </div>
+
+      <!-- STATS STRIP -->
+      <section class="stats reveal d2">
+        <div class="stat">
+          <span class="eyebrow">Current streak</span>
+          <div class="stat-fig">4<span class="unit">wks</span></div>
+          <div class="meta"><b>↑</b> personal best run</div>
+        </div>
+        <div class="stat">
+          <span class="eyebrow">This week</span>
+          <div class="stat-fig">2<span class="slash">/</span>4<span class="unit">sessions</span></div>
+          <div class="meta">2 remaining</div>
+        </div>
+        <div class="stat">
+          <span class="eyebrow">Weekly volume</span>
+          <div class="stat-fig">48,250<span class="unit">lb</span></div>
+          <div class="meta"><b>+6%</b> vs last week</div>
+        </div>
+        <div class="stat">
+          <span class="eyebrow">Total sessions</span>
+          <div class="stat-fig">137</div>
+          <div class="meta">since Feb 2025</div>
+        </div>
+      </section>
+
+      <!-- EDITORIAL SPREAD -->
+      <div class="spread">
+
+        <!-- LEAD COLUMN -->
+        <div class="col">
+
+          <!-- 01 TODAY'S WORKOUT -->
+          <section class="reveal d3">
+            <div class="sec-head">
+              <span class="num-marker">01</span>
+              <h2>Today's Workout</h2>
+              <span class="rule"></span>
+              <span class="aside">Scheduled</span>
+            </div>
+
+            <article class="lead">
+              <div class="lead-top">
+                <div style="display:flex;gap:18px;align-items:center;">
+                  <div class="lead-code">UB</div>
+                  <h3 class="lead-title"><span class="eyebrow">Upper / Power</span>Upper B</h3>
+                </div>
+                <div class="lead-vol">
+                  <div class="big">17</div>
+                  <div class="lab">Working sets</div>
+                </div>
+              </div>
+
+              <div class="lead-list">
+                <div class="ex-row"><span class="ex-idx">i</span><span class="ex-name">Incline Bench Press</span><span class="ex-scheme">4 × 8</span></div>
+                <div class="ex-row"><span class="ex-idx">ii</span><span class="ex-name">Weighted Pull-up</span><span class="ex-scheme">4 × 6</span></div>
+                <div class="ex-row"><span class="ex-idx">iii</span><span class="ex-name">Seated DB Press</span><span class="ex-scheme">3 × 10</span></div>
+                <div class="ex-row"><span class="ex-idx">iv</span><span class="ex-name">Cable Row</span><span class="ex-scheme">3 × 12</span></div>
+                <div class="ex-row"><span class="ex-idx">v</span><span class="ex-name">Face Pull</span><span class="ex-scheme">3 × 15</span></div>
+              </div>
+
+              <div class="lead-cta">
+                <span class="note">Est. 58 min · last logged Jun 11</span>
+                <button class="big-start">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8V4z"/></svg>
+                  Start workout
+                </button>
+              </div>
+            </article>
+          </section>
+
+          <!-- 03 TRAINING CALENDAR -->
+          <section class="reveal d5">
+            <div class="sec-head">
+              <span class="num-marker">03</span>
+              <h2>Training Calendar</h2>
+              <span class="rule"></span>
+            </div>
+
+            <div class="cal">
+              <div class="cal-head">
+                <div class="cal-month">June <em>2026</em></div>
+                <div class="eyebrow">17 sessions logged</div>
+              </div>
+              <div class="cal-grid" id="cal-grid">
+                <div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div><div class="cal-dow">Sun</div>
+              </div>
+              <div class="cal-legend">
+                <span><i class="lg-dot lg-done"></i>Completed</span>
+                <span><i class="lg-dot lg-today"></i>Today</span>
+                <span><i class="lg-dot lg-rest"></i>Rest / planned</span>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- RAIL COLUMN -->
+        <div class="col">
+
+          <!-- 02 THIS WEEK -->
+          <section class="reveal d4">
+            <div class="sec-head">
+              <span class="num-marker">02</span>
+              <h2>This Week</h2>
+              <span class="rule"></span>
+            </div>
+
+            <div class="week">
+              <div class="wk-row st-done"><span class="wk-day">Mon</span><div class="wk-main"><span class="wk-code">UA</span><div><div class="wk-name">Upper A</div><div class="wk-sets">18 sets</div></div></div><span class="wk-state">Done</span></div>
+              <div class="wk-row st-done"><span class="wk-day">Tue</span><div class="wk-main"><span class="wk-code">LA</span><div><div class="wk-name">Lower A</div><div class="wk-sets">16 sets</div></div></div><span class="wk-state">Done</span></div>
+              <div class="wk-row st-rest"><span class="wk-day">Wed</span><div class="wk-main"><span class="wk-code">—</span><div><div class="wk-name">Rest</div><div class="wk-sets">recovery</div></div></div><span class="wk-state"></span></div>
+              <div class="wk-row st-today"><span class="wk-day">Thu</span><div class="wk-main"><span class="wk-code">UB</span><div><div class="wk-name">Upper B</div><div class="wk-sets">17 sets planned</div></div></div><span class="wk-state">Today</span></div>
+              <div class="wk-row st-up"><span class="wk-day">Fri</span><div class="wk-main"><span class="wk-code">LB</span><div><div class="wk-name">Lower B</div><div class="wk-sets">16 sets</div></div></div><span class="wk-state">Up next</span></div>
+              <div class="wk-row st-rest"><span class="wk-day">Sat</span><div class="wk-main"><span class="wk-code">—</span><div><div class="wk-name">Rest</div><div class="wk-sets">recovery</div></div></div><span class="wk-state"></span></div>
+              <div class="wk-row st-rest"><span class="wk-day">Sun</span><div class="wk-main"><span class="wk-code">—</span><div><div class="wk-name">Rest</div><div class="wk-sets">recovery</div></div></div><span class="wk-state"></span></div>
+            </div>
+          </section>
+
+          <!-- 04 RECENT SESSIONS -->
+          <section class="reveal d6">
+            <div class="sec-head">
+              <span class="num-marker">04</span>
+              <h2>Recent Sessions</h2>
+              <span class="rule"></span>
+            </div>
+
+            <div class="recent">
+              <a class="rc-row" href="#"><span class="rc-code">UA</span><div><div class="rc-name">Upper A</div></div><span class="rc-date">Jun 16</span><svg class="rc-arrow" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a class="rc-row" href="#"><span class="rc-code">LA</span><div><div class="rc-name">Lower A</div></div><span class="rc-date">Jun 15</span><svg class="rc-arrow" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a class="rc-row" href="#"><span class="rc-code">UB</span><div><div class="rc-name">Upper B</div></div><span class="rc-date">Jun 11</span><svg class="rc-arrow" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a class="rc-row" href="#"><span class="rc-code">LB</span><div><div class="rc-name">Lower B</div></div><span class="rc-date">Jun 9</span><svg class="rc-arrow" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a class="rc-row" href="#"><span class="rc-code">UA</span><div><div class="rc-name">Upper A</div></div><span class="rc-date">Jun 8</span><svg class="rc-arrow" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <div class="colophon reveal d7">
+        <span>GymTrack — Training Log № 137</span>
+        <em>Strength is a practice, not an event.</em>
+        <span>Vol. IV · MMXXVI</span>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  // Build June 2026 calendar (Mon-start). June 1 2026 = Monday.
+  (function(){
+    const grid = document.getElementById('cal-grid');
+    const done = new Set([1,2,4,5,8,9,11,12,15,16]);
+    const today = 18;
+    const daysInMonth = 30;
+    // June 1 2026 is a Monday -> no leading blanks for Mon-start grid.
+    const firstDow = 0; // 0 = Monday column
+    for(let i=0;i<firstDow;i++){
+      const e=document.createElement('div');e.className='cal-cell empty';grid.appendChild(e);
+    }
+    for(let d=1; d<=daysInMonth; d++){
+      const c=document.createElement('div');
+      c.className='cal-cell';
+      c.textContent=d;
+      if(d===today) c.classList.add('today');
+      else if(done.has(d)) c.classList.add('done');
+      grid.appendChild(c);
+    }
+  })();
+</script>
+</body>
+</html>

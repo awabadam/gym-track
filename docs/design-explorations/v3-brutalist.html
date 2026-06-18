@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GYMTRACK // TRAINING LOG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A;
+    --paper:#FFFFFF;
+    --acid:#C7F000;
+    --acid-dim:#9DBD00;
+    --grid:#E2E2E2;
+    --shadow:6px 6px 0 var(--ink);
+    --shadow-sm:4px 4px 0 var(--ink);
+    --shadow-lg:10px 10px 0 var(--ink);
+    --border:3px solid var(--ink);
+    --border-2:2px solid var(--ink);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{background:var(--ink);}
+  body{
+    font-family:"Space Mono",monospace;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--acid);color:var(--ink);}
+
+  .display{font-family:"Archivo Black",sans-serif;text-transform:uppercase;letter-spacing:-0.02em;line-height:0.92;}
+  .mono{font-family:"Space Mono",monospace;}
+  .mono-up{font-family:"Space Mono",monospace;text-transform:uppercase;letter-spacing:0.08em;}
+
+  /* ====== SHELL ====== */
+  .app{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:100vh;
+    max-width:1440px;
+    margin:0 auto;
+    background:var(--paper);
+    border-left:var(--border);
+    border-right:var(--border);
+  }
+
+  /* ====== SIDEBAR ====== */
+  .sidebar{
+    background:var(--ink);
+    color:var(--paper);
+    border-right:var(--border);
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    padding:26px 22px 22px;
+    border-bottom:var(--border);
+    border-color:var(--paper);
+  }
+  .brand-row{display:flex;align-items:center;gap:10px;}
+  .brand-glyph{
+    width:34px;height:34px;
+    background:var(--acid);
+    border:2px solid var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-glyph svg{width:22px;height:22px;stroke:var(--ink);}
+  .wordmark{
+    font-family:"Archivo Black",sans-serif;
+    font-size:23px;
+    letter-spacing:-0.03em;
+    color:var(--paper);
+  }
+  .brand-sub{
+    margin-top:10px;
+    font-size:10px;
+    letter-spacing:0.32em;
+    color:var(--acid);
+    border:1px solid var(--acid);
+    display:inline-block;
+    padding:3px 6px;
+  }
+
+  .nav{padding:18px 14px;display:flex;flex-direction:column;gap:4px;flex:1;}
+  .nav-label{
+    font-size:9px;letter-spacing:0.3em;color:#666;
+    padding:0 8px 10px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 12px;
+    color:var(--paper);
+    text-decoration:none;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-weight:700;
+    border:2px solid transparent;
+    position:relative;
+    transition:none;
+  }
+  .nav-item svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.4;fill:none;flex-shrink:0;}
+  .nav-item:hover{
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .nav-item.active{
+    background:var(--acid);
+    color:var(--ink);
+    border:2px solid var(--paper);
+    box-shadow:4px 4px 0 var(--paper);
+  }
+  .nav-item .num{margin-left:auto;font-size:10px;opacity:0.6;}
+
+  .start-wrap{padding:14px;border-top:var(--border);border-color:var(--paper);}
+  .btn-start{
+    width:100%;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--acid);
+    color:var(--ink);
+    border:2px solid var(--paper);
+    box-shadow:4px 4px 0 var(--paper);
+    font-family:"Archivo Black",sans-serif;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+    padding:16px 12px;
+    cursor:pointer;
+  }
+  .btn-start svg{width:18px;height:18px;stroke:var(--ink);stroke-width:2.6;fill:none;}
+  .btn-start:hover{
+    background:var(--paper);
+    box-shadow:0 0 0 var(--paper);
+    transform:translate(4px,4px);
+  }
+
+  /* ====== MAIN ====== */
+  .main{display:flex;flex-direction:column;min-width:0;}
+
+  .topbar{
+    display:flex;align-items:stretch;justify-content:space-between;
+    border-bottom:var(--border);
+    background:var(--paper);
+    position:sticky;top:0;z-index:20;
+  }
+  .topbar-left{
+    display:flex;align-items:center;gap:16px;
+    padding:0 26px;
+  }
+  .top-tag{
+    background:var(--ink);color:var(--acid);
+    font-size:9px;letter-spacing:0.25em;
+    padding:5px 8px;
+    align-self:center;
+  }
+  .top-program{
+    font-family:"Archivo Black",sans-serif;
+    font-size:17px;text-transform:uppercase;letter-spacing:-0.01em;
+  }
+  .topbar-right{display:flex;align-items:stretch;}
+  .live-dot{
+    display:flex;align-items:center;gap:8px;
+    padding:0 22px;
+    border-left:var(--border);
+    font-size:10px;letter-spacing:0.18em;
+  }
+  .dot{width:11px;height:11px;background:var(--acid);border:2px solid var(--ink);animation:blink 1.1s steps(2) infinite;}
+  @keyframes blink{50%{background:var(--paper);}}
+  .btn-resume{
+    background:var(--acid);
+    border:none;border-left:var(--border);
+    font-family:"Archivo Black",sans-serif;
+    font-size:15px;text-transform:uppercase;letter-spacing:0.02em;
+    padding:0 30px;cursor:pointer;
+    display:flex;align-items:center;gap:10px;
+  }
+  .btn-resume svg{width:18px;height:18px;stroke:var(--ink);stroke-width:2.6;fill:none;}
+  .btn-resume:hover{background:var(--ink);color:var(--acid);}
+  .btn-resume:hover svg{stroke:var(--acid);}
+
+  /* ====== PAGE ====== */
+  .page{padding:30px;}
+  .page-head{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    margin-bottom:26px;
+    border-bottom:var(--border);
+    padding-bottom:22px;
+  }
+  .eyebrow{
+    font-size:11px;letter-spacing:0.3em;
+    background:var(--acid);color:var(--ink);
+    display:inline-block;padding:5px 10px;
+    border:var(--border-2);
+    margin-bottom:14px;
+  }
+  .page-title{font-size:80px;line-height:0.82;}
+  .page-sub{margin-top:14px;font-size:12px;letter-spacing:0.06em;color:#444;}
+  .head-deco{
+    text-align:right;font-size:11px;line-height:1.9;color:#444;
+    border-left:var(--border);padding-left:20px;
+  }
+  .head-deco b{color:var(--ink);}
+
+  /* stagger load */
+  .reveal{opacity:0;transform:translateY(14px);animation:rise .5s cubic-bezier(.2,.8,.2,1) forwards;}
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+
+  /* ====== STATS STRIP ====== */
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border:var(--border);
+    box-shadow:var(--shadow);
+    margin-bottom:30px;
+    background:var(--ink);
+    gap:3px;
+  }
+  .stat{
+    background:var(--paper);
+    padding:20px 22px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat:hover{background:var(--acid);}
+  .stat-label{font-size:10px;letter-spacing:0.2em;color:#555;display:flex;align-items:center;gap:8px;}
+  .stat:hover .stat-label{color:var(--ink);}
+  .stat-label::before{content:"";width:8px;height:8px;background:var(--acid);border:1.5px solid var(--ink);}
+  .stat:hover .stat-label::before{background:var(--ink);}
+  .stat-num{font-family:"Archivo Black",sans-serif;font-size:46px;line-height:1;margin-top:16px;letter-spacing:-0.03em;}
+  .stat-unit{font-size:13px;font-family:"Space Mono",monospace;font-weight:700;margin-left:4px;}
+  .stat-idx{position:absolute;top:10px;right:12px;font-size:10px;color:#bbb;}
+  .stat:hover .stat-idx{color:var(--ink);}
+
+  /* ====== GRID LAYOUT ====== */
+  .grid-main{
+    display:grid;
+    grid-template-columns:1.55fr 1fr;
+    gap:30px;
+    align-items:start;
+  }
+  .col{display:flex;flex-direction:column;gap:30px;}
+
+  .block{border:var(--border);background:var(--paper);box-shadow:var(--shadow);}
+  .block-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:var(--border);
+    background:var(--ink);color:var(--paper);
+  }
+  .block-title{font-family:"Archivo Black",sans-serif;font-size:16px;text-transform:uppercase;letter-spacing:0.01em;}
+  .block-tag{font-size:10px;letter-spacing:0.18em;color:var(--acid);}
+
+  /* ====== TODAY'S WORKOUT ====== */
+  .today-top{
+    display:flex;align-items:stretch;
+    border-bottom:var(--border);
+  }
+  .day-code{
+    background:var(--acid);
+    border-right:var(--border);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px 30px;
+    min-width:160px;
+  }
+  .day-code .code{font-family:"Archivo Black",sans-serif;font-size:64px;line-height:0.8;}
+  .day-code .lbl{font-size:10px;letter-spacing:0.3em;margin-top:10px;}
+  .today-meta{padding:22px 24px;display:flex;flex-direction:column;justify-content:center;flex:1;}
+  .today-name{font-family:"Archivo Black",sans-serif;font-size:38px;text-transform:uppercase;line-height:0.9;}
+  .today-info{margin-top:12px;font-size:11px;letter-spacing:0.12em;color:#555;display:flex;gap:18px;}
+  .today-info span b{color:var(--ink);}
+
+  .ex-list{}
+  .ex-row{
+    display:grid;grid-template-columns:40px 1fr auto;
+    align-items:center;gap:16px;
+    padding:15px 22px;
+    border-bottom:var(--border-2);
+    cursor:default;
+  }
+  .ex-row:last-child{border-bottom:none;}
+  .ex-row:hover{background:var(--ink);color:var(--paper);}
+  .ex-n{font-family:"Archivo Black",sans-serif;font-size:18px;color:#bbb;}
+  .ex-row:hover .ex-n{color:var(--acid);}
+  .ex-name{font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:0.03em;}
+  .ex-sets{
+    font-family:"Archivo Black",sans-serif;font-size:18px;
+    background:var(--acid);color:var(--ink);
+    padding:5px 12px;border:var(--border-2);
+  }
+  .ex-row:hover .ex-sets{box-shadow:3px 3px 0 var(--acid);}
+  .today-cta{
+    display:block;width:100%;
+    background:var(--acid);border:none;border-top:var(--border);
+    font-family:"Archivo Black",sans-serif;font-size:20px;text-transform:uppercase;letter-spacing:0.04em;
+    padding:20px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:12px;
+  }
+  .today-cta svg{width:22px;height:22px;stroke:var(--ink);stroke-width:2.8;fill:none;}
+  .today-cta:hover{background:var(--ink);color:var(--acid);}
+  .today-cta:hover svg{stroke:var(--acid);}
+
+  /* ====== THIS WEEK ====== */
+  .week-row{
+    display:grid;grid-template-columns:54px 1fr 70px 90px;
+    align-items:center;gap:14px;
+    padding:13px 18px;
+    border-bottom:var(--border-2);
+  }
+  .week-row:last-child{border-bottom:none;}
+  .wd{font-family:"Archivo Black",sans-serif;font-size:14px;}
+  .w-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:8px;}
+  .w-badge{font-size:10px;padding:2px 6px;border:1.5px solid var(--ink);font-weight:700;}
+  .w-sets{font-size:11px;color:#555;text-align:right;letter-spacing:0.05em;}
+  .w-state{
+    font-size:10px;letter-spacing:0.12em;font-weight:700;
+    text-align:center;padding:6px 4px;border:var(--border-2);
+  }
+  .s-done{background:var(--ink);color:var(--paper);}
+  .s-today{background:var(--acid);color:var(--ink);box-shadow:3px 3px 0 var(--ink);}
+  .s-up{background:var(--paper);color:var(--ink);}
+  .s-rest{background:repeating-linear-gradient(45deg,var(--paper),var(--paper)5px,#eee 5px,#eee 10px);color:#999;border-style:dashed;}
+  .week-row.is-rest .wd,.week-row.is-rest .w-name{color:#aaa;}
+
+  /* ====== CALENDAR ====== */
+  .cal{padding:18px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-top:var(--border-2);border-left:var(--border-2);}
+  .cal-dow{
+    text-align:center;font-size:10px;letter-spacing:0.1em;font-weight:700;
+    padding:8px 0;background:var(--ink);color:var(--paper);
+    border-right:var(--border-2);border-bottom:var(--border-2);
+  }
+  .cal-cell{
+    aspect-ratio:1;
+    border-right:var(--border-2);border-bottom:var(--border-2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;
+    position:relative;
+  }
+  .cal-cell.empty{background:repeating-linear-gradient(45deg,#fafafa,#fafafa 4px,#f0f0f0 4px,#f0f0f0 8px);}
+  .cal-cell.done{background:var(--acid);}
+  .cal-cell.done::after{content:"";position:absolute;bottom:5px;width:6px;height:6px;background:var(--ink);}
+  .cal-cell.today{background:var(--ink);color:var(--acid);box-shadow:inset 0 0 0 3px var(--acid);font-family:"Archivo Black",sans-serif;}
+  .cal-legend{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;}
+  .lg{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:0.08em;color:#555;}
+  .lg-sw{width:14px;height:14px;border:var(--border-2);}
+  .lg-done{background:var(--acid);}
+  .lg-today{background:var(--ink);box-shadow:inset 0 0 0 2px var(--acid);}
+  .lg-rest{background:repeating-linear-gradient(45deg,#fafafa,#fafafa 3px,#f0f0f0 3px,#f0f0f0 6px);}
+
+  /* ====== RECENT ====== */
+  .rec-row{
+    display:grid;grid-template-columns:auto 1fr auto;
+    align-items:center;gap:14px;
+    padding:14px 18px;
+    border-bottom:var(--border-2);
+    cursor:default;
+  }
+  .rec-row:last-child{border-bottom:none;}
+  .rec-row:hover{background:var(--acid);}
+  .rec-code{
+    font-family:"Archivo Black",sans-serif;font-size:13px;
+    background:var(--ink);color:var(--paper);
+    padding:6px 9px;
+  }
+  .rec-row:hover .rec-code{background:var(--paper);color:var(--ink);}
+  .rec-name{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+  .rec-date{font-size:11px;color:#555;letter-spacing:0.08em;}
+  .rec-row:hover .rec-date{color:var(--ink);}
+  .rec-arrow{font-family:"Archivo Black",sans-serif;font-size:16px;}
+
+  .marquee{
+    background:var(--acid);border-top:var(--border);border-bottom:var(--border);
+    overflow:hidden;white-space:nowrap;
+    font-family:"Archivo Black",sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;
+    padding:9px 0;margin:30px 0;
+  }
+  .marquee span{display:inline-block;padding-left:100%;animation:scroll 18s linear infinite;}
+  @keyframes scroll{to{transform:translateX(-100%);}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <div class="brand-glyph">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M4 9v6M20 9v6M6.5 12h11"/></svg>
+        </div>
+        <div class="wordmark">GYMTRACK</div>
+      </div>
+      <div class="brand-sub">TRAINING&nbsp;LOG</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">// NAVIGATION</div>
+      <a class="nav-item active" href="#">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard<span class="num">01</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M4 9v6M20 9v6M6.5 12h11"/></svg>
+        Workout<span class="num">02</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M4 9h16M9 4v16"/></svg>
+        Programs<span class="num">03</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+        Log<span class="num">04</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16l4-6 3 3 5-7"/></svg>
+        Progress<span class="num">05</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5"/><rect x="3" y="13" width="18" height="7"/></svg>
+        Exercises<span class="num">06</span>
+      </a>
+    </nav>
+
+    <div class="start-wrap">
+      <button class="btn-start">
+        <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+        START WORKOUT
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="top-tag">ACTIVE&nbsp;PROGRAM</span>
+        <span class="top-program">UPPER/LOWER POWER BUILD</span>
+      </div>
+      <div class="topbar-right">
+        <div class="live-dot"><span class="dot"></span>IN&nbsp;PROGRESS</div>
+        <button class="btn-resume">
+          <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+          RESUME
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE -->
+    <section class="page">
+
+      <!-- PAGE HEAD -->
+      <div class="page-head reveal" style="animation-delay:.02s">
+        <div>
+          <span class="eyebrow">THU // JUNE 18</span>
+          <h1 class="page-title display">DASH&shy;BOARD</h1>
+          <p class="page-sub">TRAINING ON UPPER/LOWER POWER BUILD</p>
+        </div>
+        <div class="head-deco">
+          BLOCK <b>03</b> / WEEK <b>04</b><br>
+          DELOAD IN <b>02 WKS</b><br>
+          NEXT: <b>UPPER B</b><br>
+          STATUS // <b>ON&nbsp;TRACK</b>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats reveal" style="animation-delay:.08s">
+        <div class="stat">
+          <div class="stat-idx">01</div>
+          <div class="stat-label">CURRENT STREAK</div>
+          <div class="stat-num">4<span class="stat-unit">WKS</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-idx">02</div>
+          <div class="stat-label">THIS WEEK</div>
+          <div class="stat-num">2<span class="stat-unit">/ 4</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-idx">03</div>
+          <div class="stat-label">WEEKLY VOLUME</div>
+          <div class="stat-num">48,250<span class="stat-unit">LB</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-idx">04</div>
+          <div class="stat-label">TOTAL SESSIONS</div>
+          <div class="stat-num">137</div>
+        </div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="grid-main">
+
+        <!-- LEFT COLUMN -->
+        <div class="col">
+
+          <!-- TODAY'S WORKOUT -->
+          <div class="block reveal" style="animation-delay:.14s">
+            <div class="block-head">
+              <span class="block-title">TODAY'S WORKOUT</span>
+              <span class="block-tag">// SCHEDULED</span>
+            </div>
+            <div class="today-top">
+              <div class="day-code">
+                <div class="code">UB</div>
+                <div class="lbl">DAY CODE</div>
+              </div>
+              <div class="today-meta">
+                <div class="today-name">UPPER B</div>
+                <div class="today-info">
+                  <span><b>5</b> EXERCISES</span>
+                  <span><b>17</b> SETS</span>
+                  <span><b>~52</b> MIN</span>
+                </div>
+              </div>
+            </div>
+            <div class="ex-list">
+              <div class="ex-row"><span class="ex-n">01</span><span class="ex-name">Incline Bench Press</span><span class="ex-sets">4&times;8</span></div>
+              <div class="ex-row"><span class="ex-n">02</span><span class="ex-name">Weighted Pull-Up</span><span class="ex-sets">4&times;6</span></div>
+              <div class="ex-row"><span class="ex-n">03</span><span class="ex-name">Seated DB Press</span><span class="ex-sets">3&times;10</span></div>
+              <div class="ex-row"><span class="ex-n">04</span><span class="ex-name">Cable Row</span><span class="ex-sets">3&times;12</span></div>
+              <div class="ex-row"><span class="ex-n">05</span><span class="ex-name">Face Pull</span><span class="ex-sets">3&times;15</span></div>
+            </div>
+            <button class="today-cta">
+              <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+              START WORKOUT
+            </button>
+          </div>
+
+          <!-- CALENDAR -->
+          <div class="block reveal" style="animation-delay:.22s">
+            <div class="block-head">
+              <span class="block-title">TRAINING CALENDAR</span>
+              <span class="block-tag">// JUNE 2026</span>
+            </div>
+            <div class="cal">
+              <div class="cal-grid" id="cal"></div>
+              <div class="cal-legend">
+                <div class="lg"><span class="lg-sw lg-done"></span>COMPLETED</div>
+                <div class="lg"><span class="lg-sw lg-today"></span>TODAY</div>
+                <div class="lg"><span class="lg-sw lg-rest"></span>OUT OF MONTH</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col">
+
+          <!-- THIS WEEK -->
+          <div class="block reveal" style="animation-delay:.18s">
+            <div class="block-head">
+              <span class="block-title">THIS WEEK</span>
+              <span class="block-tag">// 4 SESSIONS</span>
+            </div>
+            <div class="week-row">
+              <span class="wd">MON</span>
+              <span class="w-name">UPPER A <span class="w-badge">UA</span></span>
+              <span class="w-sets">18 SETS</span>
+              <span class="w-state s-done">DONE</span>
+            </div>
+            <div class="week-row">
+              <span class="wd">TUE</span>
+              <span class="w-name">LOWER A <span class="w-badge">LA</span></span>
+              <span class="w-sets">16 SETS</span>
+              <span class="w-state s-done">DONE</span>
+            </div>
+            <div class="week-row is-rest">
+              <span class="wd">WED</span>
+              <span class="w-name">REST DAY</span>
+              <span class="w-sets">&mdash;</span>
+              <span class="w-state s-rest">REST</span>
+            </div>
+            <div class="week-row">
+              <span class="wd">THU</span>
+              <span class="w-name">UPPER B <span class="w-badge">UB</span></span>
+              <span class="w-sets">17 SETS</span>
+              <span class="w-state s-today">TODAY</span>
+            </div>
+            <div class="week-row">
+              <span class="wd">FRI</span>
+              <span class="w-name">LOWER B <span class="w-badge">LB</span></span>
+              <span class="w-sets">16 SETS</span>
+              <span class="w-state s-up">UP NEXT</span>
+            </div>
+            <div class="week-row is-rest">
+              <span class="wd">SAT</span>
+              <span class="w-name">REST DAY</span>
+              <span class="w-sets">&mdash;</span>
+              <span class="w-state s-rest">REST</span>
+            </div>
+            <div class="week-row is-rest">
+              <span class="wd">SUN</span>
+              <span class="w-name">REST DAY</span>
+              <span class="w-sets">&mdash;</span>
+              <span class="w-state s-rest">REST</span>
+            </div>
+          </div>
+
+          <!-- RECENT SESSIONS -->
+          <div class="block reveal" style="animation-delay:.26s">
+            <div class="block-head">
+              <span class="block-title">RECENT SESSIONS</span>
+              <span class="block-tag">// LOG</span>
+            </div>
+            <div class="rec-row"><span class="rec-code">UA</span><span><span class="rec-name">Upper A</span><br><span class="rec-date">JUN 16 · MON</span></span><span class="rec-arrow">&rarr;</span></div>
+            <div class="rec-row"><span class="rec-code">LA</span><span><span class="rec-name">Lower A</span><br><span class="rec-date">JUN 15 · SUN</span></span><span class="rec-arrow">&rarr;</span></div>
+            <div class="rec-row"><span class="rec-code">UB</span><span><span class="rec-name">Upper B</span><br><span class="rec-date">JUN 11 · WED</span></span><span class="rec-arrow">&rarr;</span></div>
+            <div class="rec-row"><span class="rec-code">LB</span><span><span class="rec-name">Lower B</span><br><span class="rec-date">JUN 09 · MON</span></span><span class="rec-arrow">&rarr;</span></div>
+            <div class="rec-row"><span class="rec-code">UA</span><span><span class="rec-name">Upper A</span><br><span class="rec-date">JUN 08 · SUN</span></span><span class="rec-arrow">&rarr;</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MARQUEE -->
+      <div class="marquee reveal" style="animation-delay:.3s">
+        <span>NO DAYS OFF&nbsp;&nbsp;//&nbsp;&nbsp;PROGRESSIVE OVERLOAD&nbsp;&nbsp;//&nbsp;&nbsp;48,250 LB MOVED THIS WEEK&nbsp;&nbsp;//&nbsp;&nbsp;4 WEEK STREAK&nbsp;&nbsp;//&nbsp;&nbsp;EAT. LIFT. SLEEP. REPEAT.&nbsp;&nbsp;//&nbsp;&nbsp;137 SESSIONS LOGGED&nbsp;&nbsp;//&nbsp;&nbsp;UPPER/LOWER POWER BUILD&nbsp;&nbsp;//&nbsp;&nbsp;</span>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<script>
+  // Build June 2026 calendar (Mon-start). Jun 1 2026 = Monday.
+  (function(){
+    var done=[1,2,4,5,8,9,11,12,15,16];
+    var today=18;
+    var days=30; // June
+    var startOffset=0; // Monday
+    var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+    var cal=document.getElementById('cal');
+    dows.forEach(function(d){
+      var el=document.createElement('div');
+      el.className='cal-dow';el.textContent=d;cal.appendChild(el);
+    });
+    for(var i=0;i<startOffset;i++){
+      var e=document.createElement('div');e.className='cal-cell empty';cal.appendChild(e);
+    }
+    for(var d=1;d<=days;d++){
+      var c=document.createElement('div');
+      c.className='cal-cell';
+      if(d===today)c.className+=' today';
+      else if(done.indexOf(d)>-1)c.className+=' done';
+      c.textContent=d;
+      cal.appendChild(c);
+    }
+    // fill trailing to complete last row
+    var total=startOffset+days;
+    var trail=(7-(total%7))%7;
+    for(var t=0;t<trail;t++){
+      var e2=document.createElement('div');e2.className='cal-cell empty';cal.appendChild(e2);
+    }
+  })();
+</script>
+</body>
+</html>
