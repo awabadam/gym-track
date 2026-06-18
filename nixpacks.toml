@@ -1,0 +1,14 @@
+# Nixpacks build config (used by Dokploy).
+#
+# Build is auto-detected (npm ci -> npm run build). The start command runs DB
+# migrations and the idempotent catalog seed before booting the server, so a
+# deploy needs no manual database steps. If migration fails the server won't
+# start (the && chain stops), which is intentional.
+#
+# Required env vars (set these in Dokploy):
+#   DATABASE_URL         Neon/Postgres connection string
+#   BETTER_AUTH_SECRET   long random string (openssl rand -base64 48 / node crypto)
+#   BETTER_AUTH_URL      the public HTTPS URL the app is served on
+
+[start]
+cmd = "npm run db:migrate && npm run db:seed && npm run start"

@@ -37,12 +37,22 @@ async function seed() {
     { name: "Seated Leg Curl", muscleGroup: "hamstrings", type: "iso", notes: "Hamstrings." },
   ];
 
-  const insertedExercises = await db
-    .insert(exercises)
-    .values(exerciseData)
-    .returning();
+  // Idempotent: only insert catalog entries that don't already exist (matched
+  // by name). Safe to run on every deploy without duplicating exercises.
+  const existing = await db.select({ name: exercises.name }).from(exercises);
+  const existingNames = new Set(existing.map((e) => e.name));
+  const toInsert = exerciseData.filter((e) => !existingNames.has(e.name));
 
-  console.log(`Seeded: ${insertedExercises.length} exercises`);
+  if (toInsert.length > 0) {
+    await db.insert(exercises).values(toInsert);
+  }
+
+  console.log(
+    `Catalog: ${toInsert.length} added, ${existingNames.size} already present`
+  );
 }
 
-seed().catch(console.error);
+seed().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

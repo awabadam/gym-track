@@ -9,5 +9,12 @@ import { migrate } from "drizzle-orm/neon-http/migrator";
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
 
-await migrate(db, { migrationsFolder: "./db/migrations" });
-console.log("Migrations applied.");
+async function run() {
+  await migrate(db, { migrationsFolder: "./db/migrations" });
+  console.log("Migrations applied.");
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
