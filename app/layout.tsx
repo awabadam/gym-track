@@ -64,11 +64,9 @@ export default async function RootLayout({
       <body className="min-h-full bg-background text-foreground">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {!session ? (
-          // Signed-out users can only reach /sign-in and /sign-up (proxy.ts) —
-          // render those on a clean, centered screen without the app shell.
-          <main className="flex min-h-screen items-center justify-center p-4">
-            {children}
-          </main>
+          // Signed-out: render full-bleed with no app shell. Auth screens and
+          // landing pages own their own layout/centering.
+          children
         ) : (
           <>
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2">

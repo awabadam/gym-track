@@ -1,23 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-// Auth screens are the only routes reachable without a session.
-const PUBLIC_PATHS = ["/sign-in", "/sign-up"];
+// Auth screens: reachable without a session; signed-in users get bounced home.
+const AUTH_PATHS = ["/sign-in", "/sign-up"];
 
 // Next.js 16: Middleware is now "Proxy". Used here only for optimistic
 // cookie-presence redirects — real session validation happens in the data
 // layer via requireUserId().
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const isAuthPage = AUTH_PATHS.some((p) => pathname.startsWith(p));
+  // "/" is public: it serves the marketing landing page when signed out and the
+  // dashboard when signed in (the page itself branches on session).
+  const isPublic = isAuthPage || pathname === "/";
   const sessionCookie = getSessionCookie(request);
 
-  // Signed-out user hitting an app route → send to sign-in.
+  // Signed-out user hitting a protected route → send to sign-in.
   if (!sessionCookie && !isPublic) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
   // Signed-in user hitting an auth screen → send to the dashboard.
-  if (sessionCookie && isPublic) {
+  if (sessionCookie && isAuthPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
   return NextResponse.next();

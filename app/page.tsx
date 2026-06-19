@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { requireUserId } from "@/lib/auth";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { ensureUserSeeded } from "@/lib/onboarding";
+import { KineticLanding } from "@/components/landing/kinetic-landing";
 import { getActiveProgram } from "@/data/programs";
 import {
   getRecentSessions,
@@ -42,9 +44,16 @@ const WEEKDAYS = [
 
 type WeekdayStatus = "completed" | "today" | "upcoming" | "missed" | "rest";
 
-export default async function DashboardPage() {
+export default async function HomePage() {
+  // Signed-out visitors get the public marketing landing page; signed-in users
+  // get the dashboard below.
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return <KineticLanding />;
+  }
+
   // First sign-in: give the user their own starter program before loading data.
-  await ensureUserSeeded(await requireUserId());
+  await ensureUserSeeded(session.user.id);
 
   const now = new Date();
   const year = now.getFullYear();
