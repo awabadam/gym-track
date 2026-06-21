@@ -1,7 +1,15 @@
 import { db } from "@/db";
 import { exercises, sessionSets, sessions, programExercises, programDays, programs } from "@/db/schema";
-import { asc, desc, eq, and, count, max, sql, ilike, or } from "drizzle-orm";
+import { asc, desc, eq, and, count, max, sql, ilike, or, isNull } from "drizzle-orm";
 import { requireUserId } from "@/lib/auth";
+
+/**
+ * An exercise is visible to a user if it's a shared system exercise
+ * (userId IS NULL) or one they own. Used to scope every catalog read.
+ */
+function visibleTo(uid: string) {
+  return or(isNull(exercises.userId), eq(exercises.userId, uid));
+}
 
 export async function getExercises({
   search,
@@ -14,14 +22,15 @@ export async function getExercises({
   limit?: number;
   offset?: number;
 } = {}) {
-  const conditions = [];
+  const uid = await requireUserId();
+  const conditions = [visibleTo(uid)];
   if (search) {
     conditions.push(ilike(exercises.name, `%${search}%`));
   }
   if (muscleGroup) {
     conditions.push(eq(exercises.muscleGroup, muscleGroup));
   }
-  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const where = and(...conditions);
 
   const [rows, [{ total }]] = await Promise.all([
     db
@@ -37,25 +46,40 @@ export async function getExercises({
   return { rows, total };
 }
 
-/** Get all exercises (no pagination, for selects/dropdowns) */
+/** Get all visible exercises (no pagination, for selects/dropdowns) */
 export async function getAllExercises() {
-  return db.select().from(exercises).orderBy(asc(exercises.name));
+  const uid = await requireUserId();
+  return db
+    .select()
+    .from(exercises)
+    .where(visibleTo(uid))
+    .orderBy(asc(exercises.name));
 }
 
-/** Get distinct muscle groups */
+/** Get distinct muscle groups across the user's visible exercises */
 export async function getMuscleGroups(): Promise<string[]> {
+  const uid = await requireUserId();
   const rows = await db
     .selectDistinct({ muscleGroup: exercises.muscleGroup })
     .from(exercises)
-    .where(sql`${exercises.muscleGroup} is not null`)
+    .where(and(visibleTo(uid), sql`${exercises.muscleGroup} is not null`))
     .orderBy(asc(exercises.muscleGroup));
   return rows.map((r) => r.muscleGroup!);
 }
 
+/**
+ * Look up a single visible exercise. Returns null if it doesn't exist or
+ * belongs to another user. `isOwner` tells the UI whether to expose
+ * edit/delete (false for shared system exercises).
+ */
 export async function getExerciseById(id: string) {
-  return db.query.exercises.findFirst({
-    where: (e, { eq }) => eq(e.id, id),
+  const uid = await requireUserId();
+  const exercise = await db.query.exercises.findFirst({
+    where: (e, { eq: eqf, and: andf }) =>
+      andf(eqf(e.id, id), or(isNull(e.userId), eqf(e.userId, uid))),
   });
+  if (!exercise) return null;
+  return { ...exercise, isOwner: exercise.userId === uid };
 }
 
 /** Get all sets ever logged for an exercise, grouped by session */

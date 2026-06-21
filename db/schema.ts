@@ -2,6 +2,10 @@ import { pgTable, text, integer, real, timestamp, boolean, uuid, uniqueIndex } f
 
 export const exercises = pgTable("exercises", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // Owner of a custom exercise. NULL = a shared "system" exercise from the
+  // seeded catalog: visible to everyone and editable/deletable by no one.
+  // A non-NULL userId is a user's private exercise — only they see and manage it.
+  userId: text("user_id"),
   name: text("name").notNull(),
   muscleGroup: text("muscle_group"),
   type: text("type"),

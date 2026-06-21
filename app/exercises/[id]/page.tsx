@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getExerciseById, getExerciseHistory, getExerciseStats } from "@/data/exercises";
 import { formatDate } from "@/lib/format";
 import { bestEstimated1RM, totalVolume } from "@/lib/calculations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -83,7 +83,7 @@ export default async function ExerciseDetailPage({
             <p className="text-sm text-muted-foreground ml-10">{exercise.notes}</p>
           )}
         </div>
-        <ExerciseActions exercise={exercise} />
+        {exercise.isOwner && <ExerciseActions exercise={exercise} />}
       </div>
 
       {/* Stats cards */}

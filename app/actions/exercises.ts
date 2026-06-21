@@ -2,46 +2,51 @@
 
 import { db } from "@/db";
 import { exercises, programExercises, sessionSets } from "@/db/schema";
-import { eq, count } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { requireUserId } from "@/lib/auth";
+import { parseForm, exerciseSchema } from "@/lib/validation";
+
+/**
+ * Throws unless the exercise exists and is owned by the current user. Shared
+ * system exercises (userId IS NULL) are owned by no one and cannot be mutated.
+ */
+async function assertExerciseOwned(id: string, uid: string) {
+  const [owned] = await db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(and(eq(exercises.id, id), eq(exercises.userId, uid)))
+    .limit(1);
+  if (!owned) throw new Error("Not found");
+}
 
 export async function createExercise(formData: FormData) {
-  const name = formData.get("name") as string;
-  const muscleGroup = formData.get("muscleGroup") as string;
-  const type = formData.get("type") as string;
-  const notes = formData.get("notes") as string;
+  const uid = await requireUserId();
+  const data = parseForm(exerciseSchema, formData);
 
-  await db.insert(exercises).values({
-    name,
-    muscleGroup: muscleGroup || null,
-    type: type || null,
-    notes: notes || null,
-  });
+  await db.insert(exercises).values({ userId: uid, ...data });
 
   revalidatePath("/exercises");
 }
 
 export async function updateExercise(id: string, formData: FormData) {
-  const name = formData.get("name") as string;
-  const muscleGroup = formData.get("muscleGroup") as string;
-  const type = formData.get("type") as string;
-  const notes = formData.get("notes") as string;
+  const uid = await requireUserId();
+  await assertExerciseOwned(id, uid);
+  const data = parseForm(exerciseSchema, formData);
 
   await db
     .update(exercises)
-    .set({
-      name,
-      muscleGroup: muscleGroup || null,
-      type: type || null,
-      notes: notes || null,
-    })
-    .where(eq(exercises.id, id));
+    .set(data)
+    .where(and(eq(exercises.id, id), eq(exercises.userId, uid)));
 
   revalidatePath("/exercises");
   revalidatePath(`/exercises/${id}`);
 }
 
 export async function deleteExercise(id: string) {
+  const uid = await requireUserId();
+  await assertExerciseOwned(id, uid);
+
   // Check if exercise is used in any programs
   const [programUsage] = await db
     .select({ total: count() })
@@ -66,6 +71,6 @@ export async function deleteExercise(id: string) {
     );
   }
 
-  await db.delete(exercises).where(eq(exercises.id, id));
+  await db.delete(exercises).where(and(eq(exercises.id, id), eq(exercises.userId, uid)));
   revalidatePath("/exercises");
 }
