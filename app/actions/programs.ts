@@ -1,17 +1,19 @@
 "use server";
 
 import { db } from "@/db";
-import { programs, programDays, programExercises, exercises } from "@/db/schema";
+import { programs, programDays, programExercises } from "@/db/schema";
 import { eq, asc, and, gt, lt } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { slugify } from "@/lib/slug";
 import { requireUserId } from "@/lib/auth";
-
-function parseTargetRir(formData: FormData): number {
-  const n = parseInt(formData.get("targetRir") as string, 10);
-  return Number.isFinite(n) && n >= 0 && n <= 5 ? n : 2;
-}
+import {
+  parseForm,
+  programSchema,
+  programDaySchema,
+  programExerciseSchema,
+  programExerciseUpdateSchema,
+} from "@/lib/validation";
 
 /** Throws unless the program exists and belongs to the current user. */
 async function assertProgramOwned(programId: string, uid: string) {
@@ -25,21 +27,12 @@ async function assertProgramOwned(programId: string, uid: string) {
 
 export async function createProgram(formData: FormData) {
   const uid = await requireUserId();
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-
+  const { name, description, targetRir } = parseForm(programSchema, formData);
   const slug = slugify(name);
 
   const [program] = await db
     .insert(programs)
-    .values({
-      userId: uid,
-      name,
-      slug,
-      description: description || null,
-      isActive: false,
-      targetRir: parseTargetRir(formData),
-    })
+    .values({ userId: uid, name, slug, description, isActive: false, targetRir })
     .returning();
 
   revalidatePath("/programs");
@@ -49,18 +42,12 @@ export async function createProgram(formData: FormData) {
 export async function updateProgram(programId: string, formData: FormData) {
   const uid = await requireUserId();
   await assertProgramOwned(programId, uid);
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
+  const { name, description, targetRir } = parseForm(programSchema, formData);
   const slug = slugify(name);
 
   await db
     .update(programs)
-    .set({
-      name,
-      slug,
-      description: description || null,
-      targetRir: parseTargetRir(formData),
-    })
+    .set({ name, slug, description, targetRir })
     .where(and(eq(programs.id, programId), eq(programs.userId, uid)));
 
   revalidatePath(`/programs/${slug}`);
@@ -99,9 +86,7 @@ export async function addProgramDay(
 ) {
   const uid = await requireUserId();
   await assertProgramOwned(programId, uid);
-  const name = formData.get("name") as string;
-  const dayCode = formData.get("dayCode") as string;
-  const scheduledDay = formData.get("scheduledDay") as string;
+  const { name, dayCode, scheduledDay } = parseForm(programDaySchema, formData);
 
   // Get next sort order
   const existing = await db
@@ -116,7 +101,7 @@ export async function addProgramDay(
     programId,
     name,
     dayCode,
-    scheduledDay: scheduledDay || null,
+    scheduledDay,
     sortOrder: nextOrder,
   });
 
@@ -126,13 +111,11 @@ export async function addProgramDay(
 export async function updateProgramDay(dayId: string, programId: string, formData: FormData) {
   const uid = await requireUserId();
   await assertProgramOwned(programId, uid);
-  const name = formData.get("name") as string;
-  const dayCode = formData.get("dayCode") as string;
-  const scheduledDay = formData.get("scheduledDay") as string;
+  const { name, dayCode, scheduledDay } = parseForm(programDaySchema, formData);
 
   await db
     .update(programDays)
-    .set({ name, dayCode, scheduledDay: scheduledDay || null })
+    .set({ name, dayCode, scheduledDay })
     .where(eq(programDays.id, dayId));
 
   revalidatePath(`/programs/${programId}/edit`);
@@ -154,12 +137,8 @@ export async function addProgramExercise(
 ) {
   const uid = await requireUserId();
   await assertProgramOwned(programId, uid);
-  const exerciseId = formData.get("exerciseId") as string;
-  const sets = parseInt(formData.get("sets") as string);
-  const repRangeMin = parseInt(formData.get("repRangeMin") as string);
-  const repRangeMax = parseInt(formData.get("repRangeMax") as string);
-  const notes = formData.get("notes") as string;
-  const supersetGroup = formData.get("supersetGroup") as string;
+  const { exerciseId, sets, repRangeMin, repRangeMax, notes, supersetGroup } =
+    parseForm(programExerciseSchema, formData);
 
   const existing = await db
     .select({ sortOrder: programExercises.sortOrder })
@@ -176,8 +155,8 @@ export async function addProgramExercise(
     repRangeMin,
     repRangeMax,
     sortOrder: nextOrder,
-    notes: notes || null,
-    supersetGroup: supersetGroup || null,
+    notes,
+    supersetGroup,
   });
 
   revalidatePath(`/programs/${programId}/edit`);
@@ -190,21 +169,14 @@ export async function updateProgramExercise(
 ) {
   const uid = await requireUserId();
   await assertProgramOwned(programId, uid);
-  const sets = parseInt(formData.get("sets") as string);
-  const repRangeMin = parseInt(formData.get("repRangeMin") as string);
-  const repRangeMax = parseInt(formData.get("repRangeMax") as string);
-  const notes = formData.get("notes") as string;
-  const supersetGroup = formData.get("supersetGroup") as string;
+  const { sets, repRangeMin, repRangeMax, notes, supersetGroup } = parseForm(
+    programExerciseUpdateSchema,
+    formData
+  );
 
   await db
     .update(programExercises)
-    .set({
-      sets,
-      repRangeMin,
-      repRangeMax,
-      notes: notes || null,
-      supersetGroup: supersetGroup || null,
-    })
+    .set({ sets, repRangeMin, repRangeMax, notes, supersetGroup })
     .where(eq(programExercises.id, exerciseEntryId));
 
   revalidatePath(`/programs/${programId}/edit`);

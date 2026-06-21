@@ -1,11 +1,12 @@
 "use server";
 
 import { db } from "@/db";
-import { sessions, sessionSets } from "@/db/schema";
+import { sessions, sessionSets, programDays, programs } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
+import { parse, idSchema, startPastSessionSchema, setValuesSchema } from "@/lib/validation";
 
 /** Throws unless the session exists and belongs to the current user. */
 async function assertSessionOwned(sessionId: string, uid: string) {
@@ -17,8 +18,24 @@ async function assertSessionOwned(sessionId: string, uid: string) {
   if (!owned) throw new Error("Not found");
 }
 
+/**
+ * Throws unless the program day exists and belongs to a program owned by the
+ * current user — prevents starting a session against someone else's day.
+ */
+async function assertProgramDayOwned(programDayId: string, uid: string) {
+  const [owned] = await db
+    .select({ id: programDays.id })
+    .from(programDays)
+    .innerJoin(programs, eq(programDays.programId, programs.id))
+    .where(and(eq(programDays.id, programDayId), eq(programs.userId, uid)))
+    .limit(1);
+  if (!owned) throw new Error("Not found");
+}
+
 export async function startSession(programDayId: string) {
   const uid = await requireUserId();
+  programDayId = parse(idSchema, programDayId);
+  await assertProgramDayOwned(programDayId, uid);
   const today = new Date().toISOString().split("T")[0];
 
   const [session] = await db
@@ -36,11 +53,10 @@ export async function startSession(programDayId: string) {
 
 export async function startPastSession(programDayId: string, date: string) {
   const uid = await requireUserId();
-  const today = new Date().toISOString().split("T")[0];
+  ({ programDayId, date } = parse(startPastSessionSchema, { programDayId, date }));
+  await assertProgramDayOwned(programDayId, uid);
 
-  if (!programDayId || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error("Pick a workout day and a valid date.");
-  }
+  const today = new Date().toISOString().split("T")[0];
   if (date > today) {
     throw new Error("Date can’t be in the future.");
   }
@@ -95,6 +111,7 @@ export async function logSet(
 ) {
   const uid = await requireUserId();
   await assertSessionOwned(sessionId, uid);
+  ({ weight, reps, rir } = parse(setValuesSchema, { weight, reps, rir }));
 
   // Upsert by (session, exercise, set number) so re-saving a set edits it in
   // place instead of inserting a duplicate row.
@@ -132,6 +149,7 @@ export async function updateSet(
   rir: number | null
 ) {
   const uid = await requireUserId();
+  ({ weight, reps, rir } = parse(setValuesSchema, { weight, reps, rir }));
   // Only update the set if its session belongs to the current user.
   const [owned] = await db
     .select({ id: sessionSets.id })
