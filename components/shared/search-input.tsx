@@ -3,18 +3,22 @@
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function SearchInput({ placeholder = "Search..." }: { placeholder?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState(searchParams.get("q") ?? "");
+  const q = searchParams.get("q") ?? "";
+  const [value, setValue] = useState(q);
 
-  // Sync external changes (e.g. back/forward navigation)
-  useEffect(() => {
-    setValue(searchParams.get("q") ?? "");
-  }, [searchParams]);
+  // Sync external changes (e.g. back/forward navigation) during render
+  // instead of in an effect, so there's no extra commit + re-render.
+  const [prevQ, setPrevQ] = useState(q);
+  if (q !== prevQ) {
+    setPrevQ(q);
+    setValue(q);
+  }
 
   const submit = useCallback(
     (q: string) => {

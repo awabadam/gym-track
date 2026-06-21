@@ -69,7 +69,7 @@ export function AppSidebar() {
       <SidebarContent className="px-3 py-4">
         <SidebarGroup className="p-0">
           <div className="px-2 pb-3 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            // Navigate
+            {"// Navigate"}
           </div>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">

@@ -3,24 +3,28 @@
 import * as React from "react";
 import { Sun, Moon } from "lucide-react";
 
-export function ThemeToggle() {
-  const [theme, setTheme] = React.useState<"light" | "dark" | null>(null);
+function subscribe(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+  return () => observer.disconnect();
+}
 
-  React.useEffect(() => {
-    setTheme(
-      document.documentElement.classList.contains("dark") ? "dark" : "light"
-    );
-  }, []);
+function getSnapshot() {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+export function ThemeToggle() {
+  const theme = React.useSyncExternalStore(subscribe, getSnapshot, () => "light");
 
   function toggle() {
-    const next = document.documentElement.classList.contains("dark")
-      ? "light"
-      : "dark";
+    const next = theme === "dark" ? "light" : "dark";
     document.documentElement.classList.toggle("dark", next === "dark");
     try {
       localStorage.setItem("theme", next);
     } catch {}
-    setTheme(next);
   }
 
   return (
