@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { isCurrentUserAdmin } from "@/lib/auth";
 import { listRecommendedExercises } from "@/data/admin";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +13,6 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { Pagination } from "@/components/shared/pagination";
-import { AdminTabs } from "@/components/shared/admin-tabs";
 import { RecommendedExerciseDialog } from "@/components/shared/recommended-exercise-dialog";
 import { RecommendedExerciseActions } from "@/components/shared/recommended-exercise-actions";
 import { Dumbbell } from "lucide-react";
@@ -27,8 +24,6 @@ export default async function AdminExercisesPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  if (!(await isCurrentUserAdmin())) redirect("/");
-
   const { q, page: pageStr } = await searchParams;
   const page = Math.max(1, parseInt(pageStr ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
@@ -47,8 +42,6 @@ export default async function AdminExercisesPage({
         subtitle="The shared exercise catalog every user sees"
         action={<RecommendedExerciseDialog />}
       />
-
-      <AdminTabs />
 
       <Suspense>
         <SearchInput placeholder="Search recommended exercises..." />

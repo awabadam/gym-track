@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { isCurrentUserAdmin } from "@/lib/auth";
 import { listUsersForAdmin } from "@/data/admin";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +15,6 @@ import { SearchInput } from "@/components/shared/search-input";
 import { Pagination } from "@/components/shared/pagination";
 import { CreateUserDialog } from "@/components/shared/create-user-dialog";
 import { UserRowActions } from "@/components/shared/user-row-actions";
-import { AdminTabs } from "@/components/shared/admin-tabs";
 import { Users } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -42,8 +39,6 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  if (!(await isCurrentUserAdmin())) redirect("/");
-
   const { q, page: pageStr } = await searchParams;
   const page = Math.max(1, parseInt(pageStr ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
@@ -62,8 +57,6 @@ export default async function AdminPage({
         subtitle="Manage accounts, roles & access"
         action={<CreateUserDialog />}
       />
-
-      <AdminTabs />
 
       <Suspense>
         <SearchInput placeholder="Search by email..." />

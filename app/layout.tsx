@@ -1,12 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Space_Mono } from "next/font/google";
-import { headers } from "next/headers";
-import { auth, userIsAdmin } from "@/lib/auth";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/shared/app-sidebar";
-import { AppHeader } from "@/components/shared/app-header";
-import { BottomNav } from "@/components/shared/bottom-nav";
 import "./globals.css";
 
 const archivoBlack = Archivo_Black({
@@ -48,13 +41,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth.api.getSession({ headers: await headers() });
-
   return (
     <html
       lang="en"
@@ -63,29 +54,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full bg-background text-foreground">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {!session ? (
-          // Signed-out: render full-bleed with no app shell. Auth screens and
-          // landing pages own their own layout/centering.
-          children
-        ) : (
-          <>
-            <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2">
-              Skip to content
-            </a>
-            <TooltipProvider>
-              <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
-                <AppSidebar isAdmin={userIsAdmin(session.user)} />
-                <SidebarInset>
-                  <AppHeader />
-                  <main id="main-content" className="w-full flex-1 p-4 pb-24 md:p-7 md:pb-7">
-                    {children}
-                  </main>
-                </SidebarInset>
-              </SidebarProvider>
-              <BottomNav />
-            </TooltipProvider>
-          </>
-        )}
+        {children}
       </body>
     </html>
   );
