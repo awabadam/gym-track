@@ -5,8 +5,9 @@ import { programs, programDays, programExercises } from "@/db/schema";
 import { eq, asc, and, gt, lt } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { slugify } from "@/lib/slug";
-import { requireUserId } from "@/lib/auth";
+import { auth, requireUserId, userIsAdmin } from "@/lib/auth";
 import {
   parseForm,
   programSchema,
@@ -23,6 +24,34 @@ async function assertProgramOwned(programId: string, uid: string) {
     .where(and(eq(programs.id, programId), eq(programs.userId, uid)))
     .limit(1);
   if (!owned) throw new Error("Not found");
+}
+
+/**
+ * Authorizes editing a program's contents (days/exercises): the owner can edit
+ * their own program, and an admin can edit a recommended template (userId IS
+ * NULL). Lets the same builder actions/components serve both contexts.
+ */
+async function assertProgramManageable(programId: string): Promise<void> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const user = session?.user;
+  if (!user) throw new Error("Unauthorized: no signed-in user");
+
+  const [program] = await db
+    .select({ userId: programs.userId })
+    .from(programs)
+    .where(eq(programs.id, programId))
+    .limit(1);
+  if (!program) throw new Error("Not found");
+
+  const isOwner = program.userId === user.id;
+  const isManagedTemplate = program.userId === null && userIsAdmin(user);
+  if (!isOwner && !isManagedTemplate) throw new Error("Not found");
+}
+
+/** Revalidate both the user-facing and admin builder routes for a program. */
+function revalidateBuilder(programId: string) {
+  revalidatePath(`/programs/${programId}/edit`);
+  revalidatePath(`/admin/programs/${programId}/edit`);
 }
 
 export async function createProgram(formData: FormData) {
@@ -84,8 +113,7 @@ export async function addProgramDay(
   programId: string,
   formData: FormData
 ) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   const { name, dayCode, scheduledDay } = parseForm(programDaySchema, formData);
 
   // Get next sort order
@@ -105,12 +133,11 @@ export async function addProgramDay(
     sortOrder: nextOrder,
   });
 
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function updateProgramDay(dayId: string, programId: string, formData: FormData) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   const { name, dayCode, scheduledDay } = parseForm(programDaySchema, formData);
 
   await db
@@ -118,16 +145,15 @@ export async function updateProgramDay(dayId: string, programId: string, formDat
     .set({ name, dayCode, scheduledDay })
     .where(eq(programDays.id, dayId));
 
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function deleteProgramDay(dayId: string, programId: string) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   await db
     .delete(programDays)
     .where(and(eq(programDays.id, dayId), eq(programDays.programId, programId)));
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function addProgramExercise(
@@ -135,8 +161,7 @@ export async function addProgramExercise(
   programId: string,
   formData: FormData
 ) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   const { exerciseId, sets, repRangeMin, repRangeMax, notes, supersetGroup } =
     parseForm(programExerciseSchema, formData);
 
@@ -159,7 +184,7 @@ export async function addProgramExercise(
     supersetGroup,
   });
 
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function updateProgramExercise(
@@ -167,8 +192,7 @@ export async function updateProgramExercise(
   programId: string,
   formData: FormData
 ) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   const { sets, repRangeMin, repRangeMax, notes, supersetGroup } = parseForm(
     programExerciseUpdateSchema,
     formData
@@ -179,20 +203,19 @@ export async function updateProgramExercise(
     .set({ sets, repRangeMin, repRangeMax, notes, supersetGroup })
     .where(eq(programExercises.id, exerciseEntryId));
 
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function deleteProgramExercise(
   exerciseEntryId: string,
   programId: string
 ) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   await db
     .delete(programExercises)
     .where(eq(programExercises.id, exerciseEntryId));
 
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function reorderProgramExercise(
@@ -200,8 +223,7 @@ export async function reorderProgramExercise(
   programId: string,
   direction: "up" | "down"
 ) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   const entry = await db.query.programExercises.findFirst({
     where: (pe, { eq: e }) => e(pe.id, exerciseEntryId),
   });
@@ -239,12 +261,11 @@ export async function reorderProgramExercise(
     .set({ sortOrder: entry.sortOrder })
     .where(eq(programExercises.id, neighbor.id));
 
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function duplicateProgramDay(dayId: string, programId: string) {
-  const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
+  await assertProgramManageable(programId);
   const day = await db.query.programDays.findFirst({
     where: (d, { eq: e }) => e(d.id, dayId),
   });
@@ -291,7 +312,7 @@ export async function duplicateProgramDay(dayId: string, programId: string) {
     );
   }
 
-  revalidatePath(`/programs/${programId}/edit`);
+  revalidateBuilder(programId);
 }
 
 export async function duplicateProgram(programId: string) {

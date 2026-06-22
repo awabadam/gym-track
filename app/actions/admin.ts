@@ -5,13 +5,15 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { and, count, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { exercises, programExercises, sessionSets } from "@/db/schema";
+import { exercises, programs, programExercises, sessionSets } from "@/db/schema";
+import { slugify } from "@/lib/slug";
 import { auth, requireAdmin } from "@/lib/auth";
 import {
   parse,
   parseForm,
   idSchema,
   exerciseSchema,
+  programSchema,
   createUserSchema,
   setRoleSchema,
   setPasswordSchema,
@@ -204,4 +206,79 @@ export async function deleteRecommendedExercise(id: string) {
 
   revalidatePath("/admin/exercises");
   revalidatePath("/exercises");
+}
+
+// --- recommended programs (templates: programs.userId IS NULL) ----------------
+
+/** A slug unique among recommended templates; appends -2, -3, … on collision. */
+async function uniqueTemplateSlug(
+  name: string,
+  excludeId?: string,
+): Promise<string> {
+  const base = slugify(name) || "program";
+  let slug = base;
+  for (let n = 2; ; n++) {
+    const rows = await db
+      .select({ id: programs.id })
+      .from(programs)
+      .where(and(isNull(programs.userId), eq(programs.slug, slug)));
+    const taken = rows.some((r) => r.id !== excludeId);
+    if (!taken) return slug;
+    slug = `${base}-${n}`;
+  }
+}
+
+/** Throws unless the program exists and is a recommended template. */
+async function assertTemplate(id: string) {
+  const [row] = await db
+    .select({ id: programs.id })
+    .from(programs)
+    .where(and(eq(programs.id, id), isNull(programs.userId)))
+    .limit(1);
+  if (!row) throw new Error("Not found");
+}
+
+export async function createRecommendedProgram(formData: FormData) {
+  await requireAdmin();
+  const { name, description, targetRir } = parseForm(programSchema, formData);
+  const slug = await uniqueTemplateSlug(name);
+
+  const [program] = await db
+    .insert(programs)
+    .values({ userId: null, name, slug, description, isActive: false, targetRir })
+    .returning();
+
+  revalidatePath("/admin/programs");
+  redirect(`/admin/programs/${program.id}/edit`);
+}
+
+export async function updateRecommendedProgram(id: string, formData: FormData) {
+  await requireAdmin();
+  const programId = parse(idSchema, id);
+  await assertTemplate(programId);
+  const { name, description, targetRir } = parseForm(programSchema, formData);
+  const slug = await uniqueTemplateSlug(name, programId);
+
+  await db
+    .update(programs)
+    .set({ name, slug, description, targetRir })
+    .where(and(eq(programs.id, programId), isNull(programs.userId)));
+
+  revalidatePath("/admin/programs");
+  revalidatePath(`/admin/programs/${programId}/edit`);
+}
+
+export async function deleteRecommendedProgram(id: string) {
+  await requireAdmin();
+  const programId = parse(idSchema, id);
+  await assertTemplate(programId);
+
+  // Days + exercises cascade via FK onDelete. Templates aren't referenced by
+  // user sessions (users clone them), so there's no logged history to orphan.
+  await db
+    .delete(programs)
+    .where(and(eq(programs.id, programId), isNull(programs.userId)));
+
+  revalidatePath("/admin/programs");
+  redirect("/admin/programs");
 }

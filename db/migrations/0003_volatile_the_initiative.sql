@@ -1,0 +1,2 @@
+ALTER TABLE "programs" ALTER COLUMN "user_id" DROP NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "programs_template_slug_idx" ON "programs" USING btree ("slug") WHERE "programs"."user_id" is null;

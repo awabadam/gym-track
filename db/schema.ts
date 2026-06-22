@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { pgTable, text, integer, real, timestamp, boolean, uuid, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const exercises = pgTable("exercises", {
@@ -17,8 +18,10 @@ export const programs = pgTable(
   "programs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    // Clerk user id of the owner. Programs (and their days/exercises) are private per user.
-    userId: text("user_id").notNull(),
+    // Owner of the program. NULL = a shared "recommended" program template,
+    // managed by admins and surfaced to all users (parallel to exercises.userId).
+    // A non-NULL userId is a user's private program.
+    userId: text("user_id"),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),
@@ -26,9 +29,16 @@ export const programs = pgTable(
     targetRir: integer("target_rir").notNull().default(2),
     createdAt: timestamp("created_at").defaultNow(),
   },
-  // Slugs are unique per user, not globally — two users can each have a
-  // "push-pull-legs" program without colliding.
-  (t) => [uniqueIndex("programs_user_slug_idx").on(t.userId, t.slug)]
+  (t) => [
+    // Slugs are unique per user, not globally — two users can each have a
+    // "push-pull-legs" program without colliding.
+    uniqueIndex("programs_user_slug_idx").on(t.userId, t.slug),
+    // Recommended templates (userId IS NULL) must have globally unique slugs so
+    // /admin/programs routing by slug is unambiguous.
+    uniqueIndex("programs_template_slug_idx")
+      .on(t.slug)
+      .where(sql`${t.userId} is null`),
+  ]
 );
 
 export const programDays = pgTable("program_days", {

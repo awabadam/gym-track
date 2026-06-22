@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/admin", label: "Users" },
-  { href: "/admin/exercises", label: "Recommended" },
+  { href: "/admin/exercises", label: "Exercises" },
+  { href: "/admin/programs", label: "Programs" },
 ];
 
 /** Section nav for the admin console chrome (lives in the dark admin bar). */
