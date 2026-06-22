@@ -1,9 +1,18 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import * as authSchema from "@/db/auth-schema";
+
+// User ids that are always treated as admins, regardless of their stored role.
+// Set BETTER_AUTH_ADMIN_USER_IDS to a comma-separated list to bootstrap/guarantee
+// access (e.g. the owner) even before any role has been written to the DB.
+const adminUserIds = (process.env.BETTER_AUTH_ADMIN_USER_IDS ?? "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -16,8 +25,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  // Lets sign-in/sign-up server actions set the session cookie.
-  plugins: [nextCookies()],
+  plugins: [
+    // Adds roles + user management (list/create/delete users, set role,
+    // ban/unban, set password, impersonate). New users default to "user".
+    admin({ adminUserIds }),
+    // nextCookies() must stay last so it can set cookies for the plugins above.
+    nextCookies(),
+  ],
 });
 
 /**
@@ -31,4 +45,22 @@ export async function requireUserId(): Promise<string> {
     throw new Error("Unauthorized: no signed-in user");
   }
   return session.user.id;
+}
+
+/**
+ * Returns the current user's id, throwing unless they are an admin.
+ * Admin = role "admin" (set via the admin plugin) or listed in
+ * BETTER_AUTH_ADMIN_USER_IDS. Use to gate admin-only data/actions.
+ */
+export async function requireAdmin(): Promise<string> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const user = session?.user;
+  if (!user) {
+    throw new Error("Unauthorized: no signed-in user");
+  }
+  const isAdmin = user.role === "admin" || adminUserIds.includes(user.id);
+  if (!isAdmin) {
+    throw new Error("Forbidden: admin access required");
+  }
+  return user.id;
 }

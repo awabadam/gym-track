@@ -15,6 +15,13 @@
       "when": 1782029258611,
       "tag": "0001_add_exercise_user_id",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782116027655,
+      "tag": "0002_secret_siren",
+      "breakpoints": true
     }
   ]
 }
