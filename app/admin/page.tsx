@@ -17,6 +17,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { Pagination } from "@/components/shared/pagination";
 import { CreateUserDialog } from "@/components/shared/create-user-dialog";
 import { UserRowActions } from "@/components/shared/user-row-actions";
+import { AdminTabs } from "@/components/shared/admin-tabs";
 import { Users } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -61,6 +62,8 @@ export default async function AdminPage({
         subtitle="Manage accounts, roles & access"
         action={<CreateUserDialog />}
       />
+
+      <AdminTabs />
 
       <Suspense>
         <SearchInput placeholder="Search by email..." />

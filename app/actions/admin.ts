@@ -3,10 +3,15 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { and, count, eq, isNull } from "drizzle-orm";
+import { db } from "@/db";
+import { exercises, programExercises, sessionSets } from "@/db/schema";
 import { auth, requireAdmin } from "@/lib/auth";
 import {
   parse,
   parseForm,
+  idSchema,
+  exerciseSchema,
   createUserSchema,
   setRoleSchema,
   setPasswordSchema,
@@ -126,4 +131,77 @@ export async function impersonateUser(id: string) {
 export async function stopImpersonating() {
   await auth.api.stopImpersonating({ headers: await headers() });
   redirect("/admin");
+}
+
+// --- recommended exercises (the shared userId IS NULL catalog) ----------------
+
+/** Throws unless the exercise exists and is a shared/recommended one. */
+async function assertRecommended(id: string) {
+  const [row] = await db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(and(eq(exercises.id, id), isNull(exercises.userId)))
+    .limit(1);
+  if (!row) throw new Error("Not found");
+}
+
+export async function createRecommendedExercise(formData: FormData) {
+  await requireAdmin();
+  const data = parseForm(exerciseSchema, formData);
+
+  // userId NULL = shared/recommended, visible to all, owned by no one.
+  await db.insert(exercises).values({ userId: null, ...data });
+
+  revalidatePath("/admin/exercises");
+  revalidatePath("/exercises");
+}
+
+export async function updateRecommendedExercise(id: string, formData: FormData) {
+  await requireAdmin();
+  const exerciseId = parse(idSchema, id);
+  await assertRecommended(exerciseId);
+  const data = parseForm(exerciseSchema, formData);
+
+  await db
+    .update(exercises)
+    .set(data)
+    .where(and(eq(exercises.id, exerciseId), isNull(exercises.userId)));
+
+  revalidatePath("/admin/exercises");
+  revalidatePath("/exercises");
+  revalidatePath(`/exercises/${exerciseId}`);
+}
+
+export async function deleteRecommendedExercise(id: string) {
+  await requireAdmin();
+  const exerciseId = parse(idSchema, id);
+  await assertRecommended(exerciseId);
+
+  // Don't orphan history: block deletion while in use, same as user exercises.
+  const [programUsage] = await db
+    .select({ total: count() })
+    .from(programExercises)
+    .where(eq(programExercises.exerciseId, exerciseId));
+  if (programUsage.total > 0) {
+    throw new Error(
+      `Cannot delete: used in ${programUsage.total} program(s) across users.`,
+    );
+  }
+
+  const [setUsage] = await db
+    .select({ total: count() })
+    .from(sessionSets)
+    .where(eq(sessionSets.exerciseId, exerciseId));
+  if (setUsage.total > 0) {
+    throw new Error(
+      `Cannot delete: has ${setUsage.total} logged set(s) across users.`,
+    );
+  }
+
+  await db
+    .delete(exercises)
+    .where(and(eq(exercises.id, exerciseId), isNull(exercises.userId)));
+
+  revalidatePath("/admin/exercises");
+  revalidatePath("/exercises");
 }

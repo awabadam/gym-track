@@ -1,4 +1,7 @@
 import { headers } from "next/headers";
+import { and, asc, count, ilike, isNull } from "drizzle-orm";
+import { db } from "@/db";
+import { exercises } from "@/db/schema";
 import { auth, requireAdmin } from "@/lib/auth";
 
 export type AdminUser = {
@@ -48,4 +51,36 @@ export async function listUsersForAdmin(opts: {
     total: typeof res.total === "number" ? res.total : res.users.length,
     currentUserId,
   };
+}
+
+/**
+ * Lists the shared "recommended" exercises (exercises.userId IS NULL) — the
+ * catalog surfaced to every user. Admin-only; regular users can't mutate these.
+ */
+export async function listRecommendedExercises({
+  search,
+  limit = 20,
+  offset = 0,
+}: {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  await requireAdmin();
+  const conditions = [isNull(exercises.userId)];
+  if (search) conditions.push(ilike(exercises.name, `%${search}%`));
+  const where = and(...conditions);
+
+  const [rows, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(exercises)
+      .where(where)
+      .orderBy(asc(exercises.name))
+      .limit(limit)
+      .offset(offset),
+    db.select({ total: count() }).from(exercises).where(where),
+  ]);
+
+  return { rows, total };
 }
