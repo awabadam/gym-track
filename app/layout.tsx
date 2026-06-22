@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Space_Mono } from "next/font/google";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth, userIsAdmin } from "@/lib/auth";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/shared/app-sidebar";
@@ -74,7 +74,7 @@ export default async function RootLayout({
             </a>
             <TooltipProvider>
               <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
-                <AppSidebar />
+                <AppSidebar isAdmin={userIsAdmin(session.user)} />
                 <SidebarInset>
                   <AppHeader />
                   <main id="main-content" className="w-full flex-1 p-4 pb-24 md:p-7 md:pb-7">

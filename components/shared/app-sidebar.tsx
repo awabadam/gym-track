@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Library,
   Play,
+  Shield,
 } from "lucide-react";
 
 const navItems = [
@@ -32,9 +33,13 @@ const navItems = [
   { title: "Exercises", href: "/exercises", icon: Library },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+
+  const items = isAdmin
+    ? [...navItems, { title: "Admin", href: "/admin", icon: Shield }]
+    : navItems;
 
   // On mobile we use BottomNav instead — don't render the sidebar at all
   if (isMobile) return null;
@@ -73,7 +78,7 @@ export function AppSidebar() {
           </div>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
-              {navItems.map((item, i) => {
+              {items.map((item, i) => {
                 const isActive =
                   item.href === "/"
                     ? pathname === "/"

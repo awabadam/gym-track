@@ -112,6 +112,34 @@ export const setValuesSchema = z.object({
   rir: z.number().int().min(0).max(50).nullable(),
 });
 
+// --- admin / user management --------------------------------------------------
+
+// The roles the admin UI can assign. Mirrors the admin plugin config in
+// lib/auth.ts (defaultRole "user", adminRoles ["admin"]).
+export const USER_ROLES = ["user", "admin"] as const;
+
+const password = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(128, "Password is too long");
+
+export const createUserSchema = z.object({
+  name: name("Name"),
+  email: z.email("Enter a valid email"),
+  password,
+  role: z.enum(USER_ROLES),
+});
+
+export const setRoleSchema = z.object({ role: z.enum(USER_ROLES) });
+
+export const setPasswordSchema = z.object({ newPassword: password });
+
+export const banUserSchema = z.object({
+  reason: optionalText(500),
+  // 0 / empty → permanent ban (no expiry).
+  expiresInDays: z.coerce.number().int().min(0).max(3650).catch(0),
+});
+
 // --- runners ------------------------------------------------------------------
 
 function fail(error: z.ZodError): never {

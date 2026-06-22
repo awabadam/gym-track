@@ -48,9 +48,19 @@ export async function requireUserId(): Promise<string> {
 }
 
 /**
+ * Pure admin check: admin = role "admin" (set via the admin plugin) or listed
+ * in BETTER_AUTH_ADMIN_USER_IDS. Use with a session user object.
+ */
+export function userIsAdmin(user: {
+  id: string;
+  role?: string | null;
+}): boolean {
+  return user.role === "admin" || adminUserIds.includes(user.id);
+}
+
+/**
  * Returns the current user's id, throwing unless they are an admin.
- * Admin = role "admin" (set via the admin plugin) or listed in
- * BETTER_AUTH_ADMIN_USER_IDS. Use to gate admin-only data/actions.
+ * Use to gate admin-only data/actions (mutations and reads).
  */
 export async function requireAdmin(): Promise<string> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -58,9 +68,14 @@ export async function requireAdmin(): Promise<string> {
   if (!user) {
     throw new Error("Unauthorized: no signed-in user");
   }
-  const isAdmin = user.role === "admin" || adminUserIds.includes(user.id);
-  if (!isAdmin) {
+  if (!userIsAdmin(user)) {
     throw new Error("Forbidden: admin access required");
   }
   return user.id;
+}
+
+/** Non-throwing admin check for the current request (nav, soft redirects). */
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  return session?.user ? userIsAdmin(session.user) : false;
 }
