@@ -90,8 +90,7 @@ export function getProgression(
  * Returns the number of consecutive sessions at the same weight+reps.
  */
 export function getStallCount(
-  sessionHistory: { sets: SetData[] }[],
-  config: ExerciseConfig
+  sessionHistory: { sets: SetData[] }[]
 ): number {
   if (sessionHistory.length < 2) return 0;
 

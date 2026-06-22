@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { programs, programDays, programExercises, exercises } from "@/db/schema";
-import { eq, asc, and } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { requireUserId } from "@/lib/auth";
 
 export async function getPrograms() {

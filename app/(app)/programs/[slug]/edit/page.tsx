@@ -6,7 +6,6 @@ import {
   updateProgram,
   deleteProgram,
   setActiveProgram,
-  addProgramDay,
   duplicateProgramDay,
 } from "@/app/actions/programs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

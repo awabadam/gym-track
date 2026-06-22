@@ -7,7 +7,7 @@ import {
   exercises,
   programExercises,
 } from "@/db/schema";
-import { eq, desc, asc, and, sql, count, gte, lte, max, inArray } from "drizzle-orm";
+import { eq, desc, asc, and, ne, count, gte, lte, max, inArray } from "drizzle-orm";
 import { requireUserId } from "@/lib/auth";
 
 export async function getRecentSessions(limit = 10) {
@@ -102,7 +102,10 @@ export async function getLastSessionSets(
         eq(sessions.userId, uid),
         eq(sessionSets.exerciseId, exerciseId),
         eq(sessions.programDayId, programDayId),
-        eq(sessions.status, "completed")
+        eq(sessions.status, "completed"),
+        // Exclude the session being viewed so its own sets don't count as the
+        // "last" session (matters when viewing a completed session's detail).
+        excludeSessionId ? ne(sessions.id, excludeSessionId) : undefined
       )
     )
     .orderBy(desc(sessions.date), asc(sessionSets.setNumber));
