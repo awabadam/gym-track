@@ -30,9 +30,12 @@ Three groups: `components/shared/` (app-specific), `components/ui/` (shadcn prim
 ### Navigation & layout
 | Component | Client | Role |
 |-----------|:------:|------|
-| `app-sidebar.tsx` | ✓ | Desktop sidebar nav with active state + "Start Workout" CTA (hidden on mobile via `useIsMobile`) |
+| `nav-sidebar.tsx` | ✓ | Reusable brutalist sidebar shell (brand, nav items with active state, optional footer CTA); hidden on mobile via `useIsMobile`. Shared by the app and admin sidebars |
+| `app-sidebar.tsx` | ✓ | App nav config over `NavSidebar` — Dashboard…Exercises (+ Admin link when `isAdmin`), "Start Workout" footer |
+| `admin-sidebar.tsx` | ✓ | Admin nav config over `NavSidebar` — Users / Exercises / Programs, "Exit to app" footer |
+| `admin-nav.tsx` | ✓ | Horizontal admin section nav (Users/Exercises/Programs) used in the admin header on mobile |
 | `bottom-nav.tsx` | ✓ | Mobile-only bottom nav; centered Dumbbell CTA to `/workout` |
-| `app-header.tsx` | Server | Sticky header: logo (mobile), active-program label (desktop), theme toggle, resume/start button, sign-out. Reads active program + in-progress session |
+| `app-header.tsx` | Server | Sticky header: logo (mobile), active-program label (desktop), Admin shield (admins), theme toggle, resume/start, sign-out. Reads session + active program + in-progress session; shows an impersonation banner + Stop when impersonating |
 | `page-header.tsx` | Server | Brutalist page header (eyebrow chip, title, subtitle, right-aligned action) |
 | `block.tsx` | Server | Brutalist card container (inverted header bar, optional tag chip, offset shadow) — the dashboard's workhorse |
 
@@ -51,6 +54,17 @@ Three groups: `components/shared/` (app-specific), `components/ui/` (shadcn prim
 | `pagination.tsx` | ✓ | Prev/next page nav via query param |
 | `theme-toggle.tsx` | ✓ | Light/dark toggle (localStorage + DOM class) |
 | `sign-out-button.tsx` | ✓ | Calls `signOut()` → `/sign-in` |
+
+### Admin console
+| Component | Client | Role |
+|-----------|:------:|------|
+| `create-user-dialog.tsx` | ✓ | Create a user (name/email/password/role) → `createUser` |
+| `user-row-actions.tsx` | ✓ | Per-user menu: promote/demote, impersonate, set password, ban/unban, remove → the `admin.ts` user actions; destructive actions disabled on your own row |
+| `recommended-exercise-dialog.tsx` | ✓ | Create a recommended (shared) exercise → `createRecommendedExercise` |
+| `recommended-exercise-actions.tsx` | ✓ | Edit/delete a recommended exercise → `updateRecommendedExercise`, `deleteRecommendedExercise` (guarded) |
+| `create-recommended-program-dialog.tsx` | ✓ | Create a program template → `createRecommendedProgram` (redirects to the builder) |
+
+The recommended-program **builder** reuses the program-building components above (`add-day-form`, `add-exercise-form`, `exercise-row-actions`, `day-actions`); they call the shared `programs.ts` actions, which authorize admins on templates via `assertProgramManageable` (see [Data Layer](data-layer.md#ownership-checks)).
 
 ## `components/auth/`
 - `auth-form.tsx` — **Client** — email sign-in/up form; calls `signIn.email()` / `signUp.email()` from the [auth client](auth.md); shows errors; redirects to `/` on success.

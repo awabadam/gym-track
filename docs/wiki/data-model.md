@@ -31,7 +31,7 @@ exercises  ← system rows (userId NULL) shared read-only; custom rows owned per
 
 The movement library, with a **copy-on-write ownership model** (added in the production-hardening pass, migration `0001`):
 
-- **`userId IS NULL`** — a **system/recommended** exercise from the seeded catalog: visible to everyone, editable/deletable by no one through the app. (These are the "recommended" exercises a future questionnaire will surface; managing them will need an admin path — see the [plan](../production-readiness-plan.md).)
+- **`userId IS NULL`** — a **system/recommended** exercise from the seeded catalog: visible to everyone, not editable by regular users. These are curated through the [admin console](routes.md) (`/admin/exercises`); a future questionnaire will surface them.
 - **`userId = <someone>`** — a user's **private custom** exercise: only that user sees and manages it.
 
 Seeded system exercises are created on deploy (see [Deployment](deployment.md#seeding)). All catalog reads are scoped to "visible to me" (`userId IS NULL OR userId = me`) — see [Data Layer](data-layer.md).
@@ -46,14 +46,14 @@ Seeded system exercises are created on deploy (see [Deployment](deployment.md#se
 | `notes` | text | |
 | `createdAt` | timestamp | `defaultNow()` |
 
-### `programs` (per-user)
+### `programs` (per-user, or a shared template)
 
-A training blueprint owned by one user.
+A training blueprint. Owned by one user, **or** a shared "recommended" template when `userId IS NULL` (managed via the admin console, mirroring the exercise catalog).
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | uuid PK | |
-| `userId` | text, not null | Owner. (Comment in code says "Clerk" — it's actually the Better Auth user id; the app migrated auth providers.) |
+| `userId` | text, **nullable** | Owner's Better Auth user id; `NULL` = a shared recommended template. (Code comment says "Clerk" — it's the Better Auth id; the app migrated providers.) |
 | `name` | text, not null | |
 | `slug` | text, not null | URL identifier, generated via [`lib/slug.ts`](data-layer.md) |
 | `description` | text | |
@@ -61,7 +61,7 @@ A training blueprint owned by one user.
 | `targetRir` | integer, not null, default 2 | Reps-in-reserve target feeding the [progression engine](progression-engine.md) |
 | `createdAt` | timestamp | |
 
-**Unique index `programs_user_slug_idx` on `(userId, slug)`** — slugs are unique *per user*, so two users can both have a `push-pull-legs`.
+**Unique index `programs_user_slug_idx` on `(userId, slug)`** — slugs are unique *per user*, so two users can both have a `push-pull-legs`. A second **partial unique index `programs_template_slug_idx` on `(slug) WHERE userId IS NULL`** keeps recommended-template slugs globally unique.
 
 ### `program_days`
 
@@ -126,8 +126,8 @@ One logged set inside a session.
 
 Standard Better Auth Postgres schema (`db/auth-schema.ts`). See [Auth](auth.md) for how they're used.
 
-- **`user`** — `id` (text PK), `name`, `email` (unique), `emailVerified`, `image`, timestamps.
-- **`session`** — `id`, `expiresAt`, `token` (unique), `ipAddress`, `userAgent`, `userId` → `user.id` (cascade). Indexed on `userId`.
+- **`user`** — `id` (text PK), `name`, `email` (unique), `emailVerified`, `image`, timestamps, plus the admin-plugin columns `role` (nullable; `NULL`/`"user"` vs `"admin"`), `banned`, `banReason`, `banExpires` (migration `0002`).
+- **`session`** — `id`, `expiresAt`, `token` (unique), `ipAddress`, `userAgent`, `impersonatedBy` (admin-plugin), `userId` → `user.id` (cascade). Indexed on `userId`.
 - **`account`** — credential/provider rows; holds the hashed `password` for email+password. `userId` → `user.id` (cascade). Indexed on `userId`.
 - **`verification`** — token store for verification flows. Indexed on `identifier`.
 

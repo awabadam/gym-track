@@ -10,7 +10,7 @@ This wiki documents how the app actually works today. Start here and follow the 
 |------|----------------|
 | [Architecture](architecture.md) | Tech stack, the big picture, request/render flow |
 | [Data Model](data-model.md) | Every table, the relationships, and why they're shaped that way |
-| [Auth & Multi-Tenancy](auth.md) | Better Auth, the proxy (middleware), and how data is scoped per user |
+| [Auth & Multi-Tenancy](auth.md) | Better Auth, admin roles, the proxy (middleware), and how data is scoped per user |
 | [Data Layer](data-layer.md) | The `data/` read functions and `app/actions/` write functions |
 | [Progression Engine](progression-engine.md) | Double progression, estimated 1RM, stall detection |
 | [Routes & Pages](routes.md) | Every URL, what it renders, what it reads and mutates |
@@ -19,7 +19,7 @@ This wiki documents how the app actually works today. Start here and follow the 
 | [Deployment & Ops](deployment.md) | Nixpacks/Dokploy, env vars, migrations, seeding |
 | [Local Development](development.md) | Getting it running, scripts, the DB workflow |
 
-> **Production hardening in progress.** Tier-1 work (exercise ownership, action input validation, error boundaries) is done; auth hardening is paused. See the live [Production-Readiness Plan](../production-readiness-plan.md).
+> **Production hardening in progress.** Tier-1 work (exercise ownership, action input validation, error boundaries) is done, and an [admin console](auth.md#admin-roles) (users + recommended exercises/programs) is built. Auth hardening (Slice 4) is paused. See the live [Production-Readiness Plan](../production-readiness-plan.md).
 
 ## One-paragraph summary
 

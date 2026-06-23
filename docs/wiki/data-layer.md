@@ -7,7 +7,7 @@ GymTrack splits database access cleanly:
 - **Read path → `data/*.ts`** — plain async functions called directly from Server Components.
 - **Write path → `app/actions/*.ts`** — `"use server"` Server Actions called from forms and client buttons.
 
-Both paths begin with `requireUserId()` ([Auth](auth.md)) and scope every owner-owned query to that user. Pure helpers live in [`lib/`](#lib-helpers).
+Both paths begin with `requireUserId()` ([Auth](auth.md)) and scope every owner-owned query to that user. Admin-only reads/actions begin with `requireAdmin()` instead (see [Admin data & actions](#admin-data--actions)). Pure helpers live in [`lib/`](#lib-helpers).
 
 ---
 
@@ -31,7 +31,7 @@ Both paths begin with `requireUserId()` ([Auth](auth.md)) and scope every owner-
 |----------|---------|
 | `getRecentSessions(limit=10)` | Recent sessions with day name/code |
 | `getSessionById(id)` | Session + the day's `plan` (program exercises) + all `loggedSets` + the program's `targetRir`; null if not owned |
-| `getLastSessionSets(exerciseId, programDayId, excludeSessionId?)` | Sets from the **most recent completed** session of that exercise on that day — feeds the [progression engine](progression-engine.md) |
+| `getLastSessionSets(exerciseId, programDayId, excludeSessionId?)` | Sets from the **most recent completed** session of that exercise on that day — feeds the [progression engine](progression-engine.md). `excludeSessionId` omits the session being viewed so its own sets don't count as the "last" session |
 | `getInProgressSession()` | The user's single `in_progress` session, if any |
 | `getRecentSessionsWithSetCount({limit,offset})` | Paginated sessions + per-session set count + total (the `/log` page) |
 | `getSessionsForCurrentWeek()` | This week's sessions (Mon–Sun) for the dashboard week strip |
@@ -65,6 +65,18 @@ Note: every catalog read is **visibility-scoped** to the current user — a priv
 
 Returns `ExerciseProgress[]` (exerciseId, name, muscleGroup, repRange, bestE1RM, lastWeight, lastLowestReps, recommendation, series).
 
+### `data/admin.ts`
+
+Admin-only reads — each begins with `requireAdmin()` ([Auth](auth.md#admin-roles)) instead of `requireUserId()`. See [Admin data & actions](#admin-data--actions).
+
+| Function | Returns |
+|----------|---------|
+| `listUsersForAdmin({search,limit,offset})` | Paginated users (via the admin plugin's `listUsers`) + total + the current admin's id (to flag "you") |
+| `listRecommendedExercises({search,limit,offset})` | Paginated shared exercises (`userId IS NULL`) + total |
+| `getAllRecommendedExercises()` | All shared exercises (for the template builder's picker) |
+| `listRecommendedPrograms({search,limit,offset})` | Paginated program templates (`userId IS NULL`) with day counts + total |
+| `getRecommendedProgramById(id)` | One template (days + their exercises), the shape the builder consumes; null if not a template |
+
 ---
 
 ## Write path (Server Actions)
@@ -84,7 +96,8 @@ On bad input they throw a clean `Error("field: message")`. Schemas enforce non-e
 
 Private helpers re-verify ownership before any write that takes an id from the client; each throws `"Not found"` if the row isn't owned by the current user:
 
-- `assertProgramOwned(programId, uid)` — `actions/programs.ts`
+- `assertProgramOwned(programId, uid)` — `actions/programs.ts`; used by the program-level user actions (create/update/delete/set-active)
+- `assertProgramManageable(programId)` — `actions/programs.ts`; used by the **nested** day/exercise builder actions so the **owner** edits their own program *or* an **admin** edits a recommended template (`userId IS NULL`). Lets the one builder serve both
 - `assertSessionOwned(sessionId, uid)` — `actions/sessions.ts`
 - `assertProgramDayOwned(programDayId, uid)` — `actions/sessions.ts`; joins `programDays → programs.userId` so a session can't be started against another user's day
 - `assertExerciseOwned(id, uid)` — `actions/exercises.ts`; only matches non-`NULL`-owned rows, so shared system exercises can't be mutated by anyone
@@ -126,7 +139,18 @@ Private helpers re-verify ownership before any write that takes an id from the c
 | `updateExercise(id, formData)` | Edit — only the owner's custom exercise (`assertExerciseOwned`) |
 | `deleteExercise(id)` | Owner-only **guarded delete** — refuses if the exercise is used in any program *or* has any logged sets (throws with a message), to protect historical data |
 
-> Note: exercise actions are user-scoped. Shared **system** exercises (`userId IS NULL`) can't be edited or deleted through the app by anyone — curating them is a future admin path (see the [plan](../production-readiness-plan.md)).
+> Note: these exercise actions are user-scoped. Shared **recommended** exercises (`userId IS NULL`) aren't editable here by regular users — they're curated through the admin console (see below).
+
+### Admin data & actions
+
+`app/actions/admin.ts` (all `"use server"`, each gated by `requireAdmin()`) backs the [admin console](routes.md). Reads live in [`data/admin.ts`](#dataadmints).
+
+| Action | Effect |
+|--------|--------|
+| `createUser` / `setUserRole` / `banUser` / `unbanUser` / `setUserPassword` / `removeUser` | User management via the Better Auth admin API. Guards block destructive actions on your own account (anti-lockout) |
+| `impersonateUser(id)` / `stopImpersonating()` | Start/stop impersonation (the app header shows a banner + Stop while active) |
+| `createRecommendedExercise` / `updateRecommendedExercise` / `deleteRecommendedExercise` | CRUD over shared exercises (`userId IS NULL`); delete keeps the in-use guards |
+| `createRecommendedProgram` / `updateRecommendedProgram` / `deleteRecommendedProgram` | Manage program templates (`userId IS NULL`); a `uniqueTemplateSlug` helper keeps template slugs unique. Days/exercises are built with the **shared** program-builder actions (authorized via `assertProgramManageable`) |
 
 ---
 
@@ -134,7 +158,7 @@ Private helpers re-verify ownership before any write that takes an id from the c
 
 | File | Exports |
 |------|---------|
-| `lib/auth.ts` | `auth`, `requireUserId()` — see [Auth](auth.md) |
+| `lib/auth.ts` | `auth`, `requireUserId()`, `requireAdmin()`, `isCurrentUserAdmin()`, `userIsAdmin(user)` — see [Auth](auth.md) |
 | `lib/calculations.ts` | `estimated1RM`, `volume`, `totalVolume`, `bestEstimated1RM` — see [Progression Engine](progression-engine.md) |
 | `lib/progression.ts` | `getProgression`, `getStallCount`, `isUpperBody` — see [Progression Engine](progression-engine.md) |
 | `lib/format.ts` | `formatDate` (relative: Today/Yesterday/weekday/short), `formatStatus` |

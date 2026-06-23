@@ -4,7 +4,7 @@ A living tracker for hardening GymTrack for production. Updated as work progress
 
 **Status legend:** ☐ todo · ◐ in progress · ☑ done · ⏸ paused
 
-**Current state (last updated this session):** Slices 1–3 complete and verified (typecheck + lint clean). Slice 4 (auth hardening) **paused at the user's request** — pick back up here. Nothing has been committed yet; all changes are in the working tree. The slice-1 migration (`0001`) still needs to be applied to any live DB (runs automatically on deploy boot).
+**Current state (last updated this session):** Slices 1–3 complete, committed, and pushed; migrations `0001`–`0003` applied to the live DB. The **admin console** is built (see Deferred → Admin console). Slice 4 (auth hardening — `trustedOrigins`/rate-limit; email-dependent flows deferred pending a provider) is still **paused** — pick back up there. Typecheck + lint clean (0 warnings).
 
 Full context for each gap lives in the [wiki](wiki/README.md). This doc tracks the *work*.
 
@@ -87,5 +87,7 @@ Captured so they aren't lost; revisit after tier 1.
 - **Observability** — error tracking, a health-check endpoint, structured logs.
 - **Migrate/seed on boot** — guard against concurrent-boot races; note schema rollback isn't automatic ([wiki/deployment.md](wiki/deployment.md)).
 - **N+1 over Neon HTTP** — `getProgressForProgram`, `getProgramById` fire a query per item.
-- **Account management** — password reset, delete account, data export.
-- **Admin path for recommended exercises** — the shared (`userId IS NULL`) exercises are "recommended" exercises that will be surfaced from a user questionnaire. After production hardening, build an admin-only path to manage this recommended catalog (CRUD on system exercises), since slice 1 intentionally locked shared exercises so no regular user can mutate them. Likely needs a user role/admin concept (none exists today).
+- ☑ **Admin console (DONE).** Built a full admin area on the Better Auth `admin` plugin (roles + `requireAdmin()`/`userIsAdmin()`; bootstrap via `BETTER_AUTH_ADMIN_USER_IDS` or the DB `role`). Lives in its own `app/(admin)/` route group with a distinct shell. Covers: **user management** (`/admin` — list/search, create, set role, ban/unban, set password, remove, impersonate; self-action guards), **recommended exercises** (`/admin/exercises` — CRUD over `userId IS NULL`), and **recommended program templates** (`/admin/programs` — full days/exercises builder; `programs.userId` made nullable, migration 0003). Migrations `0002` (admin columns) and `0003` (nullable program owner + partial template-slug index). See [wiki/auth.md](wiki/auth.md#admin-roles).
+  - ☐ *Follow-up:* user-facing "browse recommended programs → clone into my account"; surface recommendations from the planned user questionnaire.
+
+- **Account management** — password reset, delete account, data export (self-service; admin can already set passwords / remove accounts).
