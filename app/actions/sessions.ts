@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { sessions, sessionSets, programDays, programs } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
@@ -19,15 +19,21 @@ async function assertSessionOwned(sessionId: string, uid: string) {
 }
 
 /**
- * Throws unless the program day exists and belongs to a program owned by the
- * current user — prevents starting a session against someone else's day.
+ * Throws unless the program day belongs to a program FOLLOWABLE by the current
+ * user — one they own, or one a coach assigned to them. Lets a client start/log
+ * a session from a coach-assigned program while still blocking strangers' days.
  */
 async function assertProgramDayOwned(programDayId: string, uid: string) {
   const [owned] = await db
     .select({ id: programDays.id })
     .from(programDays)
     .innerJoin(programs, eq(programDays.programId, programs.id))
-    .where(and(eq(programDays.id, programDayId), eq(programs.userId, uid)))
+    .where(
+      and(
+        eq(programDays.id, programDayId),
+        or(eq(programs.userId, uid), eq(programs.assignedClientId, uid))
+      )
+    )
     .limit(1);
   if (!owned) throw new Error("Not found");
 }

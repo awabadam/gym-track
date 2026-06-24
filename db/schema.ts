@@ -22,6 +22,10 @@ export const programs = pgTable(
     // managed by admins and surfaced to all users (parallel to exercises.userId).
     // A non-NULL userId is a user's private program.
     userId: text("user_id"),
+    // When set, this program is authored by `userId` (the trainer) and ASSIGNED
+    // to this client. The client may follow/log it but not edit it; the trainer
+    // keeps editing it and changes propagate live. NULL = a normal program.
+    assignedClientId: text("assigned_client_id"),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),

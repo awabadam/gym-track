@@ -30,16 +30,27 @@ export default async function ProgramDetailPage({
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold">{program.name}</h1>
           {program.isActive && <Badge>Active</Badge>}
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/programs/${slug}/edit`}>
-              <Pencil className="h-3 w-3 mr-1" />
-              Edit
-            </Link>
-          </Button>
+          {program.isAssigned && (
+            <Badge variant="secondary">From your coach</Badge>
+          )}
+          {program.canEdit && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/programs/${slug}/edit`}>
+                <Pencil className="h-3 w-3 mr-1" />
+                Edit
+              </Link>
+            </Button>
+          )}
         </div>
         {program.description && (
           <p className="text-sm text-muted-foreground mt-1">
             {program.description}
+          </p>
+        )}
+        {!program.canEdit && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Assigned by your coach — you can follow and log it, but only your
+            coach can edit it.
           </p>
         )}
       </div>

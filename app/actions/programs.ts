@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { programs, programDays, programExercises } from "@/db/schema";
-import { eq, asc, and, gt, lt } from "drizzle-orm";
+import { eq, asc, and, or, gt, lt, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -48,10 +48,13 @@ async function assertProgramManageable(programId: string): Promise<void> {
   if (!isOwner && !isManagedTemplate) throw new Error("Not found");
 }
 
-/** Revalidate both the user-facing and admin builder routes for a program. */
+/** Revalidate the user-facing, admin, and trainer builder routes for a program. */
 function revalidateBuilder(programId: string) {
   revalidatePath(`/programs/${programId}/edit`);
   revalidatePath(`/admin/programs/${programId}/edit`);
+  // The trainer builder route is keyed by clientId (not programId), so target
+  // the whole /clients subtree to pick up nested-edit changes there too.
+  revalidatePath("/clients", "layout");
 }
 
 export async function createProgram(formData: FormData) {
@@ -81,6 +84,9 @@ export async function updateProgram(programId: string, formData: FormData) {
 
   revalidatePath(`/programs/${slug}`);
   revalidatePath("/programs");
+  // Also refresh the builder routes (incl. the coach console) so a details
+  // edit shows up there, matching the day/exercise mutations.
+  revalidateBuilder(programId);
 }
 
 export async function deleteProgram(programId: string) {
@@ -94,16 +100,42 @@ export async function deleteProgram(programId: string) {
 
 export async function setActiveProgram(programId: string) {
   const uid = await requireUserId();
-  await assertProgramOwned(programId, uid);
-  // Deactivate only this user's programs, then activate the selected one.
+  // Allow activating a program the user FOLLOWS: one they own, or one a coach
+  // assigned to them. (They still can't EDIT an assigned program.)
+  const [followable] = await db
+    .select({ id: programs.id })
+    .from(programs)
+    .where(
+      and(
+        eq(programs.id, programId),
+        // Only programs the user actually follows — their own unassigned
+        // programs or ones assigned TO them. A trainer must NOT be able to flip
+        // a program they authored for a client active from their own surface.
+        or(
+          and(eq(programs.userId, uid), isNull(programs.assignedClientId)),
+          eq(programs.assignedClientId, uid)
+        )
+      )
+    )
+    .limit(1);
+  if (!followable) throw new Error("Not found");
+
+  // Deactivate only the set of programs this user follows — their own
+  // (unassigned) programs and programs assigned to them. Do NOT touch programs
+  // this user (as a trainer) assigned to OTHER clients.
   await db
     .update(programs)
     .set({ isActive: false })
-    .where(eq(programs.userId, uid));
+    .where(
+      or(
+        and(eq(programs.userId, uid), isNull(programs.assignedClientId)),
+        eq(programs.assignedClientId, uid)
+      )
+    );
   await db
     .update(programs)
     .set({ isActive: true })
-    .where(and(eq(programs.id, programId), eq(programs.userId, uid)));
+    .where(eq(programs.id, programId));
 
   revalidatePath("/programs");
   revalidatePath("/");

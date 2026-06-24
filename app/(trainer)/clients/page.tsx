@@ -1,4 +1,5 @@
-import { Users } from "lucide-react";
+import Link from "next/link";
+import { Users, ChevronRight } from "lucide-react";
 import { getMyActiveClients, getMyTrainerInvite } from "@/data/trainer";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,15 +67,22 @@ export default async function ClientsPage() {
             {/* Mobile: card list */}
             <div className="divide-y sm:hidden">
               {clients.map((c) => (
-                <div key={c.id} className="space-y-1 p-3">
-                  <p className="font-medium">{c.name ?? "Unknown user"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {c.email ?? "—"}
-                  </p>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Joined {formatDate(c.startedAt)}
-                  </p>
-                </div>
+                <Link
+                  key={c.id}
+                  href={`/clients/${c.clientId}`}
+                  className="flex items-center justify-between gap-2 p-3 transition-colors hover:bg-muted/50"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <p className="font-medium">{c.name ?? "Unknown user"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {c.email ?? "—"}
+                    </p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Joined {formatDate(c.startedAt)}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
               ))}
             </div>
 
@@ -86,13 +94,19 @@ export default async function ClientsPage() {
                     <TableHead>Client</TableHead>
                     <TableHead className="hidden lg:table-cell">Email</TableHead>
                     <TableHead>Joined</TableHead>
+                    <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {clients.map((c) => (
                     <TableRow key={c.id}>
                       <TableCell>
-                        <p className="font-medium">{c.name ?? "Unknown user"}</p>
+                        <Link
+                          href={`/clients/${c.clientId}`}
+                          className="font-medium hover:underline"
+                        >
+                          {c.name ?? "Unknown user"}
+                        </Link>
                         <p className="text-sm text-muted-foreground lg:hidden">
                           {c.email ?? "—"}
                         </p>
@@ -102,6 +116,15 @@ export default async function ClientsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(c.startedAt)}
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/clients/${c.clientId}`}
+                          aria-label={`View ${c.name ?? "client"}`}
+                          className="text-muted-foreground"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

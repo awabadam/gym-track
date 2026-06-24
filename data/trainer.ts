@@ -1,10 +1,16 @@
 import { headers } from "next/headers";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { trainerApplications, trainers, trainerClients } from "@/db/schema";
+import {
+  trainerApplications,
+  trainers,
+  trainerClients,
+  programs,
+} from "@/db/schema";
 import { user } from "@/db/auth-schema";
 import { auth, requireTrainer, requireUserId } from "@/lib/auth";
 import { generateInviteCode } from "@/lib/invite";
+import { getProgramById } from "@/data/programs";
 
 export type TrainerApplication = typeof trainerApplications.$inferSelect;
 
@@ -145,6 +151,52 @@ export async function getMyCoach(): Promise<MyCoach | null> {
     .limit(1);
 
   return row ?? null;
+}
+
+export type ClientDetail = {
+  client: { id: string; name: string | null; email: string | null };
+  program: Awaited<ReturnType<typeof getProgramById>> | null;
+};
+
+/**
+ * The detail view for one of the current trainer's ACTIVE clients: their basic
+ * identity plus the program this trainer has assigned to them (expanded with
+ * days/exercises, same shape as getProgramById), or null if none yet. Returns
+ * null if `clientId` isn't an active client of this trainer.
+ */
+export async function getClientDetail(
+  clientId: string,
+): Promise<ClientDetail | null> {
+  const trainerId = await requireTrainer();
+
+  const [client] = await db
+    .select({ id: user.id, name: user.name, email: user.email })
+    .from(trainerClients)
+    .innerJoin(user, eq(trainerClients.clientId, user.id))
+    .where(
+      and(
+        eq(trainerClients.trainerId, trainerId),
+        eq(trainerClients.clientId, clientId),
+        eq(trainerClients.status, "active"),
+      ),
+    )
+    .limit(1);
+  if (!client) return null;
+
+  const [assigned] = await db
+    .select({ id: programs.id })
+    .from(programs)
+    .where(
+      and(
+        eq(programs.userId, trainerId),
+        eq(programs.assignedClientId, clientId),
+      ),
+    )
+    .limit(1);
+
+  const program = assigned ? await getProgramById(assigned.id) : null;
+
+  return { client, program };
 }
 
 /**

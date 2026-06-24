@@ -43,6 +43,13 @@
       "when": 1782295783501,
       "tag": "0005_flashy_mongoose",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782299535071,
+      "tag": "0006_lowly_frog_thor",
+      "breakpoints": true
     }
   ]
 }

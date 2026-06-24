@@ -50,6 +50,11 @@ export default async function ProgramsPage() {
                     {p.isActive && (
                       <Badge className="text-xs">Active</Badge>
                     )}
+                    {p.isAssigned && (
+                      <Badge variant="secondary" className="text-xs">
+                        From your coach
+                      </Badge>
+                    )}
                   </div>
                   {p.description && (
                     <p className="text-xs text-muted-foreground mt-1">
@@ -71,11 +76,13 @@ export default async function ProgramsPage() {
                       </Button>
                     </form>
                   )}
-                  <form action={duplicateProgram.bind(null, p.id)}>
-                    <Button variant="ghost" size="sm" className="h-10 w-10 p-0" type="submit" aria-label={`Duplicate ${p.name}`}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </form>
+                  {p.canEdit && (
+                    <form action={duplicateProgram.bind(null, p.id)}>
+                      <Button variant="ghost" size="sm" className="h-10 w-10 p-0" type="submit" aria-label={`Duplicate ${p.name}`}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </form>
+                  )}
                   <Button variant="ghost" size="sm" asChild className="h-10 w-10 p-0" aria-label={`View ${p.name}`}>
                     <Link href={`/programs/${p.slug}`}>
                       <ArrowRight className="h-4 w-4" />

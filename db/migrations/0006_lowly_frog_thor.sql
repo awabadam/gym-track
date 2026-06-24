@@ -1,0 +1,1 @@
+ALTER TABLE "programs" ADD COLUMN "assigned_client_id" text;

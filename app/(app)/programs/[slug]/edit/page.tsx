@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getProgramBySlug } from "@/data/programs";
 import { getAllExercises } from "@/data/exercises";
@@ -50,6 +50,8 @@ export default async function EditProgramPage({
   ]);
 
   if (!program) notFound();
+  // Clients can VIEW an assigned program but never reach its editor.
+  if (!program.canEdit) redirect(`/programs/${slug}`);
 
   const programId = program.id;
 
