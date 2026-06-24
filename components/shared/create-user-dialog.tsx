@@ -80,6 +80,7 @@ export function CreateUserDialog() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">User</SelectItem>
+                <SelectItem value="trainer">Trainer</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>

@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins";
+import { adminAc, userAc } from "better-auth/plugins/admin/access";
 import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
 import { db } from "@/db";
@@ -28,7 +29,13 @@ export const auth = betterAuth({
   plugins: [
     // Adds roles + user management (list/create/delete users, set role,
     // ban/unban, set password, impersonate). New users default to "user".
-    admin({ adminUserIds }),
+    // Registering `roles` widens the assignable role union to include
+    // "trainer" (a regular user with elevated app-level capabilities; it gets
+    // the same plugin-level access as "user" and is NOT an admin role).
+    admin({
+      adminUserIds,
+      roles: { user: userAc, admin: adminAc, trainer: userAc },
+    }),
     // nextCookies() must stay last so it can set cookies for the plugins above.
     nextCookies(),
   ],

@@ -27,7 +27,10 @@ export default async function AppLayout({
       </a>
       <TooltipProvider>
         <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
-          <AppSidebar isAdmin={userIsAdmin(session.user)} />
+          <AppSidebar
+            isAdmin={userIsAdmin(session.user)}
+            isTrainer={session.user.role === "trainer"}
+          />
           <SidebarInset>
             <AppHeader />
             <main

@@ -116,7 +116,7 @@ export const setValuesSchema = z.object({
 
 // The roles the admin UI can assign. Mirrors the admin plugin config in
 // lib/auth.ts (defaultRole "user", adminRoles ["admin"]).
-export const USER_ROLES = ["user", "admin"] as const;
+export const USER_ROLES = ["user", "trainer", "admin"] as const;
 
 const password = z
   .string()
@@ -131,6 +131,12 @@ export const createUserSchema = z.object({
 });
 
 export const setRoleSchema = z.object({ role: z.enum(USER_ROLES) });
+
+// --- trainer applications -----------------------------------------------------
+
+export const trainerApplicationSchema = z.object({
+  note: optionalText(500),
+});
 
 export const setPasswordSchema = z.object({ newPassword: password });
 

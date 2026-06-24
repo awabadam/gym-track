@@ -82,6 +82,30 @@ export const sessions = pgTable("sessions", {
   completedAt: timestamp("completed_at"),
 });
 
+export const trainerApplications = pgTable(
+  "trainer_applications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Better Auth user id of the applicant.
+    userId: text("user_id").notNull(),
+    // 'pending' | 'approved' | 'declined'
+    status: text("status").notNull().default("pending"),
+    // Optional message from the applicant.
+    note: text("note"),
+    // Admin id who reviewed it, set on approve/decline.
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [
+    // A user can have at most one open (pending) application at a time, but may
+    // re-apply after a decline — so the uniqueness is partial on status.
+    uniqueIndex("trainer_applications_pending_user_idx")
+      .on(t.userId)
+      .where(sql`${t.status} = 'pending'`),
+  ]
+);
+
 export const sessionSets = pgTable("session_sets", {
   id: uuid("id").primaryKey().defaultRandom(),
   sessionId: uuid("session_id")

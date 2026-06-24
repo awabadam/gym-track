@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, Users, Dumbbell, ListChecks, ArrowLeft } from "lucide-react";
+import { Shield, Users, Dumbbell, ListChecks, GraduationCap, ArrowLeft } from "lucide-react";
 import { NavSidebar, type NavItem } from "@/components/shared/nav-sidebar";
 
 const navItems: NavItem[] = [
   { title: "Users", href: "/admin", icon: Users, exact: true },
+  { title: "Trainers", href: "/admin/trainers", icon: GraduationCap },
   { title: "Exercises", href: "/admin/exercises", icon: Dumbbell },
   { title: "Programs", href: "/admin/programs", icon: ListChecks },
 ];

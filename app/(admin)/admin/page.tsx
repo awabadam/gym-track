@@ -27,6 +27,13 @@ function RoleBadge({ role }: { role?: string | null }) {
       </Badge>
     );
   }
+  if (role === "trainer") {
+    return (
+      <Badge variant="secondary" className="border-foreground uppercase text-[10px]">
+        Trainer
+      </Badge>
+    );
+  }
   return (
     <Badge variant="outline" className="uppercase text-[10px]">
       User

@@ -10,6 +10,7 @@ import {
   Library,
   Play,
   Shield,
+  GraduationCap,
 } from "lucide-react";
 import { NavSidebar, type NavItem } from "@/components/shared/nav-sidebar";
 
@@ -22,10 +23,25 @@ const navItems: NavItem[] = [
   { title: "Exercises", href: "/exercises", icon: Library },
 ];
 
-export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
-  const items = isAdmin
-    ? [...navItems, { title: "Admin", href: "/admin", icon: Shield }]
-    : navItems;
+export function AppSidebar({
+  isAdmin = false,
+  isTrainer = false,
+}: {
+  isAdmin?: boolean;
+  isTrainer?: boolean;
+}) {
+  const items = [...navItems];
+  // Non-trainers (and non-admins) get a path to apply for trainer access.
+  if (!isTrainer && !isAdmin) {
+    items.push({
+      title: "Become a trainer",
+      href: "/become-a-trainer",
+      icon: GraduationCap,
+    });
+  }
+  if (isAdmin) {
+    items.push({ title: "Admin", href: "/admin", icon: Shield });
+  }
 
   return (
     <NavSidebar

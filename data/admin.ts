@@ -1,7 +1,14 @@
 import { headers } from "next/headers";
-import { and, asc, count, eq, ilike, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { exercises, programs, programDays, programExercises } from "@/db/schema";
+import {
+  exercises,
+  programs,
+  programDays,
+  programExercises,
+  trainerApplications,
+} from "@/db/schema";
+import { user } from "@/db/auth-schema";
 import { auth, requireAdmin } from "@/lib/auth";
 
 export type AdminUser = {
@@ -51,6 +58,47 @@ export async function listUsersForAdmin(opts: {
     total: typeof res.total === "number" ? res.total : res.users.length,
     currentUserId,
   };
+}
+
+/**
+ * Lists trainer applications joined to the applicant's name/email, newest
+ * first. Defaults to the 'pending' queue; admin-only.
+ */
+export async function listTrainerApplications({
+  status = "pending",
+  limit = 20,
+  offset = 0,
+}: {
+  status?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  await requireAdmin();
+  const where = eq(trainerApplications.status, status);
+
+  const [rows, [{ total }]] = await Promise.all([
+    db
+      .select({
+        id: trainerApplications.id,
+        userId: trainerApplications.userId,
+        status: trainerApplications.status,
+        note: trainerApplications.note,
+        reviewedBy: trainerApplications.reviewedBy,
+        reviewedAt: trainerApplications.reviewedAt,
+        createdAt: trainerApplications.createdAt,
+        applicantName: user.name,
+        applicantEmail: user.email,
+      })
+      .from(trainerApplications)
+      .leftJoin(user, eq(trainerApplications.userId, user.id))
+      .where(where)
+      .orderBy(desc(trainerApplications.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db.select({ total: count() }).from(trainerApplications).where(where),
+  ]);
+
+  return { rows, total };
 }
 
 /**

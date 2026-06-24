@@ -5,7 +5,14 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { and, count, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { exercises, programs, programExercises, sessionSets } from "@/db/schema";
+import {
+  exercises,
+  programs,
+  programExercises,
+  sessionSets,
+  trainerApplications,
+} from "@/db/schema";
+import { user } from "@/db/auth-schema";
 import { slugify } from "@/lib/slug";
 import { auth, requireAdmin } from "@/lib/auth";
 import {
@@ -281,4 +288,66 @@ export async function deleteRecommendedProgram(id: string) {
 
   revalidatePath("/admin/programs");
   redirect("/admin/programs");
+}
+
+// --- trainer applications -----------------------------------------------------
+
+/** Loads a pending application by id, or throws. */
+async function getPendingApplication(id: string) {
+  const [row] = await db
+    .select()
+    .from(trainerApplications)
+    .where(
+      and(
+        eq(trainerApplications.id, id),
+        eq(trainerApplications.status, "pending"),
+      ),
+    )
+    .limit(1);
+  if (!row) throw new Error("Application not found or already reviewed");
+  return row;
+}
+
+export async function approveTrainerApplication(id: string) {
+  const adminId = await requireAdmin();
+  const applicationId = parse(idSchema, id);
+  const application = await getPendingApplication(applicationId);
+
+  // Re-check the applicant's CURRENT role before promoting. A stale pending
+  // application must never *demote* someone who has since become a trainer or
+  // (especially) an admin — only plain users get promoted. Either way the
+  // application is closed so it leaves the queue.
+  const [applicant] = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(eq(user.id, application.userId))
+    .limit(1);
+
+  if (applicant && applicant.role !== "trainer" && applicant.role !== "admin") {
+    await auth.api.setRole({
+      headers: await headers(),
+      body: { userId: application.userId, role: "trainer" },
+    });
+  }
+
+  await db
+    .update(trainerApplications)
+    .set({ status: "approved", reviewedBy: adminId, reviewedAt: new Date() })
+    .where(eq(trainerApplications.id, applicationId));
+
+  revalidatePath("/admin/trainers");
+  revalidatePath("/admin"); // refresh the role badge on the Users page
+}
+
+export async function declineTrainerApplication(id: string) {
+  const adminId = await requireAdmin();
+  const applicationId = parse(idSchema, id);
+  await getPendingApplication(applicationId);
+
+  await db
+    .update(trainerApplications)
+    .set({ status: "declined", reviewedBy: adminId, reviewedAt: new Date() })
+    .where(eq(trainerApplications.id, applicationId));
+
+  revalidatePath("/admin/trainers");
 }

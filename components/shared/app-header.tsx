@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { SignOutButton } from "@/components/shared/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { Dumbbell, Play, Shield, UserX } from "lucide-react";
+import { Dumbbell, Play, Shield, UserX, GraduationCap } from "lucide-react";
 import { auth, userIsAdmin } from "@/lib/auth";
 import { stopImpersonating } from "@/app/actions/admin";
 import { getActiveProgram } from "@/data/programs";
@@ -17,6 +17,7 @@ export async function AppHeader() {
   ]);
 
   const isAdmin = session?.user ? userIsAdmin(session.user) : false;
+  const isTrainer = session?.user?.role === "trainer";
   const impersonating = Boolean(
     (session?.session as { impersonatedBy?: string | null } | undefined)
       ?.impersonatedBy,
@@ -73,6 +74,15 @@ export async function AppHeader() {
       )}
 
       <div className="ml-auto flex items-center gap-2">
+        {!isAdmin && !isTrainer && (
+          // Mobile entry point for the trainer application (the desktop sidebar
+          // carries it on larger screens).
+          <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0 md:hidden" aria-label="Become a trainer">
+            <Link href="/become-a-trainer">
+              <GraduationCap className="h-4 w-4" />
+            </Link>
+          </Button>
+        )}
         {isAdmin && (
           <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label="Admin">
             <Link href="/admin">
