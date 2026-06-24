@@ -1,7 +1,4 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { Users } from "lucide-react";
-import { auth } from "@/lib/auth";
 import { getMyActiveClients, getMyTrainerInvite } from "@/data/trainer";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,10 +22,8 @@ function formatDate(date: Date | null) {
 }
 
 export default async function ClientsPage() {
-  // Trainer-only page (admins aren't trainers). Gate via the session role.
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (session?.user?.role !== "trainer") redirect("/");
-
+  // The (trainer) layout gates the whole console to trainers; data fns also
+  // call requireTrainer().
   const [{ code }, clients] = await Promise.all([
     getMyTrainerInvite(),
     getMyActiveClients(),
