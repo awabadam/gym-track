@@ -91,3 +91,30 @@ Captured so they aren't lost; revisit after tier 1.
   - ☐ *Follow-up:* user-facing "browse recommended programs → clone into my account"; surface recommendations from the planned user questionnaire.
 
 - **Account management** — password reset, delete account, data export (self-service; admin can already set passwords / remove accounts).
+
+---
+
+## Roadmap — Trainers & multi-role
+
+The agreed **target state**: three account types — **solo user** (today), **trainer**, and **admin** — where trainer is a superset of user (trainers also work out themselves) and admin manages both. Full design lives in [wiki/roles-and-trainers.md](wiki/roles-and-trainers.md); this is the build tracker.
+
+**Confirmed decisions:**
+- Roles are a superset chain `user → trainer → admin`; one role per account.
+- **Becoming a trainer:** user applies → admin approves (approval queue in the console) → role set to `trainer` + invite code issued.
+- **Linking:** clients join via the trainer's invite link/code (at sign-up or later). **At most one active trainer**, switchable; link is time-windowed and kept as history (`trainer_clients`).
+- **Assigned programs:** trainer-owned with an `assignedClientId`; client follows + logs but can't edit; edits propagate live; client keeps their own programs too. Distinct from admin recommended templates.
+- **On leave/switch:** client keeps a personal copy; trainer keeps **read-only** access to data logged during the linked window only.
+- **Trainer experience:** roster + adherence overview, per-client read-only progress/log/calendar, feedback/notes, activity notifications (**in-app first**; email when a provider is chosen — same dependency as Slice 4).
+- **Authorization:** `requireTrainer()` + `canAccessClient(trainerId, clientId)` (windowed); client data private except to their linked trainer + admins.
+
+**Build slices (independently shippable, not rigid phases):**
+- ☐ Trainer role + application/approval queue (admin console)
+- ☐ Invite codes + the `trainer_clients` link (join/switch/leave, time-windowed)
+- ☐ Assigned programs (`programs.assignedClientId`) + client-follows visibility + leave-copy behavior
+- ☐ Trainer roster + per-client read-only monitoring
+- ☐ Coaching feedback/notes (`coach_notes`)
+- ☐ Notifications (`notifications`; in-app first, email later)
+
+**New data-model touchpoints (all additive):** `programs.assignedClientId`; `trainer_clients`, `trainer_applications`, trainer invite code, `coach_notes`, `notifications`.
+
+**Assumptions to revisit if needed:** trainer-assigned programs are separate from admin recommended templates; an account is exactly one of user/trainer/admin (no trainer+admin); notifications start in-app only.

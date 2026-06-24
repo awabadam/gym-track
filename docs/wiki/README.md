@@ -11,6 +11,7 @@ This wiki documents how the app actually works today. Start here and follow the 
 | [Architecture](architecture.md) | Tech stack, the big picture, request/render flow |
 | [Data Model](data-model.md) | Every table, the relationships, and why they're shaped that way |
 | [Auth & Multi-Tenancy](auth.md) | Better Auth, admin roles, the proxy (middleware), and how data is scoped per user |
+| [Roles & Trainers](roles-and-trainers.md) | **Planned** — the target three-role model (user / trainer / admin) and the trainer↔client system |
 | [Data Layer](data-layer.md) | The `data/` read functions and `app/actions/` write functions |
 | [Progression Engine](progression-engine.md) | Double progression, estimated 1RM, stall detection |
 | [Routes & Pages](routes.md) | Every URL, what it renders, what it reads and mutates |
