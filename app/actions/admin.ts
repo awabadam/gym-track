@@ -11,9 +11,11 @@ import {
   programExercises,
   sessionSets,
   trainerApplications,
+  trainers,
 } from "@/db/schema";
 import { user } from "@/db/auth-schema";
 import { slugify } from "@/lib/slug";
+import { generateInviteCode } from "@/lib/invite";
 import { auth, requireAdmin } from "@/lib/auth";
 import {
   parse,
@@ -292,6 +294,30 @@ export async function deleteRecommendedProgram(id: string) {
 
 // --- trainer applications -----------------------------------------------------
 
+/**
+ * Ensures a `trainers` row (with a unique invite code) exists for `trainerId`.
+ * Idempotent via onConflictDoNothing on userId, so re-approval is safe;
+ * generate-and-retry guards the unlikely inviteCode unique collision.
+ */
+async function provisionTrainer(trainerId: string): Promise<void> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await db
+        .insert(trainers)
+        .values({ userId: trainerId, inviteCode: generateInviteCode() })
+        .onConflictDoNothing({ target: trainers.userId });
+      return;
+    } catch (e) {
+      // inviteCode collided with another trainer — retry with a fresh code.
+      if (e && typeof e === "object" && (e as { code?: string }).code === "23505") {
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("Could not generate a unique invite code");
+}
+
 /** Loads a pending application by id, or throws. */
 async function getPendingApplication(id: string) {
   const [row] = await db
@@ -329,6 +355,11 @@ export async function approveTrainerApplication(id: string) {
       body: { userId: application.userId, role: "trainer" },
     });
   }
+
+  // Provision the trainer's invite code. onConflictDoNothing(by userId) keeps
+  // re-approval idempotent; generate-and-retry covers the unlikely inviteCode
+  // unique collision.
+  await provisionTrainer(application.userId);
 
   await db
     .update(trainerApplications)

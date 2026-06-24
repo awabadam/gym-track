@@ -12,7 +12,13 @@ export function proxy(request: NextRequest) {
   const isAuthPage = AUTH_PATHS.some((p) => pathname.startsWith(p));
   // "/" is public: it serves the marketing landing page when signed out and the
   // dashboard when signed in (the page itself branches on session).
-  const isPublic = isAuthPage || pathname === "/";
+  // "/join/CODE" is public too so signed-out invitees can view the landing and
+  // get nudged to sign up.
+  const isPublic =
+    isAuthPage ||
+    pathname === "/" ||
+    pathname === "/join" ||
+    pathname.startsWith("/join/");
   const sessionCookie = getSessionCookie(request);
 
   // Signed-out user hitting a protected route → send to sign-in.

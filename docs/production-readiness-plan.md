@@ -108,8 +108,8 @@ The agreed **target state**: three account types — **solo user** (today), **tr
 - **Authorization:** `requireTrainer()` + `canAccessClient(trainerId, clientId)` (windowed); client data private except to their linked trainer + admins.
 
 **Build slices (independently shippable, not rigid phases):**
-- ☐ Trainer role + application/approval queue (admin console)
-- ☐ Invite codes + the `trainer_clients` link (join/switch/leave, time-windowed)
+- ☑ Trainer role + application/approval queue (admin console) — `trainer_applications`, migration 0004
+- ☑ Invite codes + the `trainer_clients` link (join/switch/leave, time-windowed) — `trainers` + `trainer_clients`, migration 0005
 - ☐ Assigned programs (`programs.assignedClientId`) + client-follows visibility + leave-copy behavior
 - ☐ Trainer roster + per-client read-only monitoring
 - ☐ Coaching feedback/notes (`coach_notes`)

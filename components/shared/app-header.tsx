@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { SignOutButton } from "@/components/shared/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { Dumbbell, Play, Shield, UserX, GraduationCap } from "lucide-react";
+import { Dumbbell, Play, Shield, UserX, HeartHandshake, Users } from "lucide-react";
 import { auth, userIsAdmin } from "@/lib/auth";
 import { stopImpersonating } from "@/app/actions/admin";
 import { getActiveProgram } from "@/data/programs";
@@ -74,12 +74,22 @@ export async function AppHeader() {
       )}
 
       <div className="ml-auto flex items-center gap-2">
-        {!isAdmin && !isTrainer && (
-          // Mobile entry point for the trainer application (the desktop sidebar
+        {isTrainer && (
+          // Mobile entry point for the trainer's clients (the desktop sidebar
           // carries it on larger screens).
-          <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0 md:hidden" aria-label="Become a trainer">
-            <Link href="/become-a-trainer">
-              <GraduationCap className="h-4 w-4" />
+          <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0 md:hidden" aria-label="Clients">
+            <Link href="/clients">
+              <Users className="h-4 w-4" />
+            </Link>
+          </Button>
+        )}
+        {!isAdmin && (
+          // Mobile entry point for the client-facing coaching page (the desktop
+          // sidebar carries it on larger screens). Shown to trainers too, since
+          // a trainer can also be coached.
+          <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0 md:hidden" aria-label="Coach">
+            <Link href="/coach">
+              <HeartHandshake className="h-4 w-4" />
             </Link>
           </Button>
         )}

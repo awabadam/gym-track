@@ -106,6 +106,37 @@ export const trainerApplications = pgTable(
   ]
 );
 
+export const trainers = pgTable("trainers", {
+  // The trainer's Better Auth user id. One row per trainer; holds the invite
+  // code plus any future trainer-specific data.
+  userId: text("user_id").primaryKey(),
+  inviteCode: text("invite_code").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const trainerClients = pgTable(
+  "trainer_clients",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // The trainer's Better Auth user id (matches trainers.userId).
+    trainerId: text("trainer_id").notNull(),
+    // The coached user's Better Auth user id.
+    clientId: text("client_id").notNull(),
+    // 'active' | 'ended'. Links are kept as history; switching coaches ends the
+    // old link and opens a new one.
+    status: text("status").notNull().default("active"),
+    startedAt: timestamp("started_at").defaultNow(),
+    endedAt: timestamp("ended_at"),
+  },
+  (t) => [
+    // A client can have at most one ACTIVE trainer at a time — enforced by a
+    // partial unique index on clientId (ended links don't count).
+    uniqueIndex("trainer_clients_active_client_idx")
+      .on(t.clientId)
+      .where(sql`${t.status} = 'active'`),
+  ]
+);
+
 export const sessionSets = pgTable("session_sets", {
   id: uuid("id").primaryKey().defaultRandom(),
   sessionId: uuid("session_id")

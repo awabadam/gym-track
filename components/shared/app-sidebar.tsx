@@ -10,7 +10,8 @@ import {
   Library,
   Play,
   Shield,
-  GraduationCap,
+  HeartHandshake,
+  Users,
 } from "lucide-react";
 import { NavSidebar, type NavItem } from "@/components/shared/nav-sidebar";
 
@@ -31,13 +32,14 @@ export function AppSidebar({
   isTrainer?: boolean;
 }) {
   const items = [...navItems];
-  // Non-trainers (and non-admins) get a path to apply for trainer access.
-  if (!isTrainer && !isAdmin) {
-    items.push({
-      title: "Become a trainer",
-      href: "/become-a-trainer",
-      icon: GraduationCap,
-    });
+  // Trainers manage the lifters they coach.
+  if (isTrainer) {
+    items.push({ title: "Clients", href: "/clients", icon: Users });
+  }
+  // Everyone except admins gets the client-facing coaching entry (a trainer can
+  // also be coached). For non-trainers it also links out to /become-a-trainer.
+  if (!isAdmin) {
+    items.push({ title: "Coach", href: "/coach", icon: HeartHandshake });
   }
   if (isAdmin) {
     items.push({ title: "Admin", href: "/admin", icon: Shield });

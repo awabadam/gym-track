@@ -81,6 +81,23 @@ export async function requireAdmin(): Promise<string> {
   return user.id;
 }
 
+/**
+ * Returns the current user's id, throwing unless their role is exactly
+ * "trainer". Admins are NOT trainers for this gate — trainer access is the
+ * 'trainer' role specifically. Use to gate trainer-only data/actions.
+ */
+export async function requireTrainer(): Promise<string> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const user = session?.user;
+  if (!user) {
+    throw new Error("Unauthorized: no signed-in user");
+  }
+  if (user.role !== "trainer") {
+    throw new Error("Forbidden: trainer access required");
+  }
+  return user.id;
+}
+
 /** Non-throwing admin check for the current request (nav, soft redirects). */
 export async function isCurrentUserAdmin(): Promise<boolean> {
   const session = await auth.api.getSession({ headers: await headers() });
