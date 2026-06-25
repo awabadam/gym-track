@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getClientSessionDetail } from "@/data/trainer";
+import { getClientSessionDetail, getClientSessionNotes } from "@/data/trainer";
+import { addCoachNote, deleteCoachNote } from "@/app/actions/trainer";
 import { formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
+import { CoachNoteForm } from "@/components/shared/coach-note-form";
+import { CoachNotesList } from "@/components/shared/coach-notes-list";
 import { ArrowLeft } from "lucide-react";
 
 export default async function ClientSessionPage({
@@ -17,6 +20,8 @@ export default async function ClientSessionPage({
   const session = await getClientSessionDetail(clientId, sessionId);
 
   if (!session) notFound();
+
+  const notes = await getClientSessionNotes(clientId, sessionId);
 
   // Group the logged sets under each planned exercise.
   const setsByExercise = new Map<string, typeof session.loggedSets>();
@@ -66,6 +71,23 @@ export default async function ClientSessionPage({
           subtitle="Sets logged this session"
         />
       )}
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Feedback on this workout</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <CoachNoteForm
+            action={addCoachNote.bind(null, clientId, sessionId)}
+            placeholder="Leave feedback on this workout…"
+          />
+          <CoachNotesList
+            notes={notes}
+            emptyText="No feedback on this workout yet."
+            deleteAction={deleteCoachNote}
+          />
+        </CardContent>
+      </Card>
 
       <div className="grid items-start gap-4 sm:grid-cols-2">
         {session.plan.map((pe) => {

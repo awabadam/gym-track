@@ -11,6 +11,7 @@ import {
   programDays,
   programExercises,
   exercises,
+  coachNotes,
 } from "@/db/schema";
 import { user } from "@/db/auth-schema";
 import { auth, requireTrainer, requireUserId } from "@/lib/auth";
@@ -321,6 +322,90 @@ export async function getClientSessionDetail(
     .orderBy(asc(sessionSets.exerciseId), asc(sessionSets.setNumber));
 
   return { ...session, plan, loggedSets };
+}
+
+export type CoachNote = {
+  id: string;
+  body: string;
+  createdAt: Date | null;
+  sessionId: string | null;
+  sessionDayName: string | null;
+  sessionDate: string | null;
+};
+
+/** All coaching notes this trainer has written about an active client, newest first. */
+export async function getClientNotes(clientId: string): Promise<CoachNote[]> {
+  const trainerId = await requireTrainer();
+  await assertActiveClient(trainerId, clientId);
+
+  return db
+    .select({
+      id: coachNotes.id,
+      body: coachNotes.body,
+      createdAt: coachNotes.createdAt,
+      sessionId: coachNotes.sessionId,
+      sessionDayName: programDays.name,
+      sessionDate: sessions.date,
+    })
+    .from(coachNotes)
+    .leftJoin(sessions, eq(coachNotes.sessionId, sessions.id))
+    .leftJoin(programDays, eq(sessions.programDayId, programDays.id))
+    .where(
+      and(
+        eq(coachNotes.trainerId, trainerId),
+        eq(coachNotes.clientId, clientId),
+      ),
+    )
+    .orderBy(desc(coachNotes.createdAt));
+}
+
+/** This trainer's notes left on one specific client workout, newest first. */
+export async function getClientSessionNotes(
+  clientId: string,
+  sessionId: string,
+): Promise<Pick<CoachNote, "id" | "body" | "createdAt">[]> {
+  const trainerId = await requireTrainer();
+  await assertActiveClient(trainerId, clientId);
+
+  return db
+    .select({
+      id: coachNotes.id,
+      body: coachNotes.body,
+      createdAt: coachNotes.createdAt,
+    })
+    .from(coachNotes)
+    .where(
+      and(
+        eq(coachNotes.trainerId, trainerId),
+        eq(coachNotes.clientId, clientId),
+        eq(coachNotes.sessionId, sessionId),
+      ),
+    )
+    .orderBy(desc(coachNotes.createdAt));
+}
+
+export type MyCoachNote = CoachNote & { trainerName: string | null };
+
+/** Coaching notes addressed to the current user (from their coach), newest first. */
+export async function getMyCoachNotes(): Promise<MyCoachNote[]> {
+  const uid = await requireUserId();
+
+  return db
+    .select({
+      id: coachNotes.id,
+      body: coachNotes.body,
+      createdAt: coachNotes.createdAt,
+      trainerName: user.name,
+      sessionId: coachNotes.sessionId,
+      sessionDayName: programDays.name,
+      sessionDate: sessions.date,
+    })
+    .from(coachNotes)
+    .leftJoin(user, eq(coachNotes.trainerId, user.id))
+    .leftJoin(sessions, eq(coachNotes.sessionId, sessions.id))
+    .leftJoin(programDays, eq(sessions.programDayId, programDays.id))
+    .where(eq(coachNotes.clientId, uid))
+    .orderBy(desc(coachNotes.createdAt));
 }
 
 /**

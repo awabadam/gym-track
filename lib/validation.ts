@@ -148,6 +148,16 @@ export const trainerApplicationSchema = z.object({
   note: optionalText(500),
 });
 
+// --- coaching notes -----------------------------------------------------------
+
+export const coachNoteSchema = z.object({
+  body: z
+    .string()
+    .trim()
+    .min(1, "Note can't be empty")
+    .max(2000, "Note is too long"),
+});
+
 export const setPasswordSchema = z.object({ newPassword: password });
 
 export const banUserSchema = z.object({

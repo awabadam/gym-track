@@ -10,12 +10,15 @@ import {
   trainers,
   trainerClients,
   programs,
+  sessions,
+  coachNotes,
 } from "@/db/schema";
 import { auth, requireTrainer, requireUserId } from "@/lib/auth";
 import {
   parseForm,
   trainerApplicationSchema,
   programSchema,
+  coachNoteSchema,
 } from "@/lib/validation";
 import { slugify } from "@/lib/slug";
 
@@ -303,6 +306,61 @@ export async function deleteAssignedProgram(programId: string) {
   const clientId = program.assignedClientId;
   revalidatePath(`/clients/${clientId}`);
   redirect(`/clients/${clientId}`);
+}
+
+/**
+ * Leave a coaching note for an active client — either general (`sessionId`
+ * null) or tied to one of the client's logged workouts. Guarded to the
+ * trainer's own active clients; a session-scoped note must reference a session
+ * that actually belongs to the client.
+ */
+export async function addCoachNote(
+  clientId: string,
+  sessionId: string | null,
+  formData: FormData,
+) {
+  const trainerId = await requireTrainer();
+  await assertActiveClient(trainerId, clientId);
+
+  const { body } = parseForm(coachNoteSchema, formData);
+
+  if (sessionId) {
+    const [owned] = await db
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(and(eq(sessions.id, sessionId), eq(sessions.userId, clientId)))
+      .limit(1);
+    if (!owned) throw new Error("Not found");
+  }
+
+  await db.insert(coachNotes).values({
+    trainerId,
+    clientId,
+    sessionId: sessionId ?? null,
+    body,
+  });
+
+  revalidatePath(`/clients/${clientId}`);
+  if (sessionId) revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
+}
+
+/** Delete a coaching note. Only the authoring trainer can remove it. */
+export async function deleteCoachNote(noteId: string) {
+  const trainerId = await requireTrainer();
+
+  const [note] = await db
+    .select({ clientId: coachNotes.clientId, sessionId: coachNotes.sessionId })
+    .from(coachNotes)
+    .where(and(eq(coachNotes.id, noteId), eq(coachNotes.trainerId, trainerId)))
+    .limit(1);
+  if (!note) throw new Error("Not found");
+
+  await db.delete(coachNotes).where(eq(coachNotes.id, noteId));
+
+  revalidatePath(`/clients/${note.clientId}`);
+  if (note.sessionId) {
+    revalidatePath(`/clients/${note.clientId}/sessions/${note.sessionId}`);
+  }
 }
 
 /** Leave the current coach: ends this client's active link (kept as history). */

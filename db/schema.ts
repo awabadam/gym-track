@@ -156,3 +156,18 @@ export const sessionSets = pgTable("session_sets", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const coachNotes = pgTable("coach_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  // Author (trainer) and subject (client) — both Better Auth user ids.
+  trainerId: text("trainer_id").notNull(),
+  clientId: text("client_id").notNull(),
+  // Optional: a note left on a specific logged workout for context. NULL = a
+  // general note about the client. Set null (not cascade) so deleting a session
+  // keeps the coaching note as history.
+  sessionId: uuid("session_id").references(() => sessions.id, {
+    onDelete: "set null",
+  }),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});

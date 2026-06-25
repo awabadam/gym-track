@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { HeartHandshake } from "lucide-react";
-import { getMyCoach } from "@/data/trainer";
+import { getMyCoach, getMyCoachNotes } from "@/data/trainer";
 import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { JoinTrainerForm } from "@/components/shared/join-trainer-form";
 import { LeaveTrainerButton } from "@/components/shared/leave-trainer-button";
+import { CoachNotesList } from "@/components/shared/coach-notes-list";
 
 function formatDate(date: Date | null) {
   if (!date) return "—";
@@ -16,7 +22,7 @@ function formatDate(date: Date | null) {
 }
 
 export default async function CoachPage() {
-  const coach = await getMyCoach();
+  const [coach, notes] = await Promise.all([getMyCoach(), getMyCoachNotes()]);
   const coachName = coach?.name ?? "your coach";
 
   return (
@@ -63,6 +69,20 @@ export default async function CoachPage() {
               </div>
             </div>
             <JoinTrainerForm />
+          </CardContent>
+        </Card>
+      )}
+
+      {notes.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Notes from your coach</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CoachNotesList
+              notes={notes}
+              sessionHref={(sessionId) => `/log/${sessionId}`}
+            />
           </CardContent>
         </Card>
       )}

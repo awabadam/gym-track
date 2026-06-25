@@ -1,8 +1,18 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getClientDetail, getClientRecentSessions } from "@/data/trainer";
+import {
+  getClientDetail,
+  getClientRecentSessions,
+  getClientNotes,
+} from "@/data/trainer";
 import { formatDate } from "@/lib/format";
-import { deleteAssignedProgram } from "@/app/actions/trainer";
+import {
+  deleteAssignedProgram,
+  addCoachNote,
+  deleteCoachNote,
+} from "@/app/actions/trainer";
+import { CoachNoteForm } from "@/components/shared/coach-note-form";
+import { CoachNotesList } from "@/components/shared/coach-notes-list";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +42,10 @@ export default async function ClientDetailPage({
   if (!detail) notFound();
 
   const { client, program, volume } = detail;
-  const recentSessions = await getClientRecentSessions(clientId, 15);
+  const [recentSessions, notes] = await Promise.all([
+    getClientRecentSessions(clientId, 15),
+    getClientNotes(clientId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -129,6 +142,23 @@ export default async function ClientDetailPage({
         subtitle={`${client.name ?? "This client"}'s logged sets · last 30 days`}
         emptyText="No sets logged in the last 30 days."
       />
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Coaching notes</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <CoachNoteForm action={addCoachNote.bind(null, clientId, null)} />
+          <CoachNotesList
+            notes={notes}
+            emptyText="No notes yet. Leave feedback for this client above."
+            deleteAction={deleteCoachNote}
+            sessionHref={(sessionId) =>
+              `/clients/${clientId}/sessions/${sessionId}`
+            }
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2">
