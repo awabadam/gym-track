@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getClientDetail } from "@/data/trainer";
+import { getClientDetail, getClientRecentSessions } from "@/data/trainer";
+import { formatDate } from "@/lib/format";
 import { deleteAssignedProgram } from "@/app/actions/trainer";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,7 @@ export default async function ClientDetailPage({
   if (!detail) notFound();
 
   const { client, program, volume } = detail;
+  const recentSessions = await getClientRecentSessions(clientId, 15);
 
   return (
     <div className="space-y-6">
@@ -127,6 +129,43 @@ export default async function ClientDetailPage({
         subtitle={`${client.name ?? "This client"}'s logged sets · last 30 days`}
         emptyText="No sets logged in the last 30 days."
       />
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Recent workouts</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {recentSessions.length === 0 ? (
+            <p className="px-6 py-4 text-sm text-muted-foreground">
+              No workouts logged yet.
+            </p>
+          ) : (
+            <ul className="divide-y-2 divide-foreground border-t-2 border-foreground">
+              {recentSessions.map((s) => (
+                <li key={s.id}>
+                  <Link
+                    href={`/clients/${clientId}/sessions/${s.id}`}
+                    className="flex items-center justify-between gap-3 px-6 py-3 hover:bg-muted"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold uppercase tracking-wide">
+                        {s.dayName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(s.date)}
+                        {s.status !== "completed" ? ` · ${s.status}` : ""}
+                      </p>
+                    </div>
+                    <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                      {s.setCount} {s.setCount === 1 ? "set" : "sets"}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

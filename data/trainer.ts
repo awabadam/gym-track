@@ -1,11 +1,16 @@
 import { headers } from "next/headers";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   trainerApplications,
   trainers,
   trainerClients,
   programs,
+  sessions,
+  sessionSets,
+  programDays,
+  programExercises,
+  exercises,
 } from "@/db/schema";
 import { user } from "@/db/auth-schema";
 import { auth, requireTrainer, requireUserId } from "@/lib/auth";
@@ -203,6 +208,119 @@ export async function getClientDetail(
   ]);
 
   return { client, program, volume };
+}
+
+/** Throws unless `clientId` is an ACTIVE client of `trainerId`. */
+async function assertActiveClient(trainerId: string, clientId: string) {
+  const [link] = await db
+    .select({ id: trainerClients.id })
+    .from(trainerClients)
+    .where(
+      and(
+        eq(trainerClients.trainerId, trainerId),
+        eq(trainerClients.clientId, clientId),
+        eq(trainerClients.status, "active"),
+      ),
+    )
+    .limit(1);
+  if (!link) throw new Error("Not an active client");
+}
+
+export type ClientSessionRow = {
+  id: string;
+  date: string;
+  status: string;
+  dayName: string;
+  dayCode: string;
+  setCount: number;
+};
+
+/**
+ * Recent workouts (with logged-set counts) for one of the current trainer's
+ * ACTIVE clients, newest first. Read-only monitoring — guarded by the active
+ * link, throws otherwise.
+ */
+export async function getClientRecentSessions(
+  clientId: string,
+  limit = 20,
+): Promise<ClientSessionRow[]> {
+  const trainerId = await requireTrainer();
+  await assertActiveClient(trainerId, clientId);
+
+  return db
+    .select({
+      id: sessions.id,
+      date: sessions.date,
+      status: sessions.status,
+      dayName: programDays.name,
+      dayCode: programDays.dayCode,
+      setCount: count(sessionSets.id),
+    })
+    .from(sessions)
+    .innerJoin(programDays, eq(sessions.programDayId, programDays.id))
+    .leftJoin(sessionSets, eq(sessionSets.sessionId, sessions.id))
+    .where(eq(sessions.userId, clientId))
+    .groupBy(sessions.id, programDays.name, programDays.dayCode)
+    .orderBy(desc(sessions.date))
+    .limit(limit);
+}
+
+export type ClientSessionDetail = Awaited<
+  ReturnType<typeof getClientSessionDetail>
+>;
+
+/**
+ * Read-only detail of one of an active client's sessions: the day's plan plus
+ * every logged set. Guarded by the active link; returns null if the session
+ * isn't this client's.
+ */
+export async function getClientSessionDetail(
+  clientId: string,
+  sessionId: string,
+) {
+  const trainerId = await requireTrainer();
+  await assertActiveClient(trainerId, clientId);
+
+  const [session] = await db
+    .select({
+      id: sessions.id,
+      date: sessions.date,
+      status: sessions.status,
+      notes: sessions.notes,
+      programDayId: sessions.programDayId,
+      dayName: programDays.name,
+      dayCode: programDays.dayCode,
+    })
+    .from(sessions)
+    .innerJoin(programDays, eq(sessions.programDayId, programDays.id))
+    .where(and(eq(sessions.id, sessionId), eq(sessions.userId, clientId)))
+    .limit(1);
+  if (!session) return null;
+
+  const plan = await db
+    .select({
+      id: programExercises.id,
+      exerciseId: programExercises.exerciseId,
+      exerciseName: exercises.name,
+      muscleGroup: exercises.muscleGroup,
+      sets: programExercises.sets,
+      repRangeMin: programExercises.repRangeMin,
+      repRangeMax: programExercises.repRangeMax,
+      sortOrder: programExercises.sortOrder,
+      supersetGroup: programExercises.supersetGroup,
+    })
+    .from(programExercises)
+    .innerJoin(exercises, eq(programExercises.exerciseId, exercises.id))
+    .where(eq(programExercises.programDayId, session.programDayId))
+    .orderBy(asc(programExercises.sortOrder));
+
+  const loggedSets = await db
+    .select()
+    .from(sessionSets)
+    .where(eq(sessionSets.sessionId, sessionId))
+    .orderBy(asc(sessionSets.exerciseId), asc(sessionSets.setNumber));
+
+  return { ...session, plan, loggedSets };
 }
 
 /**
