@@ -111,9 +111,9 @@ The agreed **target state**: three account types — **solo user** (today), **tr
 - ☑ Trainer role + application/approval queue (admin console) — `trainer_applications`, migration 0004
 - ☑ Invite codes + the `trainer_clients` link (join/switch/leave, time-windowed) — `trainers` + `trainer_clients`, migration 0005
 - ☑ Assigned programs (`programs.assignedClientId`) + client-follows visibility + leave-keeps-a-copy — migration 0006 (also fixed a Neon-HTTP `db.transaction` runtime bug that broke slice-2 join/switch)
-- ☐ Trainer roster + per-client read-only monitoring
-- ☐ Coaching feedback/notes (`coach_notes`)
-- ☐ Notifications (`notifications`; in-app first, email later)
+- ☑ Trainer roster + per-client read-only monitoring — "Recent workouts" + a read-only `/clients/[id]/sessions/[id]` view, link-guarded reads in `data/trainer.ts`; plus the weekly muscle-volume map across builder/progress/exercise/client/session
+- ☑ Coaching feedback/notes (`coach_notes`, migration 0007) — general or session-scoped notes; trainer writes on the client/session pages, client reads on `/coach`
+- ☑ Notifications (`notifications`, migration 0008; in-app first, email later) — join/leave/assign/note/workout-logged events, header bell + `/notifications`
 
 **New data-model touchpoints (all additive):** `programs.assignedClientId`; `trainer_clients`, `trainer_applications`, trainer invite code, `coach_notes`, `notifications`.
 
