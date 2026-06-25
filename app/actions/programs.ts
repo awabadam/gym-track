@@ -1,19 +1,24 @@
 "use server";
 
 import { db } from "@/db";
-import { programs, programDays, programExercises } from "@/db/schema";
-import { eq, asc, and, or, gt, lt, isNull } from "drizzle-orm";
+import { programs, programDays, programExercises, exercises } from "@/db/schema";
+import { eq, asc, and, or, ne, gt, lt, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { slugify } from "@/lib/slug";
 import { auth, requireUserId, userIsAdmin } from "@/lib/auth";
 import {
+  parse,
   parseForm,
   programSchema,
   programDaySchema,
   programExerciseSchema,
   programExerciseUpdateSchema,
+  weekdaySchema,
+  dayNameSchema,
+  idSchema,
+  WEEKDAYS,
 } from "@/lib/validation";
 
 /** Throws unless the program exists and belongs to the current user. */
@@ -46,6 +51,22 @@ async function assertProgramManageable(programId: string): Promise<void> {
   const isOwner = program.userId === user.id;
   const isManagedTemplate = program.userId === null && userIsAdmin(user);
   if (!isOwner && !isManagedTemplate) throw new Error("Not found");
+}
+
+/** Throws unless the exercise entry belongs to a day in this program. */
+async function assertEntryInProgram(entryId: string, programId: string) {
+  const [row] = await db
+    .select({ id: programExercises.id })
+    .from(programExercises)
+    .innerJoin(programDays, eq(programExercises.programDayId, programDays.id))
+    .where(
+      and(
+        eq(programExercises.id, entryId),
+        eq(programDays.programId, programId),
+      ),
+    )
+    .limit(1);
+  if (!row) throw new Error("Not found");
 }
 
 /** Revalidate the user-facing, admin, and trainer builder routes for a program. */
@@ -225,6 +246,7 @@ export async function updateProgramExercise(
   formData: FormData
 ) {
   await assertProgramManageable(programId);
+  await assertEntryInProgram(exerciseEntryId, programId);
   const { sets, repRangeMin, repRangeMax, notes, supersetGroup } = parseForm(
     programExerciseUpdateSchema,
     formData
@@ -243,6 +265,7 @@ export async function deleteProgramExercise(
   programId: string
 ) {
   await assertProgramManageable(programId);
+  await assertEntryInProgram(exerciseEntryId, programId);
   await db
     .delete(programExercises)
     .where(eq(programExercises.id, exerciseEntryId));
@@ -256,6 +279,7 @@ export async function reorderProgramExercise(
   direction: "up" | "down"
 ) {
   await assertProgramManageable(programId);
+  await assertEntryInProgram(exerciseEntryId, programId);
   const entry = await db.query.programExercises.findFirst({
     where: (pe, { eq: e }) => e(pe.id, exerciseEntryId),
   });
@@ -272,11 +296,7 @@ export async function reorderProgramExercise(
           : gt(programExercises.sortOrder, entry.sortOrder)
       )
     )
-    .orderBy(
-      direction === "up"
-        ? asc(programExercises.sortOrder)
-        : asc(programExercises.sortOrder)
-    )
+    .orderBy(asc(programExercises.sortOrder))
     .then((rows) =>
       direction === "up" ? rows[rows.length - 1] : rows[0]
     );
@@ -343,6 +363,161 @@ export async function duplicateProgramDay(dayId: string, programId: string) {
       }))
     );
   }
+
+  revalidateBuilder(programId);
+}
+
+/** Index of a weekday within the Mon..Sun week, 1-based (monday=1..sunday=7). */
+function weekdayIndex(weekday: (typeof WEEKDAYS)[number]): number {
+  return WEEKDAYS.indexOf(weekday) + 1;
+}
+
+/** Capitalised weekday label, e.g. "monday" -> "Monday". */
+function weekdayLabel(weekday: string): string {
+  return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+}
+
+/**
+ * Week-grid builder: turn a rest weekday into a training day. Creates a
+ * programDay scheduled on `weekday`, with a default name (the capitalised
+ * weekday) and auto dayCode (first 3 letters uppercased). sortOrder = the
+ * weekday index so days render in Mon..Sun order.
+ */
+export async function addTrainingDay(programId: string, weekday: string) {
+  await assertProgramManageable(programId);
+  const { weekday: day } = parse(weekdaySchema, { weekday });
+
+  // One training day per weekday (the grid shows a single slot each).
+  const [taken] = await db
+    .select({ id: programDays.id })
+    .from(programDays)
+    .where(
+      and(
+        eq(programDays.programId, programId),
+        eq(programDays.scheduledDay, day),
+      ),
+    )
+    .limit(1);
+  if (taken) throw new Error("That weekday already has a training day");
+
+  await db.insert(programDays).values({
+    programId,
+    name: weekdayLabel(day),
+    dayCode: day.slice(0, 3).toUpperCase(),
+    scheduledDay: day,
+    sortOrder: weekdayIndex(day),
+  });
+
+  revalidateBuilder(programId);
+}
+
+/**
+ * Week-grid builder: tap-to-add an exercise to a day at sensible defaults
+ * (3 sets, 8-12 reps). Validates the exercise is a uuid and visible to the
+ * caller before inserting.
+ */
+export async function quickAddExercise(
+  dayId: string,
+  programId: string,
+  exerciseId: string
+) {
+  await assertProgramManageable(programId);
+  const id = parse(idSchema, exerciseId);
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  const user = session?.user;
+  if (!user) throw new Error("Unauthorized: no signed-in user");
+
+  // Visible = a shared/system exercise (userId NULL) or one the caller owns.
+  const [visible] = await db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.id, id),
+        or(isNull(exercises.userId), eq(exercises.userId, user.id))
+      )
+    )
+    .limit(1);
+  if (!visible) throw new Error("Not found");
+
+  // The day must belong to this program — never trust dayId on its own (the
+  // program gate above only covers programId).
+  const [day] = await db
+    .select({ id: programDays.id })
+    .from(programDays)
+    .where(and(eq(programDays.id, dayId), eq(programDays.programId, programId)))
+    .limit(1);
+  if (!day) throw new Error("Not found");
+
+  const existing = await db
+    .select({ sortOrder: programExercises.sortOrder })
+    .from(programExercises)
+    .where(eq(programExercises.programDayId, dayId))
+    .then((rows) => rows.map((r) => r.sortOrder));
+  const nextOrder = existing.length > 0 ? Math.max(...existing) + 1 : 1;
+
+  await db.insert(programExercises).values({
+    programDayId: dayId,
+    exerciseId: id,
+    sets: 3,
+    repRangeMin: 8,
+    repRangeMax: 12,
+    sortOrder: nextOrder,
+    notes: null,
+    supersetGroup: null,
+  });
+
+  revalidateBuilder(programId);
+}
+
+/** Week-grid builder: inline-rename a day's optional label (name only). */
+export async function renameProgramDay(
+  dayId: string,
+  programId: string,
+  name: string
+) {
+  await assertProgramManageable(programId);
+  const { name: parsed } = parse(dayNameSchema, { name });
+
+  await db
+    .update(programDays)
+    .set({ name: parsed })
+    .where(and(eq(programDays.id, dayId), eq(programDays.programId, programId)));
+
+  revalidateBuilder(programId);
+}
+
+/**
+ * Week-grid builder: assign an (unscheduled, legacy) day to a weekday. Sets
+ * scheduledDay and sortOrder to keep the week in Mon..Sun order.
+ */
+export async function setDayWeekday(
+  dayId: string,
+  programId: string,
+  weekday: string
+) {
+  await assertProgramManageable(programId);
+  const { weekday: day } = parse(weekdaySchema, { weekday });
+
+  // Don't collide with another day already on that weekday.
+  const [taken] = await db
+    .select({ id: programDays.id })
+    .from(programDays)
+    .where(
+      and(
+        eq(programDays.programId, programId),
+        eq(programDays.scheduledDay, day),
+        ne(programDays.id, dayId),
+      ),
+    )
+    .limit(1);
+  if (taken) throw new Error("That weekday already has a training day");
+
+  await db
+    .update(programDays)
+    .set({ scheduledDay: day, sortOrder: weekdayIndex(day) })
+    .where(and(eq(programDays.id, dayId), eq(programDays.programId, programId)));
 
   revalidateBuilder(programId);
 }

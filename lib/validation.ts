@@ -96,6 +96,16 @@ export const programExerciseUpdateSchema = z
     path: ["repRangeMax"],
   });
 
+// A single weekday, e.g. for the week-grid builder (add/assign a training day).
+export const weekdaySchema = z.object({
+  weekday: z.enum(WEEKDAYS),
+});
+
+// A bounded, non-empty name only — used to inline-rename a program day.
+export const dayNameSchema = z.object({
+  name: name("Day name"),
+});
+
 // --- sessions / sets ----------------------------------------------------------
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a valid date");
