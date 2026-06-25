@@ -157,6 +157,22 @@ export const sessionSets = pgTable("session_sets", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  // Recipient (Better Auth user id).
+  userId: text("user_id").notNull(),
+  // Event kind, e.g. 'coach_note' | 'program_assigned' | 'client_joined' |
+  // 'client_left' | 'workout_logged'.
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  body: text("body"),
+  // Optional in-app destination for the notification (e.g. /coach).
+  linkPath: text("link_path"),
+  // NULL until the recipient has seen it.
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const coachNotes = pgTable("coach_notes", {
   id: uuid("id").primaryKey().defaultRandom(),
   // Author (trainer) and subject (client) — both Better Auth user ids.

@@ -1,12 +1,19 @@
 "use server";
 
 import { db } from "@/db";
-import { sessions, sessionSets, programDays, programs } from "@/db/schema";
+import {
+  sessions,
+  sessionSets,
+  programDays,
+  programs,
+  trainerClients,
+} from "@/db/schema";
 import { eq, and, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
 import { parse, idSchema, startPastSessionSchema, setValuesSchema } from "@/lib/validation";
+import { createNotification, getDisplayName } from "@/data/notifications";
 
 /** Throws unless the session exists and belongs to the current user. */
 async function assertSessionOwned(sessionId: string, uid: string) {
@@ -100,6 +107,33 @@ export async function completeSession(sessionId: string) {
     .update(sessions)
     .set({ status: "completed", completedAt: new Date() })
     .where(and(eq(sessions.id, sessionId), eq(sessions.userId, uid)));
+
+  // If this user has an active coach, let the coach know they trained.
+  const [link] = await db
+    .select({ trainerId: trainerClients.trainerId })
+    .from(trainerClients)
+    .where(
+      and(
+        eq(trainerClients.clientId, uid),
+        eq(trainerClients.status, "active"),
+      ),
+    )
+    .limit(1);
+  if (link) {
+    const [day] = await db
+      .select({ name: programDays.name })
+      .from(sessions)
+      .innerJoin(programDays, eq(sessions.programDayId, programDays.id))
+      .where(eq(sessions.id, sessionId))
+      .limit(1);
+    await createNotification({
+      userId: link.trainerId,
+      type: "workout_logged",
+      title: `${await getDisplayName(uid)} logged a workout`,
+      body: day?.name ?? undefined,
+      linkPath: `/clients/${uid}/sessions/${sessionId}`,
+    });
+  }
 
   revalidatePath("/");
   revalidatePath("/log");

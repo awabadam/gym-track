@@ -21,6 +21,7 @@ import {
   coachNoteSchema,
 } from "@/lib/validation";
 import { slugify } from "@/lib/slug";
+import { createNotification, getDisplayName } from "@/data/notifications";
 
 /**
  * Submit an application to become a trainer. Rejects if the user is already a
@@ -150,6 +151,13 @@ export async function joinTrainer(code: string) {
     throw e;
   }
 
+  await createNotification({
+    userId: trainer.trainerId,
+    type: "client_joined",
+    title: `${await getDisplayName(uid)} joined as your client`,
+    linkPath: `/clients/${uid}`,
+  });
+
   revalidatePath("/coach");
   revalidatePath("/clients");
 }
@@ -277,6 +285,14 @@ export async function assignProgram(clientId: string, formData: FormData) {
     targetRir,
   });
 
+  await createNotification({
+    userId: clientId,
+    type: "program_assigned",
+    title: `${await getDisplayName(trainerId, "Your coach")} assigned you a new program`,
+    body: name,
+    linkPath: "/programs",
+  });
+
   revalidatePath(`/clients/${clientId}`);
   redirect(`/clients/${clientId}/program/edit`);
 }
@@ -340,6 +356,14 @@ export async function addCoachNote(
     body,
   });
 
+  await createNotification({
+    userId: clientId,
+    type: "coach_note",
+    title: `New note from ${await getDisplayName(trainerId, "your coach")}`,
+    body,
+    linkPath: sessionId ? `/log/${sessionId}` : "/coach",
+  });
+
   revalidatePath(`/clients/${clientId}`);
   if (sessionId) revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
 }
@@ -391,6 +415,13 @@ export async function leaveTrainer() {
         eq(trainerClients.status, "active"),
       ),
     );
+
+  await createNotification({
+    userId: link.trainerId,
+    type: "client_left",
+    title: `${await getDisplayName(uid)} left your coaching`,
+    linkPath: "/clients",
+  });
 
   revalidatePath("/coach");
   revalidatePath("/clients");

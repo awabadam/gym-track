@@ -3,17 +3,19 @@ import { headers } from "next/headers";
 import { SignOutButton } from "@/components/shared/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { Dumbbell, Play, Shield, UserX, HeartHandshake, Users } from "lucide-react";
+import { Dumbbell, Play, Shield, UserX, HeartHandshake, Users, Bell } from "lucide-react";
 import { auth, userIsAdmin } from "@/lib/auth";
 import { stopImpersonating } from "@/app/actions/admin";
 import { getActiveProgram } from "@/data/programs";
 import { getInProgressSession } from "@/data/sessions";
+import { getMyUnreadCount } from "@/data/notifications";
 
 export async function AppHeader() {
-  const [session, program, inProgress] = await Promise.all([
+  const [session, program, inProgress, unreadCount] = await Promise.all([
     auth.api.getSession({ headers: await headers() }),
     getActiveProgram(),
     getInProgressSession(),
+    getMyUnreadCount(),
   ]);
 
   const isAdmin = session?.user ? userIsAdmin(session.user) : false;
@@ -100,6 +102,22 @@ export async function AppHeader() {
             </Link>
           </Button>
         )}
+        <Button
+          asChild
+          size="sm"
+          variant="ghost"
+          className="relative h-8 w-8 p-0"
+          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+        >
+          <Link href="/notifications">
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center border border-foreground bg-signal px-0.5 text-[9px] font-bold leading-none text-signal-foreground">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Link>
+        </Button>
         <ThemeToggle />
         {inProgress ? (
           <Button asChild size="sm" variant="default" className="h-8 gap-1.5">

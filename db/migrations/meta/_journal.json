@@ -57,6 +57,13 @@
       "when": 1782410301773,
       "tag": "0007_redundant_blue_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782410641260,
+      "tag": "0008_glossy_xorn",
+      "breakpoints": true
     }
   ]
 }
