@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getExerciseById, getExerciseHistory, getExerciseStats } from "@/data/exercises";
 import { formatDate } from "@/lib/format";
 import { bestEstimated1RM, totalVolume } from "@/lib/calculations";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ExerciseActions } from "@/components/shared/exercise-actions";
+import { MuscleHighlight } from "@/components/shared/muscle-volume-map";
 import { Block } from "@/components/shared/block";
 import { LineChart } from "@/components/shared/line-chart";
 import { Dumbbell, TrendingUp, Calendar, Hash, ArrowLeft, Zap } from "lucide-react";
@@ -151,6 +152,20 @@ export default async function ExerciseDetailPage({
             </Badge>
           ))}
         </div>
+      )}
+
+      {/* Muscle targeted */}
+      {exercise.muscleGroup && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base capitalize">
+              Targets: {exercise.muscleGroup}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MuscleHighlight groups={[exercise.muscleGroup]} />
+          </CardContent>
+        </Card>
       )}
 
       {/* Analytics charts */}

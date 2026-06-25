@@ -11,6 +11,7 @@ import { user } from "@/db/auth-schema";
 import { auth, requireTrainer, requireUserId } from "@/lib/auth";
 import { generateInviteCode } from "@/lib/invite";
 import { getProgramById } from "@/data/programs";
+import { getActualVolumeByMuscle, type MuscleVolume } from "@/data/progress";
 
 export type TrainerApplication = typeof trainerApplications.$inferSelect;
 
@@ -156,6 +157,7 @@ export async function getMyCoach(): Promise<MyCoach | null> {
 export type ClientDetail = {
   client: { id: string; name: string | null; email: string | null };
   program: Awaited<ReturnType<typeof getProgramById>> | null;
+  volume: MuscleVolume[];
 };
 
 /**
@@ -194,9 +196,13 @@ export async function getClientDetail(
     )
     .limit(1);
 
-  const program = assigned ? await getProgramById(assigned.id) : null;
+  // Active client → this trainer is authorized to see their logged volume.
+  const [program, volume] = await Promise.all([
+    assigned ? getProgramById(assigned.id) : Promise.resolve(null),
+    getActualVolumeByMuscle(clientId, 30),
+  ]);
 
-  return { client, program };
+  return { client, program, volume };
 }
 
 /**

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getActiveProgram } from "@/data/programs";
-import { getProgressForProgram } from "@/data/progress";
+import { getProgressForProgram, getMyActualVolumeByMuscle } from "@/data/progress";
+import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,10 @@ export default async function ProgressPage() {
     );
   }
 
-  const progress = await getProgressForProgram(program.id, program.targetRir);
+  const [progress, actualVolume] = await Promise.all([
+    getProgressForProgram(program.id, program.targetRir),
+    getMyActualVolumeByMuscle(30),
+  ]);
 
   // Group progress by muscle group
   const grouped = new Map<string, typeof progress>();
@@ -117,6 +121,15 @@ export default async function ProgressPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Body map of what's actually been trained (logged sets, last 30 days) —
+          complements the planned bars above. */}
+      <MuscleVolumeMap
+        entries={actualVolume}
+        title="Trained volume"
+        subtitle="Sets actually logged · last 30 days"
+        emptyText="Log some workouts to see which muscles you've been training."
+      />
 
       {/* Progress table grouped by muscle group */}
       {sortedGroups.map(([group, exercises]) => (

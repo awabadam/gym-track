@@ -12,6 +12,7 @@ import { RestTimer } from "@/components/shared/rest-timer";
 import { WakeLock } from "@/components/shared/wake-lock";
 import { CheckCircle, Trophy, ArrowLeft, Pencil, Check } from "lucide-react";
 import { CancelSessionButton } from "@/components/shared/cancel-session-button";
+import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import Link from "next/link";
 
 /**
@@ -123,6 +124,19 @@ export async function SessionDetail({
           {!isComplete && <CancelSessionButton sessionId={sessionId} />}
         </div>
       </div>
+
+      {/* Completed-session summary: which muscles this workout actually hit. */}
+      {isComplete && !editing && totalLoggedSets > 0 && (
+        <MuscleVolumeMap
+          entries={exerciseData.map((ex) => ({
+            muscleGroup: ex.muscleGroup,
+            sets: ex.loggedSets.length,
+          }))}
+          title="Muscles worked"
+          subtitle="Sets logged this session"
+          emptyText="No sets logged this session."
+        />
+      )}
 
       {!isComplete && <RestTimer />}
 

@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AssignProgramForm } from "@/components/shared/assign-program-form";
+import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 
 export default async function ClientDetailPage({
@@ -29,7 +30,7 @@ export default async function ClientDetailPage({
 
   if (!detail) notFound();
 
-  const { client, program } = detail;
+  const { client, program, volume } = detail;
 
   return (
     <div className="space-y-6">
@@ -119,6 +120,13 @@ export default async function ClientDetailPage({
           </CardContent>
         </Card>
       )}
+
+      <MuscleVolumeMap
+        entries={volume}
+        title="Trained volume"
+        subtitle={`${client.name ?? "This client"}'s logged sets · last 30 days`}
+        emptyText="No sets logged in the last 30 days."
+      />
     </div>
   );
 }

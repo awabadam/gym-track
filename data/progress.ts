@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { sessionSets, sessions, programExercises, exercises, programDays } from "@/db/schema";
-import { eq, desc, asc, and } from "drizzle-orm";
+import { eq, desc, asc, and, gte, sql } from "drizzle-orm";
 import { bestEstimated1RM } from "@/lib/calculations";
 import { getProgression, isUpperBody } from "@/lib/progression";
 import { requireUserId } from "@/lib/auth";
@@ -16,6 +16,53 @@ export interface ExerciseProgress {
   recommendation: string;
   /** Estimated 1RM per session, oldest → newest (for sparkline trend) */
   series: { date: string; e1rm: number }[];
+}
+
+export interface MuscleVolume {
+  muscleGroup: string | null;
+  sets: number;
+}
+
+/** The date `days` ago as a YYYY-MM-DD string (sessions store dates as text). */
+function cutoffDate(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Actual training volume — number of logged sets per muscle group — from a
+ * user's COMPLETED sessions within the last `days`. No auth inside: callers
+ * must authorize access to `userId` (the owner, or a trainer's active client).
+ */
+export async function getActualVolumeByMuscle(
+  userId: string,
+  days = 30,
+): Promise<MuscleVolume[]> {
+  return db
+    .select({
+      muscleGroup: exercises.muscleGroup,
+      sets: sql<number>`count(*)::int`,
+    })
+    .from(sessionSets)
+    .innerJoin(sessions, eq(sessionSets.sessionId, sessions.id))
+    .innerJoin(exercises, eq(sessionSets.exerciseId, exercises.id))
+    .where(
+      and(
+        eq(sessions.userId, userId),
+        eq(sessions.status, "completed"),
+        gte(sessions.date, cutoffDate(days)),
+      ),
+    )
+    .groupBy(exercises.muscleGroup);
+}
+
+/** Actual logged volume per muscle for the current user (last `days`). */
+export async function getMyActualVolumeByMuscle(
+  days = 30,
+): Promise<MuscleVolume[]> {
+  const uid = await requireUserId();
+  return getActualVolumeByMuscle(uid, days);
 }
 
 export async function getProgressForProgram(
