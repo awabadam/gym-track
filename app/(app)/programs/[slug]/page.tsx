@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { Pencil } from "lucide-react";
 
 export default async function ProgramDetailPage({
@@ -54,6 +55,8 @@ export default async function ProgramDetailPage({
           </p>
         )}
       </div>
+
+      <MuscleVolumeMap entries={program.days.flatMap((d) => d.exercises)} />
 
       {program.days.map((day) => (
         <Card key={day.id}>
@@ -140,56 +143,6 @@ export default async function ProgramDetailPage({
           </CardContent>
         </Card>
       ))}
-
-      <VolumeSummary days={program.days} />
     </div>
-  );
-}
-
-function VolumeSummary({
-  days,
-}: {
-  days: {
-    exercises: {
-      muscleGroup: string | null;
-      sets: number;
-    }[];
-  }[];
-}) {
-  const volume = new Map<string, number>();
-  for (const day of days) {
-    for (const ex of day.exercises) {
-      const group = ex.muscleGroup ?? "Other";
-      volume.set(group, (volume.get(group) ?? 0) + ex.sets);
-    }
-  }
-
-  if (volume.size === 0) return null;
-
-  const sorted = [...volume.entries()].sort((a, b) => {
-    if (a[0] === "Other") return 1;
-    if (b[0] === "Other") return -1;
-    return b[1] - a[1];
-  });
-
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Weekly volume</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {sorted.map(([group, sets]) => (
-            <div
-              key={group}
-              className="flex items-center justify-between rounded-lg border p-3"
-            >
-              <span className="text-sm capitalize">{group}</span>
-              <span className="font-mono text-sm font-medium">{sets} sets</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
   );
 }
