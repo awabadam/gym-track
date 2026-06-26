@@ -6,6 +6,7 @@ import { eq, and, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/auth";
 import { parseForm, exerciseSchema } from "@/lib/validation";
+import { fineToCoarse } from "@/lib/muscles";
 
 /**
  * Throws unless the exercise exists and is owned by the current user. Shared
@@ -23,8 +24,10 @@ async function assertExerciseOwned(id: string, uid: string) {
 export async function createExercise(formData: FormData) {
   const uid = await requireUserId();
   const data = parseForm(exerciseSchema, formData);
+  // Keep the legacy coarse muscleGroup in sync with the chosen primary muscle.
+  const muscleGroup = fineToCoarse(data.primaryMuscle);
 
-  await db.insert(exercises).values({ userId: uid, ...data });
+  await db.insert(exercises).values({ userId: uid, ...data, muscleGroup });
 
   revalidatePath("/exercises");
 }
@@ -33,10 +36,11 @@ export async function updateExercise(id: string, formData: FormData) {
   const uid = await requireUserId();
   await assertExerciseOwned(id, uid);
   const data = parseForm(exerciseSchema, formData);
+  const muscleGroup = fineToCoarse(data.primaryMuscle);
 
   await db
     .update(exercises)
-    .set(data)
+    .set({ ...data, muscleGroup })
     .where(and(eq(exercises.id, id), eq(exercises.userId, uid)));
 
   revalidatePath("/exercises");

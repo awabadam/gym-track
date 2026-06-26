@@ -20,12 +20,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { MuscleSelect } from "@/components/shared/muscle-select";
 import { Plus } from "lucide-react";
-
-const muscleGroups = [
-  "chest", "back", "shoulders", "biceps", "triceps",
-  "quads", "hamstrings", "glutes", "calves", "core",
-];
 
 const exerciseTypes = ["main", "compound", "iso", "core"];
 
@@ -69,21 +65,7 @@ export function RecommendedExerciseDialog() {
             <Label htmlFor="rec-name">Name</Label>
             <Input id="rec-name" name="name" required />
           </div>
-          <div>
-            <Label htmlFor="rec-muscleGroup">Muscle group</Label>
-            <Select name="muscleGroup">
-              <SelectTrigger>
-                <SelectValue placeholder="Select..." />
-              </SelectTrigger>
-              <SelectContent>
-                {muscleGroups.map((mg) => (
-                  <SelectItem key={mg} value={mg}>
-                    <span className="capitalize">{mg}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <MuscleSelect />
           <div>
             <Label htmlFor="rec-type">Type</Label>
             <Select name="type">

@@ -19,7 +19,7 @@ export interface ExerciseProgress {
 }
 
 export interface MuscleVolume {
-  muscleGroup: string | null;
+  primary: string | null;
   sets: number;
 }
 
@@ -41,7 +41,7 @@ export async function getActualVolumeByMuscle(
 ): Promise<MuscleVolume[]> {
   return db
     .select({
-      muscleGroup: exercises.muscleGroup,
+      primary: exercises.primaryMuscle,
       sets: sql<number>`count(*)::int`,
     })
     .from(sessionSets)
@@ -54,7 +54,7 @@ export async function getActualVolumeByMuscle(
         gte(sessions.date, cutoffDate(days)),
       ),
     )
-    .groupBy(exercises.muscleGroup);
+    .groupBy(exercises.primaryMuscle);
 }
 
 /** Actual logged volume per muscle for the current user (last `days`). */

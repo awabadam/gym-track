@@ -31,12 +31,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { MuscleSelect } from "@/components/shared/muscle-select";
 import { Pencil, Trash2 } from "lucide-react";
-
-const muscleGroups = [
-  "chest", "back", "shoulders", "biceps", "triceps",
-  "quads", "hamstrings", "glutes", "calves", "core",
-];
 
 const exerciseTypes = ["main", "compound", "iso", "core"];
 
@@ -44,7 +40,8 @@ interface ExerciseActionsProps {
   exercise: {
     id: string;
     name: string;
-    muscleGroup: string | null;
+    primaryMuscle: string | null;
+    secondaryMuscles: string[] | null;
     type: string | null;
     notes: string | null;
   };
@@ -92,21 +89,10 @@ export function ExerciseActions({ exercise }: ExerciseActionsProps) {
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="edit-muscleGroup">Muscle group</Label>
-              <Select name="muscleGroup" defaultValue={exercise.muscleGroup ?? undefined}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {muscleGroups.map((mg) => (
-                    <SelectItem key={mg} value={mg}>
-                      <span className="capitalize">{mg}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <MuscleSelect
+              defaultPrimary={exercise.primaryMuscle}
+              defaultSecondary={exercise.secondaryMuscles}
+            />
             <div>
               <Label htmlFor="edit-type">Type</Label>
               <Select name="type" defaultValue={exercise.type ?? undefined}>

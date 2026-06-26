@@ -16,6 +16,7 @@ import {
 import { user } from "@/db/auth-schema";
 import { slugify } from "@/lib/slug";
 import { generateInviteCode } from "@/lib/invite";
+import { fineToCoarse } from "@/lib/muscles";
 import { auth, requireAdmin } from "@/lib/auth";
 import {
   parse,
@@ -159,9 +160,10 @@ async function assertRecommended(id: string) {
 export async function createRecommendedExercise(formData: FormData) {
   await requireAdmin();
   const data = parseForm(exerciseSchema, formData);
+  const muscleGroup = fineToCoarse(data.primaryMuscle);
 
   // userId NULL = shared/recommended, visible to all, owned by no one.
-  await db.insert(exercises).values({ userId: null, ...data });
+  await db.insert(exercises).values({ userId: null, ...data, muscleGroup });
 
   revalidatePath("/admin/exercises");
   revalidatePath("/exercises");
@@ -172,10 +174,11 @@ export async function updateRecommendedExercise(id: string, formData: FormData) 
   const exerciseId = parse(idSchema, id);
   await assertRecommended(exerciseId);
   const data = parseForm(exerciseSchema, formData);
+  const muscleGroup = fineToCoarse(data.primaryMuscle);
 
   await db
     .update(exercises)
-    .set(data)
+    .set({ ...data, muscleGroup })
     .where(and(eq(exercises.id, exerciseId), isNull(exercises.userId)));
 
   revalidatePath("/admin/exercises");

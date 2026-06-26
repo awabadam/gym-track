@@ -8,7 +8,13 @@ export const exercises = pgTable("exercises", {
   // A non-NULL userId is a user's private exercise — only they see and manage it.
   userId: text("user_id"),
   name: text("name").notNull(),
+  // Legacy coarse 10-group bucket, now DERIVED from primaryMuscle on write and
+  // kept for progression (isUpperBody) + progress grouping.
   muscleGroup: text("muscle_group"),
+  // Fine-grained anatomical targeting (lib/muscles slugs) for the body diagram.
+  // primaryMuscle = the main mover; secondaryMuscles = supporting muscles.
+  primaryMuscle: text("primary_muscle"),
+  secondaryMuscles: text("secondary_muscles").array(),
   type: text("type"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),

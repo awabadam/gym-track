@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MUSCLE_SLUGS } from "@/lib/muscles";
 
 /**
  * Validation schemas for every server action input, plus small helpers to run
@@ -44,9 +45,26 @@ const repBound = z.coerce.number("Reps must be a number").int().min(1, "Reps mus
 
 // --- exercises ----------------------------------------------------------------
 
+// Secondary muscles arrive as a single comma-separated field (the form keeps a
+// hidden input in sync) — `parseForm` collapses repeated keys, so we can't use
+// getAll. Split, trim, and keep only valid fine-muscle slugs.
+const VALID_MUSCLE_SLUGS = new Set<string>(MUSCLE_SLUGS);
+const secondaryMusclesField = z
+  .string()
+  .optional()
+  .transform((v) =>
+    v
+      ? v
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => VALID_MUSCLE_SLUGS.has(s))
+      : [],
+  );
+
 export const exerciseSchema = z.object({
   name: name("Exercise name"),
-  muscleGroup: optionalEnum(MUSCLE_GROUPS),
+  primaryMuscle: optionalEnum(MUSCLE_SLUGS),
+  secondaryMuscles: secondaryMusclesField,
   type: optionalEnum(EXERCISE_TYPES),
   notes: optionalText(),
 });

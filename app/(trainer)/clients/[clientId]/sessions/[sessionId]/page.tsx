@@ -64,7 +64,8 @@ export default async function ClientSessionPage({
       {totalLogged > 0 && (
         <MuscleVolumeMap
           entries={session.plan.map((pe) => ({
-            muscleGroup: pe.muscleGroup,
+            primary: pe.primaryMuscle,
+            secondary: pe.secondaryMuscles,
             sets: setsByExercise.get(pe.exerciseId)?.length ?? 0,
           }))}
           title="Muscles worked"

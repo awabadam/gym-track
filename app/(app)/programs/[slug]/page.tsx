@@ -56,7 +56,15 @@ export default async function ProgramDetailPage({
         )}
       </div>
 
-      <MuscleVolumeMap entries={program.days.flatMap((d) => d.exercises)} />
+      <MuscleVolumeMap
+        entries={program.days.flatMap((d) =>
+          d.exercises.map((e) => ({
+            primary: e.primaryMuscle,
+            secondary: e.secondaryMuscles,
+            sets: e.sets,
+          })),
+        )}
+      />
 
       {program.days.map((day) => (
         <Card key={day.id}>

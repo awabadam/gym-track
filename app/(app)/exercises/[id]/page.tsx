@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { ExerciseActions } from "@/components/shared/exercise-actions";
 import { MuscleHighlight } from "@/components/shared/muscle-volume-map";
+import { muscleLabel } from "@/lib/muscles";
 import { Block } from "@/components/shared/block";
 import { LineChart } from "@/components/shared/line-chart";
 import { Dumbbell, TrendingUp, Calendar, Hash, ArrowLeft, Zap } from "lucide-react";
@@ -69,11 +70,16 @@ export default async function ExerciseDetailPage({
             <h1 className="text-2xl font-bold truncate">{exercise.name}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2 ml-10">
-            {exercise.muscleGroup && (
-              <Badge variant="outline" className="capitalize text-xs">
-                {exercise.muscleGroup}
+            {exercise.primaryMuscle && (
+              <Badge variant="outline" className="text-xs">
+                {muscleLabel(exercise.primaryMuscle)}
               </Badge>
             )}
+            {(exercise.secondaryMuscles ?? []).map((m) => (
+              <Badge key={m} variant="outline" className="text-xs opacity-70">
+                {muscleLabel(m)}
+              </Badge>
+            ))}
             {exercise.type && (
               <Badge variant="secondary" className="capitalize text-xs">
                 {exercise.type}
@@ -154,16 +160,27 @@ export default async function ExerciseDetailPage({
         </div>
       )}
 
-      {/* Muscle targeted */}
-      {exercise.muscleGroup && (
+      {/* Muscles targeted */}
+      {exercise.primaryMuscle && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base capitalize">
-              Targets: {exercise.muscleGroup}
+            <CardTitle className="text-base">
+              Targets: {muscleLabel(exercise.primaryMuscle)}
             </CardTitle>
+            {(exercise.secondaryMuscles ?? []).length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Also works{" "}
+                {(exercise.secondaryMuscles ?? [])
+                  .map((m) => muscleLabel(m))
+                  .join(", ")}
+              </p>
+            )}
           </CardHeader>
           <CardContent>
-            <MuscleHighlight groups={[exercise.muscleGroup]} />
+            <MuscleHighlight
+              primary={[exercise.primaryMuscle]}
+              secondary={exercise.secondaryMuscles ?? []}
+            />
           </CardContent>
         </Card>
       )}

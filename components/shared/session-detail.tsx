@@ -129,7 +129,8 @@ export async function SessionDetail({
       {isComplete && !editing && totalLoggedSets > 0 && (
         <MuscleVolumeMap
           entries={exerciseData.map((ex) => ({
-            muscleGroup: ex.muscleGroup,
+            primary: ex.primaryMuscle,
+            secondary: ex.secondaryMuscles,
             sets: ex.loggedSets.length,
           }))}
           title="Muscles worked"

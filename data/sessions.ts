@@ -58,6 +58,8 @@ export async function getSessionById(sessionId: string) {
       exerciseId: programExercises.exerciseId,
       exerciseName: exercises.name,
       muscleGroup: exercises.muscleGroup,
+      primaryMuscle: exercises.primaryMuscle,
+      secondaryMuscles: exercises.secondaryMuscles,
       sets: programExercises.sets,
       repRangeMin: programExercises.repRangeMin,
       repRangeMax: programExercises.repRangeMax,

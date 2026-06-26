@@ -70,6 +70,8 @@ export async function getProgramById(id: string) {
           exerciseId: programExercises.exerciseId,
           exerciseName: exercises.name,
           muscleGroup: exercises.muscleGroup,
+          primaryMuscle: exercises.primaryMuscle,
+          secondaryMuscles: exercises.secondaryMuscles,
           exerciseType: exercises.type,
           sets: programExercises.sets,
           repRangeMin: programExercises.repRangeMin,

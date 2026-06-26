@@ -62,6 +62,8 @@ interface BuilderExercise {
   exerciseId: string;
   exerciseName: string;
   muscleGroup: string | null;
+  primaryMuscle: string | null;
+  secondaryMuscles: string[] | null;
   sets: number;
   repRangeMin: number;
   repRangeMax: number;
@@ -154,7 +156,13 @@ export function ProgramWeekBuilder({
       </div>
 
       <MuscleVolumeMap
-        entries={program.days.flatMap((d) => d.exercises)}
+        entries={program.days.flatMap((d) =>
+          d.exercises.map((e) => ({
+            primary: e.primaryMuscle,
+            secondary: e.secondaryMuscles,
+            sets: e.sets,
+          })),
+        )}
       />
 
       {unscheduled.length > 0 && (
