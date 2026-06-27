@@ -82,54 +82,26 @@ export default async function ProgressPage() {
         }
       />
 
-      {/* Weekly volume summary with bars */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-baseline gap-2">
-            Weekly volume
-            <span className="text-[10px] font-normal uppercase tracking-wide text-muted-foreground">
-              sets / muscle / week
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
-            {(() => {
-              const sorted = [...weeklyVolume.entries()].sort((a, b) => {
-                if (a[0] === "Other") return 1;
-                if (b[0] === "Other") return -1;
-                return b[1] - a[1];
-              });
-              const maxSets = Math.max(...sorted.map(([, s]) => s), 1);
-              return sorted.map(([group, sets]) => (
-                <div key={group} className="flex items-center gap-3">
-                  <span className="w-24 shrink-0 truncate text-xs font-bold uppercase tracking-wide">
-                    {group}
-                  </span>
-                  <div className="h-3 flex-1 border border-foreground bg-muted">
-                    <div
-                      className="h-full bg-signal"
-                      style={{ width: `${(sets / maxSets) * 100}%` }}
-                    />
-                  </div>
-                  <span className="w-5 shrink-0 text-right font-mono text-xs font-bold tabular-nums">
-                    {sets}
-                  </span>
-                </div>
-              ));
-            })()}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Body map of what's actually been trained (logged sets, last 30 days) —
-          complements the planned bars above. */}
-      <MuscleVolumeMap
-        entries={actualVolume}
-        title="Trained volume"
-        subtitle="Sets actually logged · last 30 days"
-        emptyText="Log some workouts to see which muscles you've been training."
-      />
+      {/* Planned vs. actual, both on the body map. */}
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <MuscleVolumeMap
+          entries={program.days.flatMap((d) =>
+            d.exercises.map((e) => ({
+              primary: e.primaryMuscle,
+              secondary: e.secondaryMuscles,
+              sets: e.sets,
+            })),
+          )}
+          title="Planned volume"
+          subtitle="Sets / muscle / week from your program"
+        />
+        <MuscleVolumeMap
+          entries={actualVolume}
+          title="Trained volume"
+          subtitle="Sets actually logged · last 30 days"
+          emptyText="Log some workouts to see which muscles you've been training."
+        />
+      </div>
 
       {/* Progress table grouped by muscle group */}
       {sortedGroups.map(([group, exercises]) => (
