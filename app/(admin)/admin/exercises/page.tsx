@@ -15,6 +15,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { Pagination } from "@/components/shared/pagination";
 import { RecommendedExerciseDialog } from "@/components/shared/recommended-exercise-dialog";
 import { RecommendedExerciseActions } from "@/components/shared/recommended-exercise-actions";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Dumbbell } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -36,8 +37,10 @@ export default async function AdminExercisesPage({
 
   return (
     <div className="space-y-4">
+      <Breadcrumbs
+        items={[{ label: "Admin", href: "/admin" }, { label: "Exercises" }]}
+      />
       <PageHeader
-        eyebrow="Admin"
         title="Recommended"
         subtitle="The shared exercise catalog every user sees"
         action={<RecommendedExerciseDialog />}

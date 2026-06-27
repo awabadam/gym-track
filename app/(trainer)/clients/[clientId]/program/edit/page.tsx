@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getClientDetail } from "@/data/trainer";
 import { getAllExercises } from "@/data/exercises";
 import { updateProgram } from "@/app/actions/programs";
@@ -18,7 +17,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ProgramWeekBuilder } from "@/components/shared/program-week-builder";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { Trash2 } from "lucide-react";
 
 export default async function EditAssignedProgramPage({
   params,
@@ -39,23 +39,21 @@ export default async function EditAssignedProgramPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          asChild
-          aria-label="Back to client"
-        >
-          <Link href={`/clients/${clientId}`}>
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Edit assigned program</h1>
-          <p className="text-sm text-muted-foreground">
-            For {client.name ?? client.email ?? "your client"}
-          </p>
-        </div>
+      <Breadcrumbs
+        items={[
+          { label: "Clients", href: "/clients" },
+          {
+            label: client.name ?? client.email ?? "Client",
+            href: `/clients/${clientId}`,
+          },
+          { label: "Program" },
+        ]}
+      />
+      <div>
+        <h1 className="text-2xl font-bold">Edit assigned program</h1>
+        <p className="text-sm text-muted-foreground">
+          For {client.name ?? client.email ?? "your client"}
+        </p>
       </div>
 
       <ProgramWeekBuilder

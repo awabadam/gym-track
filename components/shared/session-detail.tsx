@@ -13,6 +13,7 @@ import { WakeLock } from "@/components/shared/wake-lock";
 import { CheckCircle, Trophy, ArrowLeft, Pencil, Check } from "lucide-react";
 import { CancelSessionButton } from "@/components/shared/cancel-session-button";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import Link from "next/link";
 
 /**
@@ -83,17 +84,28 @@ export async function SessionDetail({
   const totalPlannedSets = session.plan.reduce((sum, pe) => sum + pe.sets, 0);
   const totalLoggedSets = session.loggedSets.length;
 
+  const sectionLabel = section === "workout" ? "Workout" : "Log";
+  const sectionHref = section === "workout" ? "/workout" : "/log";
+  const crumbs = edit
+    ? [
+        { label: sectionLabel, href: sectionHref },
+        { label: session.dayName, href: `/log/${sessionId}` },
+        { label: "Edit" },
+      ]
+    : [{ label: sectionLabel, href: sectionHref }, { label: session.dayName }];
+
   return (
     <div
       className={`mx-auto space-y-4 pb-20 ${editing ? "max-w-xl" : "max-w-5xl"}`}
     >
+      <Breadcrumbs items={crumbs} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          {isComplete && (
+          {isComplete && edit && (
             <Button variant="ghost" size="sm" asChild className="h-8 px-2 -ml-2 mb-1">
-              <Link href={edit ? `/log/${sessionId}` : "/log"}>
+              <Link href={`/log/${sessionId}`}>
                 <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                {edit ? "Cancel" : "Back to log"}
+                Cancel
               </Link>
             </Button>
           )}

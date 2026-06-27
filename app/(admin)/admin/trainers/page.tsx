@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/shared/page-header";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { TrainerApplicationActions } from "@/components/shared/trainer-application-actions";
 
 function formatDate(date: Date | null) {
@@ -26,8 +27,10 @@ export default async function AdminTrainersPage() {
 
   return (
     <div className="space-y-4">
+      <Breadcrumbs
+        items={[{ label: "Admin", href: "/admin" }, { label: "Trainers" }]}
+      />
       <PageHeader
-        eyebrow="Admin"
         title="Trainers"
         subtitle="Review trainer applications"
       />

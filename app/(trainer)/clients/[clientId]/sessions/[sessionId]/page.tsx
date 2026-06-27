@@ -1,15 +1,13 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getClientSessionDetail, getClientSessionNotes } from "@/data/trainer";
 import { addCoachNote, deleteCoachNote } from "@/app/actions/trainer";
 import { formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { CoachNoteForm } from "@/components/shared/coach-note-form";
 import { CoachNotesList } from "@/components/shared/coach-notes-list";
-import { ArrowLeft } from "lucide-react";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 
 export default async function ClientSessionPage({
   params,
@@ -35,18 +33,13 @@ export default async function ClientSessionPage({
 
   return (
     <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        asChild
-        className="-ml-2"
-        aria-label="Back to client"
-      >
-        <Link href={`/clients/${clientId}`}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Client
-        </Link>
-      </Button>
+      <Breadcrumbs
+        items={[
+          { label: "Clients", href: "/clients" },
+          { label: "Client", href: `/clients/${clientId}` },
+          { label: `${session.dayName} · ${formatDate(session.date)}` },
+        ]}
+      />
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

@@ -3,10 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 
 export default function NewProgramPage() {
   return (
     <div className="space-y-6">
+      <Breadcrumbs
+        items={[{ label: "Programs", href: "/programs" }, { label: "New" }]}
+      />
       <h1 className="text-2xl font-bold">New program</h1>
 
       <Card>

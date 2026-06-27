@@ -17,8 +17,8 @@ import { MuscleHighlight } from "@/components/shared/muscle-volume-map";
 import { muscleLabel } from "@/lib/muscles";
 import { Block } from "@/components/shared/block";
 import { LineChart } from "@/components/shared/line-chart";
-import { Dumbbell, TrendingUp, Calendar, Hash, ArrowLeft, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Dumbbell, TrendingUp, Calendar, Hash, Zap } from "lucide-react";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import Link from "next/link";
 
 export default async function ExerciseDetailPage({
@@ -58,18 +58,17 @@ export default async function ExerciseDetailPage({
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs
+        items={[
+          { label: "Exercises", href: "/exercises" },
+          { label: exercise.name },
+        ]}
+      />
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 shrink-0">
-              <Link href="/exercises" aria-label="Back to exercises">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold truncate">{exercise.name}</h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 ml-10">
+          <h1 className="text-2xl font-bold truncate">{exercise.name}</h1>
+          <div className="flex flex-wrap items-center gap-2">
             {exercise.primaryMuscle && (
               <Badge variant="outline" className="text-xs">
                 {muscleLabel(exercise.primaryMuscle)}
@@ -87,7 +86,7 @@ export default async function ExerciseDetailPage({
             )}
           </div>
           {exercise.notes && (
-            <p className="text-sm text-muted-foreground ml-10">{exercise.notes}</p>
+            <p className="text-sm text-muted-foreground">{exercise.notes}</p>
           )}
         </div>
         {exercise.isOwner && <ExerciseActions exercise={exercise} />}

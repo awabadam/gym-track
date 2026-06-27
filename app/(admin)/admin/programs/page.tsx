@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { Pagination } from "@/components/shared/pagination";
 import { CreateRecommendedProgramDialog } from "@/components/shared/create-recommended-program-dialog";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { ListChecks, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -36,8 +37,10 @@ export default async function AdminProgramsPage({
 
   return (
     <div className="space-y-4">
+      <Breadcrumbs
+        items={[{ label: "Admin", href: "/admin" }, { label: "Programs" }]}
+      />
       <PageHeader
-        eyebrow="Admin"
         title="Programs"
         subtitle="Recommended program templates"
         action={<CreateRecommendedProgramDialog />}

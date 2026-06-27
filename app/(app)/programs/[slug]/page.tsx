@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Pencil } from "lucide-react";
 
 export default async function ProgramDetailPage({
@@ -27,6 +28,9 @@ export default async function ProgramDetailPage({
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs
+        items={[{ label: "Programs", href: "/programs" }, { label: program.name }]}
+      />
       <div>
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold">{program.name}</h1>

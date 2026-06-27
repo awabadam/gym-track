@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AssignProgramForm } from "@/components/shared/assign-program-form";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default async function ClientDetailPage({
   params,
@@ -49,20 +50,13 @@ export default async function ClientDetailPage({
 
   return (
     <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        asChild
-        className="-ml-2"
-        aria-label="Back to clients"
-      >
-        <Link href="/clients">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Clients
-        </Link>
-      </Button>
+      <Breadcrumbs
+        items={[
+          { label: "Clients", href: "/clients" },
+          { label: client.name ?? "Client" },
+        ]}
+      />
       <PageHeader
-        eyebrow="Client"
         title={client.name ?? "Unknown user"}
         subtitle={client.email ?? "—"}
       />

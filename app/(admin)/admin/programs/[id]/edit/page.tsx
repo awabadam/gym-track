@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getRecommendedProgramById, getAllRecommendedExercises } from "@/data/admin";
 import {
   updateRecommendedProgram,
@@ -19,7 +18,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ProgramWeekBuilder } from "@/components/shared/program-week-builder";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { Trash2 } from "lucide-react";
 
 export default async function EditRecommendedProgramPage({
   params,
@@ -38,14 +38,14 @@ export default async function EditRecommendedProgramPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" asChild aria-label="Back to programs">
-          <Link href="/admin/programs">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold">Edit recommended program</h1>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Admin", href: "/admin" },
+          { label: "Programs", href: "/admin/programs" },
+          { label: "Edit" },
+        ]}
+      />
+      <h1 className="text-2xl font-bold">Edit recommended program</h1>
 
       <ProgramWeekBuilder
         program={program}
