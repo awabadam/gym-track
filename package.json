@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx db/migrate.ts",
-    "db:seed": "tsx db/seed.ts"
+    "db:seed": "tsx db/seed.ts",
+    "db:import-exercises": "tsx db/import-exercises.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
