@@ -41,7 +41,10 @@ export default async function AppLayout({
             </main>
           </SidebarInset>
         </SidebarProvider>
-        <BottomNav />
+        <BottomNav
+          isAdmin={userIsAdmin(session.user)}
+          isTrainer={session.user.role === "trainer"}
+        />
       </TooltipProvider>
     </>
   );

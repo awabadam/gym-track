@@ -11,9 +11,11 @@ import {
   getSessionsInRange,
 } from "@/data/sessions";
 import { formatDate } from "@/lib/format";
+import { startSession } from "@/app/actions/sessions";
 import { Button } from "@/components/ui/button";
 import { Block } from "@/components/shared/block";
 import { WorkoutCalendar } from "@/components/shared/workout-calendar";
+import { StartWorkoutPicker } from "@/components/shared/start-workout-picker";
 import { ArrowRight, Clock, Moon, Play } from "lucide-react";
 
 function repsLabel(e: { repRangeMin: number | null; repRangeMax: number | null }) {
@@ -207,6 +209,8 @@ export default async function HomePage() {
         </div>
       )}
 
+      {/* START AREA — anchor target for the mobile "Start" tab */}
+      <div id="start" className="scroll-mt-20 space-y-5">
       {/* IN PROGRESS */}
       {inProgress && (
         <Block title="Workout In Progress" tag="// Live" className="reveal">
@@ -289,14 +293,29 @@ export default async function HomePage() {
               );
             })}
           </div>
-          <Link
-            href="/workout"
-            className="flex items-center justify-center gap-2 border-t-2 border-foreground bg-signal py-4 text-lg uppercase tracking-wide text-signal-foreground transition-colors hover:bg-foreground hover:text-background"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            <Play className="h-5 w-5 fill-current" />
-            Start Workout
-          </Link>
+          <div className="flex items-stretch border-t-2 border-foreground">
+            <form
+              action={startSession.bind(null, todayDay.id)}
+              className="flex-1"
+            >
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 bg-signal py-4 text-lg uppercase tracking-wide text-signal-foreground transition-colors hover:bg-foreground hover:text-background"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                <Play className="h-5 w-5 fill-current" />
+                Start Workout
+              </button>
+            </form>
+            {program!.days.length > 1 && (
+              <StartWorkoutPicker
+                days={program!.days}
+                todayDayId={todayDay.id}
+                label="Other day"
+                triggerClassName="flex shrink-0 items-center justify-center gap-1.5 border-l-2 border-foreground bg-card px-4 text-sm font-bold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background sm:px-6"
+              />
+            )}
+          </div>
         </Block>
       )}
 
@@ -311,9 +330,18 @@ export default async function HomePage() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Rest · Recover · Grow
             </p>
+            {program && (
+              <StartWorkoutPicker
+                days={program.days}
+                label="Train anyway"
+                align="center"
+                triggerClassName="mt-3 inline-flex items-center justify-center gap-1.5 border-2 border-foreground bg-card px-4 py-2.5 text-sm font-bold uppercase tracking-wide transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_var(--shadow-color)]"
+              />
+            )}
           </div>
         </Block>
       )}
+      </div>
 
       {/* WEEK + CALENDAR */}
       <div className="grid gap-5 md:grid-cols-2">
@@ -424,12 +452,22 @@ export default async function HomePage() {
             <p className="text-sm font-bold uppercase tracking-wide">
               No Sessions Yet
             </p>
-            <Link
-              href="/workout"
-              className="text-xs uppercase tracking-wide underline"
-            >
-              Start Your First Workout
-            </Link>
+            {program ? (
+              <StartWorkoutPicker
+                days={program.days}
+                todayDayId={todayDay?.id}
+                label="Start Your First Workout"
+                align="center"
+                triggerClassName="inline-flex items-center gap-1.5 text-xs uppercase tracking-wide underline"
+              />
+            ) : (
+              <Link
+                href="/programs"
+                className="text-xs uppercase tracking-wide underline"
+              >
+                Create a Program
+              </Link>
+            )}
           </div>
         ) : (
           recentSessions.map((s) => (

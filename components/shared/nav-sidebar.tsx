@@ -23,6 +23,9 @@ export interface NavItem {
   // Match the href exactly instead of by prefix (used for a section root like
   // "/" or "/admin" that would otherwise stay active on every child route).
   exact?: boolean;
+  // Optional group label (e.g. "Train", "Build"). When any item has one, the
+  // sidebar renders a labeled group per section instead of one flat list.
+  section?: string;
 }
 
 interface Brand {
@@ -52,6 +55,40 @@ export function NavSidebar({
 
   if (isMobile) return null;
 
+  // Group items by section in first-seen order. Items without a section fall
+  // under the default navLabel, preserving the original flat layout.
+  const sections: { label: string; items: NavItem[] }[] = [];
+  for (const item of items) {
+    const label = item.section ?? navLabel;
+    let group = sections.find((s) => s.label === label);
+    if (!group) {
+      group = { label, items: [] };
+      sections.push(group);
+    }
+    group.items.push(item);
+  }
+
+  const renderItem = (item: NavItem, i: number) => {
+    const isActive = item.exact
+      ? pathname === item.href
+      : pathname === item.href || pathname.startsWith(`${item.href}/`);
+    return (
+      <SidebarMenuItem key={item.href}>
+        <Link
+          href={item.href}
+          data-active={isActive}
+          className="group flex items-center gap-3 border-2 px-3 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-none data-[active=false]:border-transparent data-[active=false]:text-foreground data-[active=false]:hover:border-foreground data-[active=false]:hover:bg-foreground data-[active=false]:hover:text-background data-[active=true]:border-foreground data-[active=true]:bg-signal data-[active=true]:text-signal-foreground data-[active=true]:shadow-[3px_3px_0_0_var(--foreground)]"
+        >
+          <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.4} />
+          <span>{item.title}</span>
+          <span className="ml-auto font-mono text-[10px] opacity-60">
+            {String(i + 1).padStart(2, "0")}
+          </span>
+        </Link>
+      </SidebarMenuItem>
+    );
+  };
+
   return (
     <Sidebar
       collapsible="none"
@@ -76,37 +113,19 @@ export function NavSidebar({
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-4">
-        <SidebarGroup className="p-0">
-          <div className="px-2 pb-3 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            {navLabel}
-          </div>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
-              {items.map((item, i) => {
-                const isActive = item.exact
-                  ? pathname === item.href
-                  : pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <Link
-                      href={item.href}
-                      data-active={isActive}
-                      className="group flex items-center gap-3 border-2 px-3 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-none data-[active=false]:border-transparent data-[active=false]:text-foreground data-[active=false]:hover:border-foreground data-[active=false]:hover:bg-foreground data-[active=false]:hover:text-background data-[active=true]:border-foreground data-[active=true]:bg-signal data-[active=true]:text-signal-foreground data-[active=true]:shadow-[3px_3px_0_0_var(--foreground)]"
-                    >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.4} />
-                      <span>{item.title}</span>
-                      <span className="ml-auto font-mono text-[10px] opacity-60">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                    </Link>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="gap-4 px-3 py-4">
+        {sections.map((group) => (
+          <SidebarGroup key={group.label} className="p-0">
+            <div className="px-2 pb-3 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+              {group.label}
+            </div>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1.5">
+                {group.items.map(renderItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       {footer && (

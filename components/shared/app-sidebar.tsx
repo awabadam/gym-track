@@ -7,6 +7,7 @@ import {
   ListChecks,
   ClipboardList,
   TrendingUp,
+  Target,
   Library,
   Play,
   Shield,
@@ -16,12 +17,12 @@ import {
 import { NavSidebar, type NavItem } from "@/components/shared/nav-sidebar";
 
 const navItems: NavItem[] = [
-  { title: "Dashboard", href: "/", icon: LayoutDashboard, exact: true },
-  { title: "Workout", href: "/workout", icon: Dumbbell },
-  { title: "Programs", href: "/programs", icon: ListChecks },
-  { title: "Log", href: "/log", icon: ClipboardList },
-  { title: "Progress", href: "/progress", icon: TrendingUp },
-  { title: "Exercises", href: "/exercises", icon: Library },
+  { title: "Dashboard", href: "/", icon: LayoutDashboard, exact: true, section: "// Train" },
+  { title: "Log", href: "/log", icon: ClipboardList, section: "// Train" },
+  { title: "Progress", href: "/progress", icon: TrendingUp, section: "// Train" },
+  { title: "Goals", href: "/goals", icon: Target, section: "// Train" },
+  { title: "Programs", href: "/programs", icon: ListChecks, section: "// Build" },
+  { title: "Exercises", href: "/exercises", icon: Library, section: "// Build" },
 ];
 
 export function AppSidebar({
@@ -32,17 +33,18 @@ export function AppSidebar({
   isTrainer?: boolean;
 }) {
   const items = [...navItems];
-  // Trainers manage the lifters they coach.
+  // Trainers manage the lifters they coach — authoring-adjacent, so it sits
+  // under Build alongside programs and exercises.
   if (isTrainer) {
-    items.push({ title: "Clients", href: "/clients", icon: Users });
+    items.push({ title: "Clients", href: "/clients", icon: Users, section: "// Build" });
   }
   // Everyone except admins gets the client-facing coaching entry (a trainer can
   // also be coached). For non-trainers it also links out to /become-a-trainer.
   if (!isAdmin) {
-    items.push({ title: "Coach", href: "/coach", icon: HeartHandshake });
+    items.push({ title: "Coach", href: "/coach", icon: HeartHandshake, section: "// Build" });
   }
   if (isAdmin) {
-    items.push({ title: "Admin", href: "/admin", icon: Shield });
+    items.push({ title: "Admin", href: "/admin", icon: Shield, section: "// Admin" });
   }
 
   return (
@@ -51,7 +53,7 @@ export function AppSidebar({
       items={items}
       footer={
         <Link
-          href="/workout"
+          href="/"
           className="group flex items-center justify-center gap-2 border-2 border-foreground bg-signal px-3 py-3.5 text-sm font-bold uppercase tracking-wide text-signal-foreground transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--foreground)]"
           style={{ fontFamily: "var(--font-display)" }}
         >

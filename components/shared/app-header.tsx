@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Dumbbell, Play, Shield, UserX, HeartHandshake, Users, Bell } from "lucide-react";
 import { auth, userIsAdmin } from "@/lib/auth";
 import { stopImpersonating } from "@/app/actions/admin";
+import { startSession } from "@/app/actions/sessions";
 import { getActiveProgram } from "@/data/programs";
 import { getInProgressSession } from "@/data/sessions";
 import { getMyUnreadCount } from "@/data/notifications";
@@ -17,6 +18,11 @@ export async function AppHeader() {
     getInProgressSession(),
     getMyUnreadCount(),
   ]);
+
+  const todayWeekday = new Date()
+    .toLocaleDateString("en-US", { weekday: "long" })
+    .toLowerCase();
+  const todayDay = program?.days.find((d) => d.scheduledDay === todayWeekday);
 
   const isAdmin = session?.user ? userIsAdmin(session.user) : false;
   const isTrainer = session?.user?.role === "trainer";
@@ -126,9 +132,16 @@ export async function AppHeader() {
               Resume
             </Link>
           </Button>
+        ) : todayDay ? (
+          <form action={startSession.bind(null, todayDay.id)} className="hidden md:block">
+            <Button type="submit" size="sm" variant="outline" className="h-8 gap-1.5">
+              <Play className="h-3.5 w-3.5 fill-current" />
+              Start {todayDay.dayCode}
+            </Button>
+          </form>
         ) : (
           <Button asChild size="sm" variant="outline" className="hidden h-8 md:flex">
-            <Link href="/workout">
+            <Link href="/">
               <Play className="mr-1 h-3.5 w-3.5 fill-current" />
               Workout
             </Link>
