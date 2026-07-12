@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, integer, real, timestamp, boolean, uuid, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, real, timestamp, boolean, uuid, uniqueIndex, check } from "drizzle-orm/pg-core";
 
 export const exercises = pgTable("exercises", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -193,3 +193,62 @@ export const coachNotes = pgTable("coach_notes", {
   body: text("body").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Manually-entered personal records — headlined by the true (tested) 1RM.
+// Distinct from the app's auto estimated-1RM (derived from logged sets in
+// lib/calculations): this is a max the user actually tested and chose to record,
+// so logging one is a deliberate, celebrated moment. History is kept (multiple
+// rows per lift) so a PR can progress over time.
+export const personalRecords = pgTable("personal_records", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").notNull(),
+  exerciseId: uuid("exercise_id")
+    .notNull()
+    .references(() => exercises.id),
+  // What kind of record. v1 ships "one_rep_max"; room for "max_reps" etc later.
+  kind: text("kind").notNull().default("one_rep_max"),
+  value: real("value").notNull(), // kg for a 1RM
+  reps: integer("reps"), // optional context (1 for a true 1RM)
+  achievedOn: text("achieved_on").notNull(), // ISO date the lift happened
+  note: text("note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Goals across four types, discriminated by `type`. Type-specific columns
+// (exerciseId / muscle / period) are nullable at the column level because they
+// don't apply to every type — but the CHECK below enforces the right fields per
+// type, so the DB still rejects malformed rows (a strength goal with no exercise,
+// a volume goal with no muscle, etc.). One lean table, integrity preserved.
+export const goals = pgTable(
+  "goals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    type: text("type").notNull(), // strength | consistency | volume | bodyweight
+    exerciseId: uuid("exercise_id").references(() => exercises.id), // strength only
+    muscle: text("muscle"), // lib/muscles slug (volume only)
+    // Target in the type's natural unit: strength → 1RM kg; consistency →
+    // sessions per `period`; volume → sets/week for `muscle`; bodyweight → kg.
+    targetValue: real("target_value").notNull(),
+    period: text("period"), // week | month (consistency only)
+    targetDate: text("target_date"), // optional ISO deadline
+    status: text("status").notNull().default("active"), // active | achieved | archived
+    achievedAt: timestamp("achieved_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [
+    check(
+      "goals_type_fields_ck",
+      sql`
+        (${t.type} = 'strength'    and ${t.exerciseId} is not null and ${t.muscle} is null     and ${t.period} is null) or
+        (${t.type} = 'volume'      and ${t.muscle} is not null     and ${t.exerciseId} is null and ${t.period} is null) or
+        (${t.type} = 'consistency' and ${t.period} is not null     and ${t.exerciseId} is null and ${t.muscle} is null) or
+        (${t.type} = 'bodyweight'  and ${t.exerciseId} is null     and ${t.muscle} is null     and ${t.period} is null)
+      `
+    ),
+    // At most one active 1RM goal per lift.
+    uniqueIndex("goals_active_strength_idx")
+      .on(t.userId, t.exerciseId)
+      .where(sql`${t.type} = 'strength' and ${t.status} = 'active'`),
+  ]
+);

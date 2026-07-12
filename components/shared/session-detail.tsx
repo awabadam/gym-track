@@ -85,7 +85,7 @@ export async function SessionDetail({
   const totalLoggedSets = session.loggedSets.length;
 
   const sectionLabel = section === "workout" ? "Workout" : "Log";
-  const sectionHref = section === "workout" ? "/workout" : "/log";
+  const sectionHref = section === "workout" ? "/" : "/log";
   const crumbs = edit
     ? [
         { label: sectionLabel, href: sectionHref },

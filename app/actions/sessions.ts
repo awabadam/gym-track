@@ -96,9 +96,8 @@ export async function cancelSession(sessionId: string) {
     .where(and(eq(sessions.id, sessionId), eq(sessions.userId, uid)));
 
   revalidatePath("/");
-  revalidatePath("/workout");
   revalidatePath("/log");
-  redirect("/workout");
+  redirect("/");
 }
 
 export async function completeSession(sessionId: string) {

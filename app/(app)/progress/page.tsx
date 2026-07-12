@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getActiveProgram } from "@/data/programs";
 import { getProgressForProgram, getMyActualVolumeByMuscle } from "@/data/progress";
+import { getAchievedGoals } from "@/data/goals";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
+import { AchievementsShowcase } from "@/components/shared/achievements-showcase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,9 +40,10 @@ export default async function ProgressPage() {
     );
   }
 
-  const [progress, actualVolume] = await Promise.all([
+  const [progress, actualVolume, achievements] = await Promise.all([
     getProgressForProgram(program.id, program.targetRir),
     getMyActualVolumeByMuscle(30),
+    getAchievedGoals(),
   ]);
 
   // Group progress by muscle group
@@ -80,6 +83,12 @@ export default async function ProgressPage() {
             </Link>
           </Button>
         }
+      />
+
+      <AchievementsShowcase
+        achievements={achievements}
+        variant="compact"
+        limit={8}
       />
 
       {/* Planned vs. actual, both on the body map. */}

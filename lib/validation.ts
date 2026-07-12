@@ -178,6 +178,36 @@ export const coachNoteSchema = z.object({
 
 export const setPasswordSchema = z.object({ newPassword: password });
 
+// --- goals / personal records -------------------------------------------------
+
+const weightAmount = z.coerce
+  .number("Enter a number")
+  .positive("Must be greater than 0")
+  .max(10000, "That's too heavy");
+
+// Optional ISO date: missing / empty → null, else must look like YYYY-MM-DD.
+const optionalIsoDate = z
+  .string()
+  .optional()
+  .transform((v) => (v ? v.trim() : ""))
+  .refine((v) => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v), "Pick a valid date")
+  .transform((v) => (v ? v : null));
+
+// A true (tested) one-rep max the user logs by hand.
+export const oneRepMaxSchema = z.object({
+  exerciseId: uuid("exercise"),
+  value: weightAmount,
+  achievedOn: isoDate,
+  note: optionalText(200),
+});
+
+// A target 1RM for a lift.
+export const strengthGoalSchema = z.object({
+  exerciseId: uuid("exercise"),
+  targetValue: weightAmount,
+  targetDate: optionalIsoDate,
+});
+
 export const banUserSchema = z.object({
   reason: optionalText(500),
   // 0 / empty → permanent ban (no expiry).

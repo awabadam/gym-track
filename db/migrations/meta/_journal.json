@@ -71,6 +71,13 @@
       "when": 1782509793993,
       "tag": "0009_messy_lady_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782622952216,
+      "tag": "0010_bitter_miss_america",
+      "breakpoints": true
     }
   ]
 }

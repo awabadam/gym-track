@@ -17,7 +17,7 @@ import { MuscleHighlight } from "@/components/shared/muscle-volume-map";
 import { muscleLabel } from "@/lib/muscles";
 import { Block } from "@/components/shared/block";
 import { LineChart } from "@/components/shared/line-chart";
-import { Dumbbell, TrendingUp, Calendar, Hash, Zap } from "lucide-react";
+import { Dumbbell, TrendingUp, Calendar, Hash, Zap, ExternalLink } from "lucide-react";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import Link from "next/link";
 
@@ -88,6 +88,17 @@ export default async function ExerciseDetailPage({
           {exercise.notes && (
             <p className="text-sm text-muted-foreground">{exercise.notes}</p>
           )}
+          <a
+            href={`https://www.google.com/search?q=${encodeURIComponent(
+              `how to perform ${exercise.name} exercise`,
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-2 hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            How to perform
+          </a>
         </div>
         {exercise.isOwner && <ExerciseActions exercise={exercise} />}
       </div>
