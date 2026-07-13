@@ -20,7 +20,7 @@
 3. Apply the schema: `npx dotenv -e .env.local -- npm run db:migrate`
 4. Seed the shared exercise catalog: `npx dotenv -e .env.local -- npm run db:seed`
 5. Run it: `npm run dev` → http://localhost:3000
-6. Sign up — your first dashboard load auto-creates your personal starter program ([Auth](auth.md#first-sign-in-seeding)).
+6. Sign up — your first dashboard load auto-creates your personal starter program ([Auth & Roles](auth-and-roles.md)).
 
 ## Scripts (`package.json`)
 
@@ -38,19 +38,19 @@
 
 ## Working in the codebase
 
-> **Read `AGENTS.md` first.** It warns that this is **Next.js 16** with breaking changes from older versions — the relevant guides live in `node_modules/next/dist/docs/`. Don't assume older Next APIs. The most visible example: middleware is now **`proxy.ts`** ([Auth](auth.md#the-proxy-next-16-middleware-proxyts)).
+> **Read `AGENTS.md` first.** It warns that this is **Next.js 16** with breaking changes from older versions — the relevant guides live in `node_modules/next/dist/docs/`. Don't assume older Next APIs. The most visible example: middleware is now **`proxy.ts`** ([Architecture](architecture.md), [Auth & Roles](auth-and-roles.md)).
 
 Common changes, and where they land:
 
 | Task | Where |
 |------|-------|
-| New page / route | `app/**/page.tsx` — see [Routes](routes.md). Params/searchParams are awaited Promises |
-| New read query | `data/*.ts` — start with `requireUserId()`, scope by `userId`. See [Data Layer](data-layer.md) |
-| New mutation | `app/actions/*.ts` — `"use server"`, ownership check, **validate via a `lib/validation.ts` schema (`parseForm`/`parse`)**, write, `revalidatePath`. See [Data Layer](data-layer.md#write-path-server-actions) |
-| Input validation | add/extend a Zod schema in `lib/validation.ts`. See [Input validation](data-layer.md#input-validation) |
+| New page / route | `app/**/page.tsx` — see [Architecture](architecture.md). Params/searchParams are awaited Promises |
+| New read query | `data/*.ts` — start with `requireUserId()`, scope by `userId`. See [Architecture](architecture.md) |
+| New mutation | `app/actions/*.ts` — `"use server"`, ownership check, **validate via a `lib/validation.ts` schema (`parseForm`/`parse`)**, write, `revalidatePath`. See [Architecture](architecture.md) |
+| Input validation | add/extend a Zod schema in `lib/validation.ts`. See [Architecture](architecture.md) |
 | Schema change | edit `db/schema.ts` → `db:generate` → `db:migrate`. See [Data Model](data-model.md) |
-| Progression / stats math | `lib/calculations.ts`, `lib/progression.ts`. See [Progression Engine](progression-engine.md) |
-| UI / styling | reuse `Block`/`PageHeader`, semantic tokens. See [Design System](design-system.md) and [Components](components.md) |
+| Progression / stats math | `lib/calculations.ts`, `lib/progression.ts`. See [Workout Logging](workout-logging.md) |
+| UI / styling | reuse `Block`/`PageHeader`, semantic tokens. See [UI & Components](ui-components.md) |
 | shadcn primitive | `components/ui/` via shadcn (`components.json`) |
 
 ## Testing
@@ -61,7 +61,7 @@ Common changes, and where they land:
 
 - Path alias `@/*` → repo root.
 - Reads in Server Components via `data/`; writes via Server Actions in `app/actions/`. No bespoke API routes (only Better Auth's catch-all).
-- Every owner-scoped query/mutation goes through `requireUserId()` ([Auth](auth.md)).
+- Every owner-scoped query/mutation goes through `requireUserId()` ([Auth & Roles](auth-and-roles.md)).
 - Every mutation validates its input through a `lib/validation.ts` (Zod) schema before writing.
 
 ## Production-hardening status

@@ -1,86 +1,86 @@
-# Architecture
+# Architecture & Project Overview
 
-[← Wiki Home](README.md)
+GymTrack is a Next.js 16 workout-tracking web app (React 19, App Router) that lets users build training programs, log sessions, and track progress, with elevated **trainer** (coach) and **admin** consoles layered on top of the same codebase. Data lives in Postgres (Neon) accessed through Drizzle ORM, auth is handled by Better Auth, and the UI is Tailwind CSS v4 with shadcn/Radix primitives. Server work is split cleanly between **read queries** (`data/*`) and **write mutations** (`app/actions/*`), both of which scope every operation to the signed-in user.
+
+> This project pins a modified/newer Next.js (`next@16.2.9`, `package.json:23`) where conventions differ from older versions — most visibly, middleware is now `proxy.ts` and error boundaries receive an `unstable_retry` prop. Everything below is verified against the code as of this writing.
 
 ## Tech stack
 
-| Layer | Choice | Notes |
-|-------|--------|-------|
-| Framework | **Next.js 16** (App Router) | Server Components by default; Server Actions for mutations. Note: in Next 16 middleware is called **`proxy`** (see [Auth](auth.md)). |
-| Language | **TypeScript** | Path alias `@/*` → repo root. |
-| UI runtime | **React 19** | |
-| Styling | **Tailwind CSS v4** + **shadcn** primitives | Brutalist theme — see [Design System](design-system.md). |
-| ORM | **Drizzle ORM** (`drizzle-orm`, `drizzle-kit`) | Schema-first, SQL migrations. |
-| Database | **Postgres** via **Neon serverless HTTP driver** (`@neondatabase/serverless`) | `drizzle-orm/neon-http`. |
-| Auth | **Better Auth** (`better-auth`) | Email + password. See [Auth](auth.md). |
-| Icons | `lucide-react` | |
-| Deploy | **Nixpacks** on **Dokploy** | See [Deployment](deployment.md). |
+Confirmed from `package.json` and the config files:
 
-## The big picture
+| Concern | Choice | Evidence |
+| --- | --- | --- |
+| Framework | Next.js `16.2.9`, React `19.2.4` (App Router) | `package.json:23,25` |
+| Language / TS | TypeScript 5, `strict`, `moduleResolution: "bundler"`, `@/*` → repo root | `tsconfig.json:7,11,21-23` |
+| Database | Postgres via Neon serverless HTTP driver | `package.json:16`, `db/index.ts:1-7` |
+| ORM / migrations | Drizzle ORM `0.45.2` + drizzle-kit; schema split `db/schema.ts` + `db/auth-schema.ts` | `package.json:21,40`, `drizzle.config.ts:5-9` |
+| Auth | Better Auth `1.6.19` (email+password) + `admin` plugin (roles user/admin/trainer) | `package.json:17`, `lib/auth.ts:18-42` |
+| Styling / UI | Tailwind CSS v4, shadcn (`radix-nova` style), Radix UI, lucide icons, `tw-animate-css` | `package.json:24,28,31,35,43`, `components.json:3,13` |
+| Validation | Zod `4.x` | `package.json:32`, `lib/validation.ts` |
+| Body maps / charts | `react-body-highlighter` (muscle maps) + custom `line-chart`/`sparkline` | `package.json:26` |
+| Fonts | `next/font/google` — Archivo Black (display) + Space Mono | `app/layout.tsx:2-15` |
+| Deploy | Nixpacks on Dokploy; start runs migrate → seed → start | `nixpacks.toml:13-14` |
 
-```
-                 Browser
-                    │
-         ┌──────────┴───────────┐
-         │   proxy.ts (Next 16   │   optimistic cookie-presence redirects
-         │   "middleware"/proxy) │   (real auth happens in the data layer)
-         └──────────┬───────────┘
-                    │
-            ┌───────┴────────┐
-            │  App Router     │
-            │  app/**/page.tsx│  Server Components (async, run on server)
-            └───┬────────┬────┘
-                │        │
-       reads    │        │   writes (form actions / button handlers)
-                ▼        ▼
-        ┌─────────────┐ ┌──────────────────┐
-        │  data/*.ts  │ │ app/actions/*.ts │  "use server"
-        │ (read fns)  │ │ (Server Actions) │
-        └──────┬──────┘ └────────┬─────────┘
-               │                 │
-        lib/auth requireUserId() │  every fn scopes to the signed-in user
-               │                 │
-               ▼                 ▼
-            ┌────────────────────────┐
-            │   db (Drizzle + Neon)  │
-            └────────────────────────┘
-                       │
-                  Postgres (Neon)
-```
+`next.config.ts` is an empty config object — there is **no** custom Next config (`next.config.ts:3-5`). The `README.md` is stock create-next-app boilerplate and does not describe this app.
 
-## Request & render flow
+## Directory layout & conventions
 
-1. **`proxy.ts`** runs first on most paths. It does a cheap **cookie-presence** check only: signed-out users hitting a protected route are bounced to `/sign-in`; signed-in users hitting `/sign-in` or `/sign-up` are bounced home. It does **not** validate the session — that's deliberate. See [Auth](auth.md).
-2. A **group layout** (Server Component) wraps the page: `app/(app)/layout.tsx` calls `auth.api.getSession()` and renders the app shell (sidebar + header + bottom nav) for signed-in users, or full-bleed for signed-out; `app/(admin)/layout.tsx` gates on `userIsAdmin` and renders the admin shell. The root `app/layout.tsx` is now minimal (fonts, theme, metadata). See [Routes](routes.md#route-groups).
-3. The **page** (Server Component) reads data by calling functions in [`data/`](data-layer.md). Each of those calls `requireUserId()` and filters every query by the current user — this is the real authorization boundary.
-4. **Mutations** happen through [Server Actions](data-layer.md#write-path-server-actions) in `app/actions/`. They check ownership, validate input (Zod), write via Drizzle, then `revalidatePath()` the affected routes and often `redirect()`.
+### Route groups under `app/`
 
-## Directory layout
+Three parenthesized route groups partition the app by audience. Route groups don't affect the URL, so `/admin` and `/clients` sit at the root path while being isolated behind separate layouts and access gates. Each group's `layout.tsx` renders its own shell and enforces its own gate:
 
-```
-app/                  App Router routes (see Routes & Pages)
-  (app)/              user app — own layout (app shell); URLs unchanged
-  (admin)/            admin console — own layout (admin shell), gated to admins
-  actions/            "use server" mutation functions (write path; incl. admin.ts)
-  api/auth/[...all]/  Better Auth catch-all route (the only API route)
-data/                 Read-only query functions (read path; incl. admin.ts)
-lib/                  auth, calculations, progression, formatting, slug, onboarding, validation
-db/                   schema, drizzle client, migrations, seeds
-components/
-  shared/             app-specific components (incl. nav-sidebar + admin components)
-  ui/                 shadcn primitives
-  auth/ landing/      auth form + marketing landing
-hooks/                use-mobile
-proxy.ts              Next 16 "middleware" (cookie-presence redirects)
-docs/                 this wiki + analysis docs
-```
+- **`app/(app)/`** — the end-user product: dashboard (`page.tsx`), `programs`, `exercises`, `progress`, `goals`, `log`, `workout`, `notifications`, plus `sign-in`/`sign-up`, `join`, `become-a-trainer`, `coach`. Its layout fetches the session and, **if signed out, renders children full-bleed** with no app shell (auth screens and the landing page own their own layout); if signed in it wraps children in the sidebar + header + bottom-nav shell and passes `isAdmin`/`isTrainer` into the nav (`app/(app)/layout.tsx:14-49`).
+- **`app/(admin)/`** — the admin console (`/admin`, `/admin/exercises`, `/admin/programs`, `/admin/trainers`). Its layout **hard-gates the whole group**: `redirect("/")` unless `userIsAdmin(session.user)` (`app/(admin)/layout.tsx:18-19`).
+- **`app/(trainer)/`** — the coach console (`/clients`, with nested `[clientId]` program-edit and session views). Its layout redirects unless `session.user.role === "trainer"` — admins are deliberately **not** treated as trainers here (`app/(trainer)/layout.tsx:18-19`).
 
-## Key design decisions
+Dynamic segments use the `[id]` / `[clientId]` / `[...all]` conventions (e.g. `app/api/auth/[...all]/route.ts`).
 
-- **No REST/GraphQL API.** Reads are direct DB calls inside Server Components; writes are Server Actions. The only route under `app/api` is Better Auth's `[...all]` handler.
-- **Authorization lives in the data/action layer, not the proxy.** `requireUserId()` is the single source of truth and every query/mutation is scoped by `userId`. The proxy is purely an optimistic UX redirect. See [Auth](auth.md).
-- **Shared recommended catalog + per-user custom, private everything else.** Shared exercises and program templates (`userId IS NULL`) are read-only to users and managed only via the admin console; custom exercises and all user programs/sessions are per-user. See [Data Model](data-model.md).
-- **Admin console is a separate route group.** `app/(admin)/` has its own shell and is gated by `userIsAdmin` (layout) + `requireAdmin()` (every data/action). Roles come from the Better Auth `admin` plugin. See [Auth](auth.md#admin-roles).
-- **Inputs validated at the action boundary.** Every Server Action runs its `FormData`/arguments through a Zod schema (`lib/validation.ts`) before touching the DB. See [Data Layer](data-layer.md#input-validation).
-- **Error boundaries everywhere.** `app/error.tsx`, `app/global-error.tsx`, and `app/not-found.tsx` keep uncaught errors and bad URLs from surfacing as raw crash screens. See [Routes](routes.md).
-- **Self-bootstrapping deploys.** The start command runs migrations + an idempotent catalog seed before booting, so a deploy needs no manual DB steps. See [Deployment](deployment.md).
+### The data / actions / components split
+
+- **`data/*`** — read-only query functions (server-side). Each starts with `const uid = await requireUserId()` and scopes every query to that id, so authorization lives inside the query (e.g. `data/programs.ts:21,37,52`). Files mirror domains: `programs`, `sessions`, `exercises`, `progress`, `goals`, `trainer`, `admin`, `notifications`.
+- **`app/actions/*`** — write mutations, each file marked `"use server"` (`app/actions/exercises.ts:1`). Pattern: validate `FormData` with Zod via `parseForm(schema, formData)`, re-check ownership (e.g. `assertExerciseOwned`, `app/actions/exercises.ts:15-22`), write via Drizzle, then `revalidatePath(...)` the affected routes (`app/actions/exercises.ts:32,46-47`). Trainer/admin actions gate with `requireTrainer()` / `requireAdmin()` instead of `requireUserId()`.
+- **`components/ui/*`** — generic shadcn/Radix primitives (`button`, `dialog`, `sidebar`, `table`, `tabs`, `tooltip`, …), managed by shadcn (`components.json`).
+- **`components/shared/*`** — app-specific composite components (`app-sidebar`, `session-detail`, `set-logger`, `rest-timer`, `muscle-volume-map`, `program-week-builder`, …). Also `components/auth/auth-form.tsx` and `components/landing/kinetic-landing.tsx`.
+- **`lib/*`** — cross-cutting helpers: `auth.ts` (session gates), `validation.ts` (Zod schemas + `parseForm`), `muscles.ts`, `calculations.ts`, `progression.ts`, `format.ts`, `slug.ts`, `invite.ts`, `onboarding.ts`, `utils.ts` (`cn` = clsx + tailwind-merge, `lib/utils.ts:4-6`).
+- **`hooks/*`** — a single hook, `use-mobile.ts` (`useIsMobile`, a 768px media-query store, `hooks/use-mobile.ts:12-18`).
+
+**Naming conventions:** files are kebab-case; `data/` and `app/actions/` files are named by domain and usually mirror each other (`data/programs.ts` ↔ `app/actions/programs.ts`). The `@/` path alias resolves to the repo root (`tsconfig.json:21-23`), so imports read `@/lib/auth`, `@/db`, `@/components/ui/...`.
+
+## Request lifecycle & routing gate
+
+1. **`proxy.ts` (the Next 16 rename of middleware)** runs first on nearly every request. It performs only **optimistic** redirects based on the *presence* of the Better Auth session cookie (`getSessionCookie`, `proxy.ts:22`) — it does **not** validate the session. Signed-out users hitting a non-public route are sent to `/sign-in` (`proxy.ts:25-27`); signed-in users hitting `/sign-in` or `/sign-up` are bounced to `/` (`proxy.ts:29-31`). Public paths are `/`, `/join`, `/join/*`, and the auth pages (`proxy.ts:17-21`). The matcher excludes `api/auth`, Next internals, and static assets (`proxy.ts:35-40`).
+2. **Root layout** (`app/layout.tsx`) sets `<html>`/`<body>`, loads fonts, injects a pre-paint theme script to avoid a light/dark flash (`app/layout.tsx:18,56`), and declares metadata/PWA viewport.
+3. **Group layout** runs the *real* server-side authorization check. `(app)` branches on session presence; `(admin)` and `(trainer)` `redirect("/")` on the wrong role. This is where the app shell (sidebar/header/bottom-nav) is composed.
+4. **Page / data layer.** Server Components call `data/*` queries; mutations run through `app/actions/*`. Real session validation is enforced **here**, not in the proxy — `requireUserId()` / `requireAdmin()` / `requireTrainer()` throw if the caller isn't authorized (`lib/auth.ts:49-99`), so every read and write is independently gated even after the proxy redirect. The `proxy.ts:7-9` comment makes this two-tier design explicit ("real session validation happens in the data layer").
+
+Auth API requests are served by a Better Auth catch-all handler (`app/api/auth/[...all]/route.ts:1-4`, `toNextJsHandler(auth)`) — the only route under `app/api`, and one the proxy matcher intentionally skips.
+
+**Error & fallback boundaries:** `app/error.tsx` (client boundary, receives `error` + `unstable_retry`, `app/error.tsx:9-15`), `app/global-error.tsx` (last-resort boundary rendering its own `<html>/<body>` with inline styles, `app/global-error.tsx:8-14`), `app/not-found.tsx` (unmatched routes and `notFound()` calls), plus `app/manifest.ts` for the PWA manifest.
+
+## Key files
+
+| Path | Purpose |
+| --- | --- |
+| `proxy.ts` | Next 16 middleware: optimistic cookie-presence auth redirects + route matcher |
+| `app/layout.tsx` | Root layout — fonts, metadata, PWA viewport, anti-FOUC theme script |
+| `app/(app)/layout.tsx` | End-user app shell; renders full-bleed when signed out |
+| `app/(admin)/layout.tsx` | Admin console shell + admin-only redirect gate |
+| `app/(trainer)/layout.tsx` | Coach console shell + trainer-only redirect gate |
+| `lib/auth.ts` | Better Auth config + `requireUserId`/`requireAdmin`/`requireTrainer`/`userIsAdmin` gates |
+| `db/index.ts` | Drizzle client over Neon serverless HTTP |
+| `db/schema.ts`, `db/auth-schema.ts` | App + auth table definitions (migration source) |
+| `drizzle.config.ts` | drizzle-kit config (Postgres dialect, migrations out dir) |
+| `data/*.ts` | Per-domain read queries, each scoped via `requireUserId()` |
+| `app/actions/*.ts` | Per-domain `"use server"` mutations (validate → check ownership → write → `revalidatePath`) |
+| `lib/validation.ts` | Zod schemas + `parseForm(schema, formData)` helper |
+| `lib/utils.ts` | `cn()` class-merge helper |
+| `components/ui/*` | shadcn/Radix primitives |
+| `components/shared/*` | App-specific composite components |
+| `app/api/auth/[...all]/route.ts` | Better Auth request handler |
+| `nixpacks.toml` | Deploy (Dokploy): start = migrate → seed → start |
+
+## Related pages
+
+- Data model & schema: [./data-model.md](./data-model.md)
+- Authentication, roles, and the trainer/admin gates: [./auth-and-roles.md](./auth-and-roles.md)
+- UI components, layout shell, and styling: [./ui-components.md](./ui-components.md)

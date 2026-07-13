@@ -42,7 +42,7 @@ Set these in Dokploy (and in `.env.local` for local dev — see [Development](de
 ### Seeding
 
 - `npm run db:seed` (`db/seed.ts`) seeds the **shared exercise catalog**. It's **idempotent** — it only inserts catalog entries not already present (matched by name), so it's safe to run on every deploy.
-- Per-user starter **programs** are *not* seeded at deploy time — they're created on a user's first sign-in by `ensureUserSeeded` / `seedProgramForUser`. See [Auth](auth.md#first-sign-in-seeding).
+- Per-user starter **programs** are *not* seeded at deploy time — they're created on a user's first sign-in by `ensureUserSeeded` / `seedProgramForUser`. See [Auth & Roles](auth-and-roles.md).
 
 ### One-off scripts
 
