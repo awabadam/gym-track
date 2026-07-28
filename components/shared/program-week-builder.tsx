@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   updateProgramExercise,
   reorderProgramExercise,
@@ -11,6 +11,10 @@ import {
   renameProgramDay,
   setDayWeekday,
 } from "@/app/actions/programs";
+import {
+  searchExercisesForPicker,
+  type PickerExercise,
+} from "@/app/actions/exercises";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { Button } from "@/components/ui/button";
@@ -81,13 +85,6 @@ interface BuilderDay {
   exercises: BuilderExercise[];
 }
 
-interface CatalogExercise {
-  id: string;
-  name: string;
-  muscleGroup: string | null;
-  type: string | null;
-}
-
 interface BuilderProgram {
   id: string;
   name: string;
@@ -103,11 +100,9 @@ function label(weekday: string): string {
 
 export function ProgramWeekBuilder({
   program,
-  exercises,
   updateDetailsAction,
 }: {
   program: BuilderProgram;
-  exercises: CatalogExercise[];
   // Context-specific details save: updateProgram (user/trainer) or
   // updateRecommendedProgram (admin template). Bound with programId by the page.
   updateDetailsAction: (formData: FormData) => Promise<void>;
@@ -147,7 +142,6 @@ export function ProgramWeekBuilder({
               weekday={weekday}
               day={day}
               programId={programId}
-              exercises={exercises}
             />
           ) : (
             <RestDayCard key={weekday} weekday={weekday} programId={programId} />
@@ -166,11 +160,7 @@ export function ProgramWeekBuilder({
       />
 
       {unscheduled.length > 0 && (
-        <UnscheduledSection
-          days={unscheduled}
-          programId={programId}
-          exercises={exercises}
-        />
+        <UnscheduledSection days={unscheduled} programId={programId} />
       )}
     </div>
   );
@@ -279,12 +269,10 @@ function TrainingDayCard({
   weekday,
   day,
   programId,
-  exercises,
 }: {
   weekday: Weekday;
   day: BuilderDay;
   programId: string;
-  exercises: CatalogExercise[];
 }) {
   return (
     <Card>
@@ -313,11 +301,7 @@ function TrainingDayCard({
         ) : (
           <p className="text-sm text-muted-foreground">No exercises yet.</p>
         )}
-        <ExercisePicker
-          dayId={day.id}
-          programId={programId}
-          exercises={exercises}
-        />
+        <ExercisePicker dayId={day.id} programId={programId} />
       </CardContent>
     </Card>
   );
@@ -624,28 +608,49 @@ function ExerciseRow({
 function ExercisePicker({
   dayId,
   programId,
-  exercises,
 }: {
   dayId: string;
   programId: string;
-  exercises: CatalogExercise[];
 }) {
   const [search, setSearch] = useState("");
+  const [results, setResults] = useState<PickerExercise[]>([]);
+  const [total, setTotal] = useState(0);
+  // The term the current `results` were fetched for. While it lags behind the
+  // live `term` (debounce in flight) we render a "Searching…" state instead of
+  // stale matches. Tracking it here keeps every setState inside the async
+  // callback, so nothing fires synchronously in the effect body.
+  const [resultsTerm, setResultsTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const listboxId = useId();
-  const term = search.trim().toLowerCase();
-  // Cap results low (Miller's rule) so the picker stays scannable.
-  const results = term
-    ? exercises
-        .filter(
-          (ex) =>
-            ex.name.toLowerCase().includes(term) ||
-            (ex.muscleGroup?.toLowerCase().includes(term) ?? false)
-        )
-        .slice(0, 5)
-    : [];
+  const term = search.trim();
   const showResults = term.length > 0;
+
+  // Debounced SERVER search: the ~1300-item catalog is no longer serialized to
+  // the client — each keystroke (after a 250ms pause) hits the scoped search
+  // action. `active` guards against out-of-order responses clobbering state.
+  useEffect(() => {
+    if (!term) return;
+    let active = true;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchExercisesForPicker(term);
+        if (!active) return;
+        setResults(res.results);
+        setTotal(res.total);
+      } catch {
+        if (!active) return;
+        setResults([]);
+        setTotal(0);
+      } finally {
+        if (active) setResultsTerm(term);
+      }
+    }, 250);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [term]);
 
   async function add(exerciseId: string) {
     setError(null);
@@ -657,12 +662,15 @@ function ExercisePicker({
     }
   }
 
+  const searching = showResults && resultsTerm !== term;
+  const noMatches = showResults && !searching && results.length === 0;
+
   return (
     <div className="space-y-2">
       <Input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Add exercise — search by name or muscle…"
+        placeholder="Add exercise — search by name…"
         aria-label="Search exercises to add"
         role="combobox"
         aria-expanded={showResults}
@@ -670,9 +678,9 @@ function ExercisePicker({
         aria-autocomplete="list"
       />
       <span className="sr-only" role="status" aria-live="polite">
-        {showResults
-          ? `${results.length} ${results.length === 1 ? "exercise" : "exercises"} match`
-          : ""}
+        {!showResults || searching
+          ? ""
+          : `${total} ${total === 1 ? "exercise" : "exercises"} match`}
       </span>
       {error && <p className="text-sm text-destructive">{error}</p>}
       {showResults && (
@@ -682,7 +690,13 @@ function ExercisePicker({
           aria-label="Matching exercises"
           className="divide-y-2 divide-foreground border-2 border-foreground"
         >
-          {results.length > 0 ? (
+          {searching ? (
+            <p className="p-2 text-sm text-muted-foreground">Searching…</p>
+          ) : noMatches ? (
+            <p className="p-2 text-sm text-muted-foreground">
+              No exercises match “{term}”
+            </p>
+          ) : (
             results.map((ex) => (
               <button
                 key={ex.id}
@@ -700,10 +714,6 @@ function ExercisePicker({
                 )}
               </button>
             ))
-          ) : (
-            <p className="p-2 text-sm text-muted-foreground">
-              No exercises match “{search.trim()}”
-            </p>
           )}
         </div>
       )}
@@ -714,11 +724,9 @@ function ExercisePicker({
 function UnscheduledSection({
   days,
   programId,
-  exercises,
 }: {
   days: BuilderDay[];
   programId: string;
-  exercises: CatalogExercise[];
 }) {
   return (
     <Card className="border-dashed">
@@ -731,12 +739,7 @@ function UnscheduledSection({
       </CardHeader>
       <CardContent className="space-y-4">
         {days.map((day) => (
-          <UnscheduledDay
-            key={day.id}
-            day={day}
-            programId={programId}
-            exercises={exercises}
-          />
+          <UnscheduledDay key={day.id} day={day} programId={programId} />
         ))}
       </CardContent>
     </Card>
@@ -746,11 +749,9 @@ function UnscheduledSection({
 function UnscheduledDay({
   day,
   programId,
-  exercises,
 }: {
   day: BuilderDay;
   programId: string;
-  exercises: CatalogExercise[];
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -801,11 +802,7 @@ function UnscheduledDay({
       ) : (
         <p className="text-sm text-muted-foreground">No exercises yet.</p>
       )}
-      <ExercisePicker
-        dayId={day.id}
-        programId={programId}
-        exercises={exercises}
-      />
+      <ExercisePicker dayId={day.id} programId={programId} />
     </div>
   );
 }

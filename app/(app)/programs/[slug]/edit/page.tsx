@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import { getProgramBySlug } from "@/data/programs";
-import { getAllExercises } from "@/data/exercises";
 import {
   updateProgram,
   deleteProgram,
@@ -31,10 +30,7 @@ export default async function EditProgramPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [program, exercises] = await Promise.all([
-    getProgramBySlug(slug),
-    getAllExercises(),
-  ]);
+  const program = await getProgramBySlug(slug);
 
   if (!program) notFound();
   // Clients can VIEW an assigned program but never reach its editor.
@@ -55,7 +51,6 @@ export default async function EditProgramPage({
 
       <ProgramWeekBuilder
         program={program}
-        exercises={exercises}
         updateDetailsAction={updateProgram.bind(null, programId)}
       />
 

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getClientDetail } from "@/data/trainer";
-import { getAllExercises } from "@/data/exercises";
 import { updateProgram } from "@/app/actions/programs";
 import { deleteAssignedProgram } from "@/app/actions/trainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +25,7 @@ export default async function EditAssignedProgramPage({
   params: Promise<{ clientId: string }>;
 }) {
   const { clientId } = await params;
-  const [detail, exercises] = await Promise.all([
-    getClientDetail(clientId),
-    getAllExercises(),
-  ]);
+  const detail = await getClientDetail(clientId);
 
   // No active client, or no assigned program for them yet → nothing to edit.
   if (!detail || !detail.program) notFound();
@@ -58,7 +54,6 @@ export default async function EditAssignedProgramPage({
 
       <ProgramWeekBuilder
         program={program}
-        exercises={exercises}
         updateDetailsAction={updateProgram.bind(null, programId)}
       />
 
