@@ -1,6 +1,7 @@
 /**
- * Minimal static sparkline (no axes, no interactivity) — a bold amber trend
- * line with a square cap on the latest point. Server-renderable.
+ * Minimal static sparkline (no axes, no interactivity) — a foreground trend
+ * line (readable in both themes) with a signal-accented square cap on the
+ * latest point. Server-renderable.
  */
 export function Sparkline({
   values,
@@ -22,7 +23,7 @@ export function Sparkline({
           y={height / 2 - 3}
           width={6}
           height={6}
-          fill="var(--signal)"
+          fill="var(--chart-1)"
         />
       </svg>
     );
@@ -50,12 +51,12 @@ export function Sparkline({
       <path
         d={path}
         fill="none"
-        stroke="var(--signal)"
+        stroke="var(--chart-2)"
         strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <rect x={lastX - 2.5} y={lastY - 2.5} width={5} height={5} fill="var(--foreground)" />
+      <rect x={lastX - 2.5} y={lastY - 2.5} width={5} height={5} fill="var(--chart-1)" />
     </svg>
   );
 }
