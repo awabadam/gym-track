@@ -21,7 +21,7 @@ Root cause is the button size scale; the pattern is copied into the hand-built c
 - ☐ `components/shared/app-header.tsx:88,98,105,115` — icon buttons `h-8 w-8` (32px), the mobile-only entry points. Bump to `size-11`.
 - ☐ `components/shared/user-row-actions.tsx:112-119` — 32px trigger + ~32px menu rows. Enlarge on touch.
 - ☐ `components/shared/program-week-builder.tsx:491-533` — up/down/delete controls `h-8 w-8` at `gap-0.5`. Enlarge + widen spacing.
-- ☐ `components/shared/pagination.tsx` — prev/next `h-8 w-8`. Enlarge.
+- ☑ `components/shared/pagination.tsx` — prev/next `h-8 w-8`. Enlarge.
 
 ### 1.2 The core write path must fail loudly
 - ☐ `components/shared/set-logger.tsx:71-86` — optimistic save reverts silently on `catch`. Surface an inline error/toast, keep entered values, offer retry.
@@ -92,27 +92,27 @@ Root cause is the button size scale; the pattern is copied into the hand-built c
 - ☐ `components/ui/badge.tsx:8,18` — outline variant 1px border while everything else is 2px. Promote to 2px in the override.
 - ☐ Modal scrim `bg-black/10` theme-blind (`dialog.tsx:42`, `sheet.tsx:40`, `alert-dialog.tsx:39`) — nearly invisible in dark mode. Use a theme-aware scrim.
 - ☐ `components/ui/button.tsx:19-20` — destructive `text-destructive` on `bg-destructive/10` ≈4:1. Darken text token or raise bg opacity.
-- ☐ Shadow drift 5px vs 4px: `components/landing/kinetic-landing.tsx:228,296`, `app/(app)/page.tsx:185`. Standardize on 4px (promote a shadow token).
+- ☑ Shadow drift 5px vs 4px: `components/landing/kinetic-landing.tsx:228,296`, `app/(app)/page.tsx:185`. Standardize on 4px (promote a shadow token).
 - ☐ `app/(app)/programs/[slug]/edit/page.tsx:93` — program-delete `AlertDialogAction` not `bg-destructive` while exercise-delete is. Mark it destructive.
 - ☐ `components/shared/program-week-builder.tsx:367-393` — `DayLabelEditor` input has no Enter-to-save/Esc-cancel. Add `onKeyDown`.
 - ☐ `components/shared/set-logger.tsx:142-156` — RIR cycles up-only; overshoot wraps through 0. Add long-press-decrement or stepper.
 - ☐ `components/shared/set-logger.tsx:66-69` — editing a saved set un-fills the check but leaves the old DB row until re-confirmed (UI/DB mismatch on return). Reconcile.
 - ☐ `components/shared/set-logger.tsx:152` — RIR label `text-[9px]`; `:103` `text-[11px]` — floor micro-labels at ~11-12px; verify contrast on the `bg-signal/15` tinted row.
-- ☐ `components/shared/achievements-showcase.tsx:20` — returns `null` with no achievements; first-run users get no orientation. Render a lightweight empty prompt.
+- ☑ `components/shared/achievements-showcase.tsx:20` — returns `null` with no achievements; first-run users get no orientation. Render a lightweight empty prompt.
 - ☐ `app/(app)/exercises/[id]/page.tsx:78` — secondary-muscle badges `opacity-70` likely sub-4.5:1. Use a muted token instead of opacity.
 - ☐ `components/shared/line-chart.tsx:28` — empty state `border-dashed`; app language is solid 2px `--foreground`. Match it.
 - ☐ `components/shared/muscle-volume-map.tsx:149` — legend swatches 1px border. `border-2`.
 - ☐ `components/auth/auth-form.tsx:104-121` — no forgot-password link (locked-out dead end); loading is text-only. Add link + spinner.
-- ☐ `components/shared/trainer-sidebar.tsx:7-9` + trainer layout — single "01 Clients" numbered item looks unfinished; no mobile section nav (unlike admin's `AdminNav`). Drop numbering or consolidate; add mobile parity.
-- ☐ `app/(admin)/admin/page.tsx:83-181` — Users table has no row selection / bulk actions. Add checkbox selection + bulk action bar.
+- ☑ `components/shared/trainer-sidebar.tsx:7-9` + trainer layout — single "01 Clients" numbered item looks unfinished; no mobile section nav (unlike admin's `AdminNav`). Drop numbering or consolidate; add mobile parity.
+- ☑ `app/(admin)/admin/page.tsx:83-181` — Users table has no row selection / bulk actions. Add checkbox selection + bulk action bar.
 
 ---
 
 ## Catalog-scale performance (P2, cross-cutting)
 
-- ☐ `app/(app)/programs/[slug]/edit/page.tsx:35` + `program-week-builder.tsx:609-617` — `getAllExercises()` ships the full ~1300-item catalog to the client for local filtering. Back the picker with a server search action (as the Exercises index does).
-- ☐ `program-week-builder.tsx:622-651` — exercise picker shows up to 8 results (Miller's ≤4), no no-results state, no `combobox`/`listbox` roles or `aria-live` count. Cap ~5, add "No exercises match", add roles + live region.
-- ☐ `components/shared/pagination.tsx` — at ~65 pages, only prev/next. Add first/last or page-jump; consider larger page size.
+- ☑ `app/(app)/programs/[slug]/edit/page.tsx:35` + `program-week-builder.tsx:609-617` — `getAllExercises()` ships the full ~1300-item catalog to the client for local filtering. Back the picker with a server search action (as the Exercises index does).
+- ☑ `program-week-builder.tsx:622-651` — exercise picker shows up to 8 results (Miller's ≤4), no no-results state, no `combobox`/`listbox` roles or `aria-live` count. Cap ~5, add "No exercises match", add roles + live region.
+- ☑ `components/shared/pagination.tsx` — at ~65 pages, only prev/next. Add first/last or page-jump; consider larger page size.
 
 ---
 
