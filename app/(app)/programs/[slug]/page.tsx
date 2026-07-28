@@ -34,7 +34,6 @@ export default async function ProgramDetailPage({
       />
       <PageHeader
         title={program.name}
-        subtitle={program.description}
         action={
           <div className="flex items-center gap-2">
             {program.isActive && <Badge>Active</Badge>}
@@ -52,6 +51,9 @@ export default async function ProgramDetailPage({
           </div>
         }
       />
+      {program.description && (
+        <p className="text-sm text-muted-foreground">{program.description}</p>
+      )}
       {!program.canEdit && (
         <p className="text-xs text-muted-foreground">
           Assigned by your coach — you can follow and log it, but only your
