@@ -78,7 +78,7 @@ export default async function ExerciseDetailPage({
             </Badge>
           )}
           {(exercise.secondaryMuscles ?? []).map((m) => (
-            <Badge key={m} variant="outline" className="text-xs opacity-70">
+            <Badge key={m} variant="outline" className="text-xs text-muted-foreground">
               {muscleLabel(m)}
             </Badge>
           ))}

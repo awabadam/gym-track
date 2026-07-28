@@ -45,6 +45,21 @@ function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
+function statusLabel(status: string) {
+  return status === "completed" ? "completed" : "in progress";
+}
+
+function dayCellLabel(year: number, month: number, day: number, daySessions: Session[]) {
+  const dateLabel = new Date(year, month, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  const sessionsLabel = daySessions
+    .map((s) => `${s.dayName}, ${statusLabel(s.status)}`)
+    .join("; ");
+  return `${dateLabel} — ${sessionsLabel}`;
+}
+
 export function WorkoutCalendar({
   sessions,
   initialYear,
@@ -156,7 +171,12 @@ export function WorkoutCalendar({
             return (
               <Tooltip key={dateStr}>
                 <TooltipTrigger asChild>
-                  <Link href={`/log/${firstSession.id}`}>{cell}</Link>
+                  <Link
+                    href={`/log/${firstSession.id}`}
+                    aria-label={dayCellLabel(year, month, day, daySessions)}
+                  >
+                    {cell}
+                  </Link>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
                   {daySessions.map((s) => (
