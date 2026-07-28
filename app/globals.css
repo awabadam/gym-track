@@ -218,6 +218,27 @@
     border-width: 2px !important;
     border-color: var(--foreground) !important;
   }
+
+  /* Overlay surfaces (dialog/alert-dialog/sheet/select/dropdown) = hard
+     border + offset shadow, no soft shadow or rounding */
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"],
+  [data-slot="sheet-content"],
+  [data-slot="select-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="dropdown-menu-sub-content"] {
+    border: 2px solid var(--foreground) !important;
+    box-shadow: 4px 4px 0 0 var(--shadow-color) !important;
+  }
+
+  /* Tabs = hard border on active trigger (default variant only; "line"
+     variant keeps its underline-only treatment), no soft shadow */
+  [data-slot="tabs-list"][data-variant="default"]
+    [data-slot="tabs-trigger"][data-state="active"] {
+    border-width: 2px !important;
+    border-color: var(--foreground) !important;
+    box-shadow: none !important;
+  }
 }
 
 /* Bottom nav safe area for iOS notch/home indicator */
