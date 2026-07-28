@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ProgramWeekBuilder } from "@/components/shared/program-week-builder";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { PageHeader } from "@/components/shared/page-header";
 import { Trash2 } from "lucide-react";
 
 export default async function EditProgramPage({
@@ -50,7 +51,7 @@ export default async function EditProgramPage({
           { label: "Edit" },
         ]}
       />
-      <h1 className="text-2xl font-bold">Edit program</h1>
+      <PageHeader title="Edit program" />
 
       <ProgramWeekBuilder
         program={program}

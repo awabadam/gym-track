@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { PageHeader } from "@/components/shared/page-header";
 
 export default function NewProgramPage() {
   return (
@@ -11,7 +12,7 @@ export default function NewProgramPage() {
       <Breadcrumbs
         items={[{ label: "Programs", href: "/programs" }, { label: "New" }]}
       />
-      <h1 className="text-2xl font-bold">New program</h1>
+      <PageHeader title="New program" />
 
       <Card>
         <CardHeader>

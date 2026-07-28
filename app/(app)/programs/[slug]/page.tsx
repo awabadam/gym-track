@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { PageHeader } from "@/components/shared/page-header";
 import { Pencil } from "lucide-react";
 
 export default async function ProgramDetailPage({
@@ -31,34 +32,32 @@ export default async function ProgramDetailPage({
       <Breadcrumbs
         items={[{ label: "Programs", href: "/programs" }, { label: program.name }]}
       />
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">{program.name}</h1>
-          {program.isActive && <Badge>Active</Badge>}
-          {program.isAssigned && (
-            <Badge variant="secondary">From your coach</Badge>
-          )}
-          {program.canEdit && (
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/programs/${slug}/edit`}>
-                <Pencil className="h-3 w-3 mr-1" />
-                Edit
-              </Link>
-            </Button>
-          )}
-        </div>
-        {program.description && (
-          <p className="text-sm text-muted-foreground mt-1">
-            {program.description}
-          </p>
-        )}
-        {!program.canEdit && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            Assigned by your coach — you can follow and log it, but only your
-            coach can edit it.
-          </p>
-        )}
-      </div>
+      <PageHeader
+        title={program.name}
+        subtitle={program.description}
+        action={
+          <div className="flex items-center gap-2">
+            {program.isActive && <Badge>Active</Badge>}
+            {program.isAssigned && (
+              <Badge variant="secondary">From your coach</Badge>
+            )}
+            {program.canEdit && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/programs/${slug}/edit`}>
+                  <Pencil className="h-3 w-3 mr-1" />
+                  Edit
+                </Link>
+              </Button>
+            )}
+          </div>
+        }
+      />
+      {!program.canEdit && (
+        <p className="text-xs text-muted-foreground">
+          Assigned by your coach — you can follow and log it, but only your
+          coach can edit it.
+        </p>
+      )}
 
       <MuscleVolumeMap
         entries={program.days.flatMap((d) =>
