@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 
 export function AssignProgramForm({ clientId }: { clientId: string }) {
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setError(null);
+    setPending(true);
     try {
       await assignProgram(clientId, formData);
     } catch (e) {
@@ -26,6 +28,8 @@ export function AssignProgramForm({ clientId }: { clientId: string }) {
         throw e;
       }
       setError(e instanceof Error ? e.message : "Failed to assign program");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -57,8 +61,8 @@ export function AssignProgramForm({ clientId }: { clientId: string }) {
         </div>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" size="sm">
-        Create program
+      <Button type="submit" size="sm" disabled={pending}>
+        {pending ? "Creating…" : "Create program"}
       </Button>
     </form>
   );

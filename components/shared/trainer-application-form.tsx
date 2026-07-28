@@ -11,13 +11,17 @@ export function TrainerApplicationForm({
   submitLabel?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setError(null);
+    setPending(true);
     try {
       await applyToBeTrainer(formData);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to submit application");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -35,7 +39,9 @@ export function TrainerApplicationForm({
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit">{submitLabel}</Button>
+      <Button type="submit" disabled={pending}>
+        {pending ? "Submitting…" : submitLabel}
+      </Button>
     </form>
   );
 }

@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionById, getLastSessionSets, getBestSet } from "@/data/sessions";
 import { getProgression, isUpperBody } from "@/lib/progression";
-import { completeSession } from "@/app/actions/sessions";
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +9,9 @@ import { Block } from "@/components/shared/block";
 import { SetLogger } from "@/components/shared/set-logger";
 import { RestTimer } from "@/components/shared/rest-timer";
 import { WakeLock } from "@/components/shared/wake-lock";
-import { CheckCircle, Trophy, ArrowLeft, Pencil, Check } from "lucide-react";
+import { Trophy, ArrowLeft, Pencil, Check } from "lucide-react";
 import { CancelSessionButton } from "@/components/shared/cancel-session-button";
+import { FinishWorkoutButton } from "@/components/shared/finish-workout-button";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import Link from "next/link";
@@ -280,14 +280,7 @@ export async function SessionDetail({
       })}
       </div>
 
-      {!isComplete && (
-        <form action={completeSession.bind(null, sessionId)}>
-          <Button className="w-full" size="lg">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Finish workout
-          </Button>
-        </form>
-      )}
+      {!isComplete && <FinishWorkoutButton sessionId={sessionId} />}
 
       {isComplete && edit && (
         <Button asChild className="w-full" size="lg">
