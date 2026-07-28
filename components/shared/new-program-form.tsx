@@ -15,9 +15,11 @@ import {
 
 export function NewProgramForm() {
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setError(null);
+    setPending(true);
     try {
       await createProgram(formData);
     } catch (e) {
@@ -34,6 +36,8 @@ export function NewProgramForm() {
         throw e;
       }
       setError(e instanceof Error ? e.message : "Failed to create program");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -75,7 +79,9 @@ export function NewProgramForm() {
         </p>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit">Create &amp; add days</Button>
+      <Button type="submit" disabled={pending}>
+        {pending ? "Creating…" : "Create & add days"}
+      </Button>
     </form>
   );
 }
