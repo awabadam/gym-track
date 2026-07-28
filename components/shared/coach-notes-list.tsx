@@ -1,5 +1,19 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 
 export interface DisplayNote {
@@ -55,17 +69,11 @@ export function CoachNotesList({
                 {note.body}
               </p>
               {deleteAction && (
-                <form action={deleteAction.bind(null, note.id)}>
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 shrink-0 p-0 text-destructive hover:text-destructive"
-                    aria-label="Delete note"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </form>
+                <DeleteNoteButton
+                  noteId={note.id}
+                  noteBody={note.body}
+                  deleteAction={deleteAction}
+                />
               )}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
@@ -91,5 +99,69 @@ export function CoachNotesList({
         );
       })}
     </ul>
+  );
+}
+
+/** Truncate a note body for use inside a confirm-dialog description. */
+function excerpt(body: string, max = 80): string {
+  const flat = body.replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max)}…` : flat;
+}
+
+function DeleteNoteButton({
+  noteId,
+  noteBody,
+  deleteAction,
+}: {
+  noteId: string;
+  noteBody: string;
+  deleteAction: (noteId: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  function handleDelete() {
+    startTransition(async () => {
+      await deleteAction(noteId);
+      setOpen(false);
+    });
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 shrink-0 p-0 text-destructive hover:text-destructive"
+          aria-label="Delete note"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+          <AlertDialogDescription>
+            &quot;{excerpt(noteBody)}&quot; will be permanently removed. This
+            cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={pending}
+            onClick={(e) => {
+              e.preventDefault();
+              handleDelete();
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

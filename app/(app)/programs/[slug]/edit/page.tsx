@@ -91,7 +91,10 @@ export default async function EditProgramPage({
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <form action={deleteProgram.bind(null, programId)}>
-                  <AlertDialogAction type="submit">
+                  <AlertDialogAction
+                    type="submit"
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
                     Delete program
                   </AlertDialogAction>
                 </form>
