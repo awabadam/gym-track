@@ -367,6 +367,15 @@ function DayLabelEditor({
         <Input
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              save();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              setEditing(false);
+            }
+          }}
           className="h-8"
           aria-label="Day label"
           autoFocus
@@ -451,6 +460,12 @@ function ExerciseRow({
 
   async function handleUpdate(formData: FormData) {
     setError(null);
+    const repRangeMin = Number(formData.get("repRangeMin"));
+    const repRangeMax = Number(formData.get("repRangeMax"));
+    if (repRangeMin > repRangeMax) {
+      setError("Max reps must be ≥ min reps");
+      return;
+    }
     try {
       await updateProgramExercise(entry.id, programId, formData);
       setExpanded(false);

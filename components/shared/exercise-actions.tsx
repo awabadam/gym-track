@@ -49,12 +49,18 @@ interface ExerciseActionsProps {
 
 export function ExerciseActions({ exercise }: ExerciseActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleUpdate(formData: FormData) {
-    await updateExercise(exercise.id, formData);
-    setEditOpen(false);
+    setUpdateError(null);
+    try {
+      await updateExercise(exercise.id, formData);
+      setEditOpen(false);
+    } catch (e) {
+      setUpdateError(e instanceof Error ? e.message : "Failed to save changes");
+    }
   }
 
   async function handleDelete() {
@@ -69,7 +75,13 @@ export function ExerciseActions({ exercise }: ExerciseActionsProps) {
   return (
     <div className="flex items-center gap-1 shrink-0">
       {/* Edit */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog
+        open={editOpen}
+        onOpenChange={(next) => {
+          setEditOpen(next);
+          if (!next) setUpdateError(null);
+        }}
+      >
         <DialogTrigger asChild>
           <Button variant="ghost" size="sm" className="h-10 w-10 p-0" aria-label={`Edit ${exercise.name}`}>
             <Pencil className="h-4 w-4" />
@@ -116,6 +128,9 @@ export function ExerciseActions({ exercise }: ExerciseActionsProps) {
                 defaultValue={exercise.notes ?? ""}
               />
             </div>
+            {updateError && (
+              <p className="text-sm text-destructive">{updateError}</p>
+            )}
             <Button type="submit" className="w-full">
               Save changes
             </Button>
