@@ -91,6 +91,20 @@
   --sidebar-accent-foreground: oklch(0.15 0 0);
   --sidebar-border: oklch(0.15 0 0);
   --sidebar-ring: oklch(0.15 0 0);
+
+  /* Muscle-volume heat ramp (components/shared/muscle-volume-map.tsx). Paper
+     is near-white, and --signal is itself a very light chartreuse (L≈0.9),
+     so pure --signal barely contrasts against the card (~1.3:1). Mixing
+     toward --foreground (near-black in this theme) is what buys contrast:
+     each step folds in more foreground, so the ramp reads pale→ink-green
+     while every stop clears ~3.4:1+ against --card. */
+  --muscle-tier-0: color-mix(in oklch, var(--foreground) 39%, var(--signal) 61%);
+  --muscle-tier-1: color-mix(in oklch, var(--foreground) 50%, var(--signal) 50%);
+  --muscle-tier-2: color-mix(in oklch, var(--foreground) 60%, var(--signal) 40%);
+  --muscle-tier-3: color-mix(in oklch, var(--foreground) 70%, var(--signal) 30%);
+  --muscle-tier-4: color-mix(in oklch, var(--foreground) 80%, var(--signal) 20%);
+  --muscle-tier-5: color-mix(in oklch, var(--foreground) 90%, var(--signal) 10%);
+  --muscle-unworked: var(--muted);
 }
 
 /* ============ DARK (INK) ============ */
@@ -130,6 +144,20 @@
   --sidebar-accent-foreground: oklch(0.92 0 0);
   --sidebar-border: oklch(0.92 0 0);
   --sidebar-ring: oklch(0.92 0 0);
+
+  /* Muscle-volume heat ramp, dark counterpart. Here --foreground and
+     --signal are both light (L≈0.9-0.92) against the dark --card, so
+     mixing toward --foreground wouldn't spread the ramp at all (~13:1 for
+     every stop, indistinguishable from each other). Instead mix --signal
+     down toward --muted (dark, near-card): each step folds in more signal,
+     so the ramp reads dim→vivid chartreuse while every stop still clears
+     ~3.7:1+ against --card. */
+  --muscle-tier-0: color-mix(in oklch, var(--signal) 48%, var(--muted) 52%);
+  --muscle-tier-1: color-mix(in oklch, var(--signal) 58%, var(--muted) 42%);
+  --muscle-tier-2: color-mix(in oklch, var(--signal) 68%, var(--muted) 32%);
+  --muscle-tier-3: color-mix(in oklch, var(--signal) 78%, var(--muted) 22%);
+  --muscle-tier-4: color-mix(in oklch, var(--signal) 89%, var(--muted) 11%);
+  --muscle-tier-5: var(--signal);
 }
 
 @layer base {
