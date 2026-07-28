@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { logSet } from "@/app/actions/sessions";
 import { Check, TriangleAlert } from "lucide-react";
 
@@ -74,12 +74,28 @@ export function SetLogger({
 
   const rirTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rirLongPressed = useRef(false);
+  // Bumped on every handleSave. A given call captures its value and only
+  // applies its post-await result if it's still the latest — so a stale
+  // in-flight save that resolves after the user edited again can't clear the
+  // dirty flag or re-mark the row as saved.
+  const saveGen = useRef(0);
+
+  // Don't let a hold-in-progress RIR timer fire after unmount.
+  useEffect(
+    () => () => {
+      if (rirTimer.current) clearTimeout(rirTimer.current);
+    },
+    []
+  );
 
   // Editing a value un-confirms the set until the user checks it again.
   function markDirty() {
     if (saved) {
       setSaved(false);
       setDirty(true);
+      // Invalidate any in-flight save: its post-await success must not clear
+      // the dirty flag now that the on-screen values differ from what was sent.
+      saveGen.current++;
     }
     if (error) setError(false);
   }
@@ -88,6 +104,7 @@ export function SetLogger({
     if (!weight || !reps || saving) return;
     const w = parseFloat(weight);
     const r = parseInt(reps);
+    const gen = ++saveGen.current;
     setSaving(true);
     setError(false);
     setSaved(true);
@@ -96,15 +113,29 @@ export function SetLogger({
     setTimeout(() => setJustSaved(false), 350);
     try {
       await logSet(sessionId, exerciseId, setNumber, w, r, rir);
-      setDirty(false);
       // Tell the rest timer a set was completed (auto-start).
       window.dispatchEvent(new CustomEvent("gymtrack:set-logged"));
+      // Only reconcile "saved" state if the user hasn't edited (which starts a
+      // newer save generation) since this request was dispatched. Otherwise
+      // the on-screen values differ from what we just persisted, so leaving
+      // the row dirty is correct — don't clear it for a stale resolution.
+      if (gen === saveGen.current) {
+        setDirty(false);
+      }
     } catch {
       // Loud failure: never silently drop the typed values. Keep weight/reps
-      // as-is, un-fill the check, and surface a retryable error state.
-      setSaved(false);
-      setError(true);
+      // as-is, un-fill the check, and surface a retryable error state — but
+      // only if the user hasn't edited since dispatch. If they did, the row is
+      // already dirty with newer values they'll re-save, so a stale rejection
+      // shouldn't flash an error over it.
+      if (gen === saveGen.current) {
+        setSaved(false);
+        setError(true);
+      }
     } finally {
+      // Always release the in-flight lock — a second save can't start until
+      // this one settles, so this is the only place that clears it. (Gen may
+      // have advanced via an edit; that must not strand `saving` at true.)
       setSaving(false);
     }
   }
@@ -241,7 +272,7 @@ export function SetLogger({
             error
               ? "border-destructive bg-destructive text-destructive-foreground"
               : dirty
-                ? "border-dashed border-foreground bg-card text-foreground"
+                ? "border-foreground bg-signal/25 text-foreground hover:bg-signal/40"
                 : saved
                   ? "border-foreground bg-signal text-signal-foreground"
                   : "border-foreground bg-card text-foreground hover:bg-muted"
