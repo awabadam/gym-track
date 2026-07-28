@@ -33,7 +33,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label="Toggle light / dark mode"
       title="Toggle theme"
-      className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-background text-foreground outline-none transition-transform hover:-translate-y-px hover:shadow-[3px_3px_0_0_var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+      className="flex size-11 items-center justify-center border-2 border-foreground bg-background text-foreground outline-none transition-transform hover:-translate-y-px hover:shadow-[3px_3px_0_0_var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
     >
       {theme === "dark" ? (
         <Sun className="h-4 w-4" />
