@@ -1,11 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { MUSCLES, MUSCLES_BY_REGION } from "@/lib/muscles";
+import { MUSCLES_BY_REGION } from "@/lib/muscles";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
- * Primary-muscle <select> plus toggleable supporting muscles. Submits
+ * Primary-muscle Select plus toggleable supporting muscles. Submits
  * `primaryMuscle` (one slug) and `secondaryMuscles` (a comma-separated hidden
  * input, since parseForm collapses repeated form keys).
  */
@@ -32,24 +41,23 @@ export function MuscleSelect({
     <div className="space-y-3">
       <div>
         <Label htmlFor="primaryMuscle">Primary muscle</Label>
-        <select
-          id="primaryMuscle"
-          name="primaryMuscle"
-          value={primary}
-          onChange={(e) => setPrimary(e.target.value)}
-          className="mt-1 flex h-9 w-full border-2 border-foreground bg-transparent px-2.5 text-sm"
-        >
-          <option value="">Select…</option>
-          {MUSCLES_BY_REGION.map((group) => (
-            <optgroup key={group.region} label={group.label}>
-              {group.muscles.map((m) => (
-                <option key={m.slug} value={m.slug}>
-                  {m.label}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <Select name="primaryMuscle" value={primary} onValueChange={setPrimary}>
+          <SelectTrigger id="primaryMuscle" className="mt-1 h-11 w-full">
+            <SelectValue placeholder="Select…" />
+          </SelectTrigger>
+          <SelectContent>
+            {MUSCLES_BY_REGION.map((group) => (
+              <SelectGroup key={group.region}>
+                <SelectLabel>{group.label}</SelectLabel>
+                {group.muscles.map((m) => (
+                  <SelectItem key={m.slug} value={m.slug}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
@@ -57,23 +65,36 @@ export function MuscleSelect({
         <p className="text-xs text-muted-foreground">
           Optional — muscles this exercise also works.
         </p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {MUSCLES.filter((m) => m.slug !== primary).map((m) => {
-            const on = secondary.includes(m.slug);
+        <div className="mt-1.5 space-y-3">
+          {MUSCLES_BY_REGION.map((group) => {
+            const options = group.muscles.filter((m) => m.slug !== primary);
+            if (options.length === 0) return null;
             return (
-              <button
-                key={m.slug}
-                type="button"
-                onClick={() => toggle(m.slug)}
-                aria-pressed={on}
-                className={`border-2 border-foreground px-2 py-1 text-xs transition-colors ${
-                  on
-                    ? "bg-signal text-signal-foreground"
-                    : "bg-background hover:bg-muted"
-                }`}
-              >
-                {m.label}
-              </button>
+              <div key={group.region}>
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-muted-foreground">
+                  {group.label}
+                </p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {options.map((m) => {
+                    const on = secondary.includes(m.slug);
+                    return (
+                      <button
+                        key={m.slug}
+                        type="button"
+                        onClick={() => toggle(m.slug)}
+                        aria-pressed={on}
+                        className={`flex min-h-11 items-center justify-center border-2 border-foreground px-3 text-sm transition-colors ${
+                          on
+                            ? "bg-signal text-signal-foreground"
+                            : "bg-background hover:bg-muted"
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>

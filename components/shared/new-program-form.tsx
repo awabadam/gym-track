@@ -5,6 +5,13 @@ import { createProgram } from "@/app/actions/programs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function NewProgramForm() {
   const [error, setError] = useState<string | null>(null);
@@ -51,18 +58,18 @@ export function NewProgramForm() {
       </div>
       <div>
         <Label htmlFor="targetRir">Target RIR</Label>
-        <select
-          id="targetRir"
-          name="targetRir"
-          defaultValue="2"
-          className="mt-1 flex h-8 w-full border-2 border-foreground bg-transparent px-2.5 text-sm"
-        >
-          {[0, 1, 2, 3, 4].map((n) => (
-            <option key={n} value={n}>
-              {n} {n === 1 ? "rep" : "reps"} in reserve
-            </option>
-          ))}
-        </select>
+        <Select name="targetRir" defaultValue="2">
+          <SelectTrigger id="targetRir" className="mt-1 h-11 w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[0, 1, 2, 3, 4].map((n) => (
+              <SelectItem key={n} value={String(n)}>
+                {n} {n === 1 ? "rep" : "reps"} in reserve
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p className="mt-1 text-xs text-muted-foreground">
           Reps left in the tank before the app suggests adding weight.
         </p>

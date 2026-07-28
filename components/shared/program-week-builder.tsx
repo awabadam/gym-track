@@ -214,18 +214,18 @@ function DetailsHeader({
           <div className="flex items-end gap-3">
             <div className="flex-1">
               <Label htmlFor="targetRir">Target RIR</Label>
-              <select
-                id="targetRir"
-                name="targetRir"
-                defaultValue={String(program.targetRir)}
-                className="mt-1 flex h-8 w-full border-2 border-foreground bg-transparent px-2.5 text-sm"
-              >
-                {[0, 1, 2, 3, 4].map((n) => (
-                  <option key={n} value={n}>
-                    {n} {n === 1 ? "rep" : "reps"} in reserve
-                  </option>
-                ))}
-              </select>
+              <Select name="targetRir" defaultValue={String(program.targetRir)}>
+                <SelectTrigger id="targetRir" className="mt-1 h-11 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[0, 1, 2, 3, 4].map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n} {n === 1 ? "rep" : "reps"} in reserve
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button type="submit" size="sm">
               Save
