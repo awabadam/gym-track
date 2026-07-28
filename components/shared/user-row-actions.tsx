@@ -339,7 +339,6 @@ export function UserRowActions({
                 e.preventDefault();
                 handlePromote();
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Promote to admin
             </AlertDialogAction>
