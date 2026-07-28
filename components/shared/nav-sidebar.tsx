@@ -77,7 +77,7 @@ export function NavSidebar({
         <Link
           href={item.href}
           data-active={isActive}
-          className="group flex items-center gap-3 border-2 px-3 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-none data-[active=false]:border-transparent data-[active=false]:text-foreground data-[active=false]:hover:border-foreground data-[active=false]:hover:bg-foreground data-[active=false]:hover:text-background data-[active=true]:border-foreground data-[active=true]:bg-signal data-[active=true]:text-signal-foreground data-[active=true]:shadow-[3px_3px_0_0_var(--foreground)]"
+          className="group flex items-center gap-3 border-2 px-3 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-none outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground data-[active=false]:border-transparent data-[active=false]:text-foreground data-[active=false]:hover:border-foreground data-[active=false]:hover:bg-foreground data-[active=false]:hover:text-background data-[active=true]:border-foreground data-[active=true]:bg-signal data-[active=true]:text-signal-foreground data-[active=true]:shadow-[3px_3px_0_0_var(--foreground)]"
         >
           <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.4} />
           <span>{item.title}</span>
@@ -95,21 +95,24 @@ export function NavSidebar({
       className="sticky top-0 h-svh self-start border-r-2 border-foreground"
     >
       <SidebarHeader className="h-14 justify-center gap-0 border-b-2 border-foreground p-0">
-        <Link href={brand.href} className="group flex h-full items-center gap-2.5 px-4">
+        <Link
+          href={brand.href}
+          className="group flex h-full items-center gap-2.5 px-4 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+        >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center border-2 border-foreground bg-signal text-signal-foreground transition-transform group-hover:-translate-y-0.5 group-hover:shadow-[3px_3px_0_0_var(--foreground)]">
             <brand.icon className="h-[18px] w-[18px]" strokeWidth={2.5} />
           </span>
-          <span className="flex flex-col leading-none">
-            <span
+          <div className="flex flex-col leading-none">
+            <h2
               className="text-lg leading-none tracking-tight text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
             >
               {brand.title}
-            </span>
+            </h2>
             <span className="mt-1 text-[8px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
               {brand.subtitle}
             </span>
-          </span>
+          </div>
         </Link>
       </SidebarHeader>
 

@@ -75,7 +75,7 @@ export function BottomNav({
               <Link
                 key={tab.href}
                 href={tab.href}
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 border-x-2 border-foreground bg-foreground py-2 text-background"
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 border-x-2 border-foreground bg-foreground py-2 text-background outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
               >
                 <tab.icon className="h-5 w-5" strokeWidth={2.4} />
                 <span className="text-[10px] font-bold uppercase tracking-wide">
@@ -89,7 +89,7 @@ export function BottomNav({
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 ${
+              className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ${
                 isActive ? "text-foreground" : "text-muted-foreground"
               }`}
             >
@@ -105,7 +105,7 @@ export function BottomNav({
         {/* MORE — opens the Build menu */}
         <Sheet>
           <SheetTrigger
-            className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 ${
+            className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ${
               moreActive ? "text-foreground" : "text-muted-foreground"
             }`}
           >
@@ -133,7 +133,7 @@ export function BottomNav({
                     <Link
                       href={link.href}
                       data-active={active}
-                      className="group flex items-center gap-2.5 border-2 px-3 py-3 text-sm font-bold uppercase tracking-wide transition-none data-[active=false]:border-transparent data-[active=false]:bg-card data-[active=false]:hover:border-foreground data-[active=true]:border-foreground data-[active=true]:bg-signal data-[active=true]:text-signal-foreground data-[active=true]:shadow-[3px_3px_0_0_var(--foreground)]"
+                      className="group flex items-center gap-2.5 border-2 px-3 py-3 text-sm font-bold uppercase tracking-wide transition-none outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground data-[active=false]:border-transparent data-[active=false]:bg-card data-[active=false]:hover:border-foreground data-[active=true]:border-foreground data-[active=true]:bg-signal data-[active=true]:text-signal-foreground data-[active=true]:shadow-[3px_3px_0_0_var(--foreground)]"
                     >
                       <link.icon className="h-5 w-5 shrink-0" strokeWidth={2.4} />
                       <span>{link.label}</span>

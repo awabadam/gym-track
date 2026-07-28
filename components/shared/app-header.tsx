@@ -58,12 +58,12 @@ export async function AppHeader() {
         <span className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-signal text-signal-foreground">
           <Dumbbell className="h-4 w-4" strokeWidth={2.5} />
         </span>
-        <span
+        <h2
           className="text-base uppercase tracking-tight"
           style={{ fontFamily: "var(--font-display)" }}
         >
           GymTrack
-        </span>
+        </h2>
       </Link>
 
       {/* Active program — desktop */}
@@ -85,7 +85,7 @@ export async function AppHeader() {
         {isTrainer && (
           // Mobile entry point for the trainer's clients (the desktop sidebar
           // carries it on larger screens).
-          <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0 md:hidden" aria-label="Clients">
+          <Button asChild size="sm" variant="ghost" className="size-11 p-0 md:hidden" aria-label="Clients">
             <Link href="/clients">
               <Users className="h-4 w-4" />
             </Link>
@@ -95,14 +95,14 @@ export async function AppHeader() {
           // Mobile entry point for the client-facing coaching page (the desktop
           // sidebar carries it on larger screens). Shown to trainers too, since
           // a trainer can also be coached.
-          <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0 md:hidden" aria-label="Coach">
+          <Button asChild size="sm" variant="ghost" className="size-11 p-0 md:hidden" aria-label="Coach">
             <Link href="/coach">
               <HeartHandshake className="h-4 w-4" />
             </Link>
           </Button>
         )}
         {isAdmin && (
-          <Button asChild size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label="Admin">
+          <Button asChild size="sm" variant="ghost" className="size-11 p-0" aria-label="Admin">
             <Link href="/admin">
               <Shield className="h-4 w-4" />
             </Link>
@@ -112,7 +112,7 @@ export async function AppHeader() {
           asChild
           size="sm"
           variant="ghost"
-          className="relative h-8 w-8 p-0"
+          className="relative size-11 p-0"
           aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         >
           <Link href="/notifications">

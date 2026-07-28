@@ -145,13 +145,28 @@
     @apply font-sans;
   }
 
-  /* Heavy condensed-impact display type for all headings */
+  /* Heavy condensed-impact display type for all headings. Tailwind's
+     preflight resets heading font-size to `inherit`, so without an explicit
+     step here any heading that doesn't carry its own text-* utility would
+     render at body-copy size. This modest scale only matters as a fallback:
+     virtually every heading in the app already carries an explicit text-*
+     class, which — being in Tailwind's utilities layer — always wins over
+     this base-layer rule. */
   h1, h2, h3 {
     font-family: var(--font-display);
     text-transform: uppercase;
     letter-spacing: -0.01em;
     line-height: 1;
     font-weight: 400;
+  }
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.375rem;
+  }
+  h3 {
+    font-size: 1.125rem;
   }
 
   ::selection {
