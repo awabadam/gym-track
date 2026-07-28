@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import {
   updateProgramExercise,
   reorderProgramExercise,
@@ -633,7 +633,9 @@ function ExercisePicker({
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const listboxId = useId();
   const term = search.trim().toLowerCase();
+  // Cap results low (Miller's rule) so the picker stays scannable.
   const results = term
     ? exercises
         .filter(
@@ -641,8 +643,9 @@ function ExercisePicker({
             ex.name.toLowerCase().includes(term) ||
             (ex.muscleGroup?.toLowerCase().includes(term) ?? false)
         )
-        .slice(0, 8)
+        .slice(0, 5)
     : [];
+  const showResults = term.length > 0;
 
   async function add(exerciseId: string) {
     setError(null);
@@ -661,25 +664,47 @@ function ExercisePicker({
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Add exercise — search by name or muscle…"
         aria-label="Search exercises to add"
+        role="combobox"
+        aria-expanded={showResults}
+        aria-controls={listboxId}
+        aria-autocomplete="list"
       />
+      <span className="sr-only" role="status" aria-live="polite">
+        {showResults
+          ? `${results.length} ${results.length === 1 ? "exercise" : "exercises"} match`
+          : ""}
+      </span>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {results.length > 0 && (
-        <div className="divide-y-2 divide-foreground border-2 border-foreground">
-          {results.map((ex) => (
-            <button
-              key={ex.id}
-              type="button"
-              onClick={() => add(ex.id)}
-              className="flex w-full items-center justify-between gap-2 p-2 text-left hover:bg-signal hover:text-signal-foreground"
-            >
-              <span className="font-medium">{ex.name}</span>
-              {ex.muscleGroup && (
-                <span className="text-xs capitalize text-muted-foreground">
-                  {ex.muscleGroup}
-                </span>
-              )}
-            </button>
-          ))}
+      {showResults && (
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label="Matching exercises"
+          className="divide-y-2 divide-foreground border-2 border-foreground"
+        >
+          {results.length > 0 ? (
+            results.map((ex) => (
+              <button
+                key={ex.id}
+                type="button"
+                role="option"
+                aria-selected={false}
+                onClick={() => add(ex.id)}
+                className="flex w-full items-center justify-between gap-2 p-2 text-left hover:bg-signal hover:text-signal-foreground"
+              >
+                <span className="font-medium">{ex.name}</span>
+                {ex.muscleGroup && (
+                  <span className="text-xs capitalize text-muted-foreground">
+                    {ex.muscleGroup}
+                  </span>
+                )}
+              </button>
+            ))
+          ) : (
+            <p className="p-2 text-sm text-muted-foreground">
+              No exercises match “{search.trim()}”
+            </p>
+          )}
         </div>
       )}
     </div>

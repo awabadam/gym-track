@@ -44,11 +44,15 @@ export function NavSidebar({
   navLabel = "// Navigate",
   items,
   footer,
+  showNumbers = true,
 }: {
   brand: Brand;
   navLabel?: string;
   items: NavItem[];
   footer?: React.ReactNode;
+  // Trailing "01/02" index per item. Reads as unfinished for a single-item
+  // nav, so consoles with one destination (the coach console) opt out.
+  showNumbers?: boolean;
 }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
@@ -81,9 +85,11 @@ export function NavSidebar({
         >
           <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.4} />
           <span>{item.title}</span>
-          <span className="ml-auto font-mono text-[10px] opacity-60">
-            {String(i + 1).padStart(2, "0")}
-          </span>
+          {showNumbers && (
+            <span className="ml-auto font-mono text-[10px] opacity-60">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+          )}
         </Link>
       </SidebarMenuItem>
     );
