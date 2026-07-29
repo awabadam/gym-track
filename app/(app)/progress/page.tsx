@@ -71,6 +71,23 @@ export default async function ProgressPage() {
     return (weeklyVolume.get(b[0]) ?? 0) - (weeklyVolume.get(a[0]) ?? 0);
   });
 
+  // Headline: answer "am I progressing?" before showing the analysis tools.
+  const trendables = progress.filter((p) => p.series.length >= 2);
+  const trendingUp = trendables.filter(
+    (p) => p.series[p.series.length - 1].e1rm > p.series[0].e1rm
+  ).length;
+  const trainedSets30 = actualVolume.reduce((a, e) => a + e.sets, 0);
+  const plannedSetsWk = [...weeklyVolume.values()].reduce((a, b) => a + b, 0);
+  const headline = [
+    {
+      label: "Lifts Trending Up",
+      value: trendables.length > 0 ? `${trendingUp}/${trendables.length}` : "—",
+      unit: "",
+    },
+    { label: "Trained Sets · 30d", value: trainedSets30, unit: "sets" },
+    { label: "Planned / Week", value: plannedSetsWk, unit: "sets" },
+  ];
+
   return (
     <div className="surface-quiet space-y-6">
       <PageHeader
@@ -84,6 +101,31 @@ export default async function ProgressPage() {
           </Button>
         }
       />
+
+      {/* Headline strip — the progress story at a glance. */}
+      <div className="reveal [animation-delay:80ms] grid grid-cols-3 gap-[2px] border-2 border-foreground bg-foreground">
+        {headline.map((s) => (
+          <div key={s.label} className="bg-card p-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+              {s.label}
+            </div>
+            <div
+              className="mt-2 text-3xl tabular-nums md:text-4xl"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {s.value}
+              {s.unit && (
+                <span
+                  className="ml-1 align-baseline text-sm font-bold lowercase tracking-normal text-muted-foreground"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {s.unit}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
       <AchievementsShowcase
         achievements={achievements}
