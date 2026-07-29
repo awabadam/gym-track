@@ -1,4 +1,5 @@
 import { Block } from "@/components/shared/block";
+import { StreakMilestones } from "@/components/shared/streak-milestones";
 import {
   addDays,
   computeStreaks,
@@ -79,6 +80,7 @@ export function ConsistencyStrip({
 
   return (
     <Block title="Consistency" tag={`// ${workoutsLast30}/30d`} className={className}>
+      <StreakMilestones weeklyStreak={weeklyStreak} sessionStreak={sessionStreak} />
       <div className="flex flex-col md:flex-row">
         {/* Dual streak stats — same visual language as the stat strip. */}
         <div className="grid shrink-0 grid-cols-2 gap-[2px] border-b-2 border-foreground bg-foreground md:w-56 md:grid-cols-1 md:border-b-0 md:border-r-2">

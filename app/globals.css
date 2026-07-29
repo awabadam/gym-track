@@ -363,4 +363,11 @@
     opacity: 1;
     animation: none;
   }
+  /* Celebrations: show the stamp statically, skip the confetti entirely. */
+  .animate-pop {
+    animation: none;
+  }
+  .confetti-piece {
+    display: none;
+  }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type CSSProperties } from "react";
+import { useState, useTransition } from "react";
 import type { StrengthData, TrackedLift } from "@/data/goals";
 import {
   logOneRepMax,
@@ -10,6 +10,7 @@ import {
 } from "@/app/actions/goals";
 import { formatDate } from "@/lib/format";
 import { Block } from "@/components/shared/block";
+import { BrutalCelebration } from "@/components/shared/brutal-celebration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -257,35 +258,6 @@ function LiftRow({
   );
 }
 
-function Confetti() {
-  // 18 deterministic pieces (no RNG → stable) fanning out as they fall.
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {Array.from({ length: 18 }, (_, i) => {
-        const left = (i * 37) % 100;
-        const x = ((i * 53) % 120) - 60;
-        const rot = 200 + ((i * 97) % 520);
-        const delay = (i % 6) * 0.07;
-        const filled = i % 2 === 0;
-        return (
-          <span
-            key={i}
-            className={`confetti-piece ${filled ? "bg-signal" : "bg-background"}`}
-            style={
-              {
-                left: `${left}%`,
-                "--x": `${x}px`,
-                "--r": `${rot}deg`,
-                "--d": `${delay}s`,
-              } as CSSProperties
-            }
-          />
-        );
-      })}
-    </div>
-  );
-}
-
 function CelebrationView({
   celebration,
   liftName,
@@ -307,22 +279,12 @@ function CelebrationView({
   const celebrate = isNewBest || achievedGoal;
 
   return (
-    <div className="relative flex flex-col items-center gap-3.5 overflow-hidden py-6 text-center">
-      {celebrate && <Confetti />}
-
-      <div
-        className="animate-pop relative border-4 border-foreground bg-signal px-6 py-4 text-signal-foreground shadow-[6px_6px_0_0_var(--shadow-color)]"
-        style={{ fontFamily: "var(--font-display)" }}
-      >
-        <p className="text-xs uppercase tracking-[0.3em]">
-          {isNewBest ? "New 1RM" : "Logged"}
-        </p>
-        <p className="text-6xl leading-none tabular-nums">
-          {value}
-          <span className="text-2xl"> kg</span>
-        </p>
-      </div>
-
+    <BrutalCelebration
+      kicker={isNewBest ? "New 1RM" : "Logged"}
+      value={value}
+      unit="kg"
+      confetti={celebrate}
+    >
       {isNewBest && delta != null && delta > 0 && (
         <span className="relative flex items-center gap-1 border-2 border-foreground bg-foreground px-3 py-1 text-sm font-bold uppercase tracking-wide text-background">
           <TrendingUp className="h-4 w-4" /> +{delta} kg · new best
@@ -357,7 +319,7 @@ function CelebrationView({
       <Button onClick={onClose} className="relative mt-1">
         Done
       </Button>
-    </div>
+    </BrutalCelebration>
   );
 }
 
