@@ -14,6 +14,7 @@ import {
  HeartHandshake,
  Shield,
  MoreHorizontal,
+ Settings,
  type LucideIcon,
 } from "lucide-react";
 import {
@@ -35,7 +36,7 @@ const tabs = [
 ];
 
 // Routes reachable from the More sheet — used to highlight the More tab.
-const BUILD_PREFIXES = ["/goals", "/programs", "/exercises", "/coach", "/clients", "/admin"];
+const BUILD_PREFIXES = ["/goals", "/programs", "/exercises", "/coach", "/clients", "/admin", "/settings"];
 
 export function BottomNav({
  isAdmin = false,
@@ -54,6 +55,7 @@ export function BottomNav({
  if (isTrainer) buildLinks.push({ href: "/clients", label: "Clients", icon: Users });
  if (!isAdmin) buildLinks.push({ href: "/coach", label: "Coach", icon: HeartHandshake });
  if (isAdmin) buildLinks.push({ href: "/admin", label: "Admin", icon: Shield });
+ buildLinks.push({ href: "/settings", label: "Settings", icon: Settings });
 
  const moreActive = BUILD_PREFIXES.some(
  (p) => pathname === p || pathname.startsWith(`${p}/`)
