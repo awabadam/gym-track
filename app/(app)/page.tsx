@@ -13,6 +13,7 @@ import {
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Block } from "@/components/shared/block";
+import { ConsistencyStrip } from "@/components/shared/consistency-strip";
 import { WorkoutCalendar } from "@/components/shared/workout-calendar";
 import { StartWorkoutPicker } from "@/components/shared/start-workout-picker";
 import { StartWorkoutButton } from "@/components/shared/start-workout-button";
@@ -65,13 +66,20 @@ export default async function HomePage() {
   const nextY = month + 2 > 12 ? year + 1 : year;
   const calEnd = `${nextY}-${String(nextM).padStart(2, "0")}-31`;
 
-  const [program, recentSessions, inProgress, weekSessions, calendarSessions] =
+  // Local ISO date + a trailing year of history for streak computation.
+  const todayISO = now.toLocaleDateString("en-CA");
+  const yearAgo = new Date(now);
+  yearAgo.setDate(yearAgo.getDate() - 364);
+  const yearAgoISO = yearAgo.toLocaleDateString("en-CA");
+
+  const [program, recentSessions, inProgress, weekSessions, calendarSessions, historySessions] =
     await Promise.all([
       getActiveProgram(),
       getRecentSessions(5),
       getInProgressSession(),
       getSessionsForCurrentWeek(),
       getSessionsInRange(calStart, calEnd),
+      getSessionsInRange(yearAgoISO, todayISO),
     ]);
 
   const today = new Date()
@@ -207,6 +215,18 @@ export default async function HomePage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* CONSISTENCY — dual streaks + contribution grid */}
+      {program && (
+        <ConsistencyStrip
+          sessions={historySessions}
+          scheduledWeekdays={program.days
+            .map((d) => d.scheduledDay)
+            .filter((d): d is string => Boolean(d))}
+          today={todayISO}
+          className="reveal [animation-delay:110ms]"
+        />
       )}
 
       {/* START AREA — anchor target for the mobile "Start" tab */}
