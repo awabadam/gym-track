@@ -292,19 +292,19 @@ export default async function HomePage() {
               return (
                 <div
                   key={`${e.exerciseName}-${i}`}
-                  className="group grid grid-cols-[36px_1fr_auto] items-center gap-3 border-b-2 border-foreground px-5 py-3 last:border-b-0 transition-colors hover:bg-signal"
+                  className="group grid grid-cols-[36px_1fr_auto] items-center gap-3 border-b-2 border-foreground px-5 py-3 last:border-b-0 transition-colors hover:bg-muted"
                 >
                   <span
-                    className="text-base text-muted-foreground group-hover:text-signal-foreground"
+                    className="text-base text-muted-foreground"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="truncate text-sm font-bold uppercase tracking-wide group-hover:text-signal-foreground">
+                  <span className="truncate text-sm font-bold uppercase tracking-wide">
                     {e.exerciseName}
                   </span>
                   <span
-                    className="shrink-0 border-2 border-foreground bg-signal px-2 py-0.5 text-sm text-signal-foreground group-hover:bg-foreground group-hover:text-background"
+                    className="shrink-0 border-2 border-foreground bg-foreground px-2 py-0.5 text-sm text-background"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {reps ? `${e.sets}×${reps}` : `${e.sets} sets`}
@@ -484,15 +484,15 @@ export default async function HomePage() {
             <Link
               key={s.id}
               href={`/log/${s.id}`}
-              className="group grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b-2 border-foreground px-4 py-3 last:border-b-0 transition-colors hover:bg-signal"
+              className="group grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b-2 border-foreground px-4 py-3 last:border-b-0 transition-colors hover:bg-muted"
             >
               <span className="bg-foreground px-2 py-1 font-mono text-xs font-bold text-background">
                 {s.dayCode}
               </span>
-              <span className="text-sm font-bold uppercase tracking-wide group-hover:text-signal-foreground">
+              <span className="text-sm font-bold uppercase tracking-wide">
                 {s.dayName}
               </span>
-              <span className="font-mono text-xs tabular-nums text-muted-foreground group-hover:text-signal-foreground">
+              <span className="font-mono text-xs tabular-nums text-muted-foreground">
                 {formatDate(s.date)}
               </span>
             </Link>

@@ -58,7 +58,7 @@ export function StrengthSection({
           <div className="flex gap-2">
             <button
               onClick={() => setGoalFor({ exerciseId: null, goal: null })}
-              className="flex items-center gap-1 bg-background px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-signal hover:text-signal-foreground"
+              className="flex items-center gap-1 bg-background px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-transparent hover:text-background"
             >
               <Target className="h-3 w-3" /> Set goal
             </button>
