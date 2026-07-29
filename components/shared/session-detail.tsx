@@ -153,6 +153,25 @@ export async function SessionDetail({
 
       {!isComplete && <RestTimer />}
 
+      {/* Empty plan: the day has no exercises — say so loudly and route to the
+          editor instead of rendering a blank logging screen. */}
+      {session.plan.length === 0 && (
+        <div className="flex flex-col items-center gap-3 border-2 border-foreground bg-card px-6 py-12 text-center shadow-[4px_4px_0_0_var(--shadow-color)]">
+          <p className="text-lg font-bold uppercase tracking-wide">
+            This day has no exercises yet
+          </p>
+          <p className="max-w-sm text-xs uppercase tracking-wide text-muted-foreground">
+            Add exercises to {session.dayName} in the program editor, then come
+            back to log your sets.
+          </p>
+          <Button asChild className="mt-2">
+            <Link href={`/programs/${session.programSlug}/edit`}>
+              Edit Program
+            </Link>
+          </Button>
+        </div>
+      )}
+
       <div
         className={
           editing ? "space-y-4" : "grid items-start gap-4 sm:grid-cols-2"

@@ -21,7 +21,10 @@ export async function ensureUserSeeded(userId: string) {
 
   try {
     await seedProgramForUser(userId);
-  } catch {
-    // Another concurrent request likely seeded first; ignore.
+  } catch (e) {
+    // Usually a concurrent request seeded first (unique-index race) — fine.
+    // But surface it: a catalog-resolution failure here must not be silent
+    // (that's how every user ended up with an exercise-less program once).
+    console.error("[onboarding] seedProgramForUser failed:", e);
   }
 }

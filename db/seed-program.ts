@@ -10,7 +10,7 @@ const DAY_DATA = [
   { name: "Lower B", dayCode: "LB", scheduledDay: "friday", sortOrder: 4 },
 ];
 
-const PROGRAM_EXERCISE_DATA = [
+export const PROGRAM_EXERCISE_DATA = [
   { dayCode: "UA", exercise: "Bench Press", sets: 4, min: 5, max: 8, order: 1 },
   { dayCode: "UA", exercise: "Barbell Row", sets: 4, min: 5, max: 8, order: 2 },
   { dayCode: "UA", exercise: "Overhead Press", sets: 3, min: 6, max: 10, order: 3 },
@@ -45,6 +45,18 @@ const PROGRAM_EXERCISE_DATA = [
 export async function seedProgramForUser(userId: string) {
   const catalog = await db.select().from(exercises).orderBy(asc(exercises.name));
   const byName = Object.fromEntries(catalog.map((e) => [e.name, e.id]));
+
+  // Resolve the template against the catalog BEFORE creating anything: a
+  // program whose days have no exercises is worse than no program (the July
+  // catalog-import wipe produced exactly that, silently, for every user).
+  // Failing here lets ensureUserSeeded retry on a later load.
+  const unresolved = PROGRAM_EXERCISE_DATA.filter((pe) => !byName[pe.exercise]);
+  if (unresolved.length > 0) {
+    throw new Error(
+      `seedProgramForUser: ${unresolved.length} template exercises missing from catalog: ` +
+        unresolved.map((pe) => pe.exercise).join(", ")
+    );
+  }
 
   const [program] = await db
     .insert(programs)
