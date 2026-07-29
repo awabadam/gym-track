@@ -17,8 +17,12 @@ export default async function GoalsPage() {
         subtitle="Personal records & targets"
         eyebrow="// Strength"
       />
-      <StrengthSection data={strength} today={today} />
-      <AchievementsShowcase achievements={achievements} variant="full" />
+      <div className="reveal [animation-delay:120ms]">
+        <StrengthSection data={strength} today={today} />
+      </div>
+      <div className="reveal [animation-delay:220ms]">
+        <AchievementsShowcase achievements={achievements} variant="full" />
+      </div>
     </div>
   );
 }

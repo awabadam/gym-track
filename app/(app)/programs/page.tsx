@@ -27,7 +27,7 @@ export default async function ProgramsPage() {
       />
 
       {programs.length === 0 ? (
-        <Card>
+        <Card className="reveal [animation-delay:120ms]">
           <CardContent className="py-12 text-center text-muted-foreground">
             <ListChecks className="h-10 w-10 mx-auto mb-3 opacity-40" />
             <p className="font-medium">No programs yet</p>
@@ -41,7 +41,7 @@ export default async function ProgramsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3">
+        <div className="reveal [animation-delay:120ms] grid gap-3">
           {programs.map((p) => (
             <Card key={p.id} className="hover:border-primary/50 transition-colors">
               <CardContent className="flex items-center justify-between py-4">
