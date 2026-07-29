@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { AppHeader } from "@/components/shared/app-header";
 import { BottomNav } from "@/components/shared/bottom-nav";
+import { SkipLink } from "@/components/shared/skip-link";
 
 export default async function AppLayout({
   children,
@@ -19,12 +20,7 @@ export default async function AppLayout({
 
   return (
     <>
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2"
-      >
-        Skip to content
-      </a>
+      <SkipLink />
       <TooltipProvider>
         <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
           <AppSidebar

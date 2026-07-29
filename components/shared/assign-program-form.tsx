@@ -5,12 +5,21 @@ import { assignProgram } from "@/app/actions/trainer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function AssignProgramForm({ clientId }: { clientId: string }) {
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setError(null);
+    setPending(true);
     try {
       await assignProgram(clientId, formData);
     } catch (e) {
@@ -26,6 +35,8 @@ export function AssignProgramForm({ clientId }: { clientId: string }) {
         throw e;
       }
       setError(e instanceof Error ? e.message : "Failed to assign program");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -42,23 +53,23 @@ export function AssignProgramForm({ clientId }: { clientId: string }) {
         </div>
         <div>
           <Label htmlFor="targetRir">Target RIR</Label>
-          <select
-            id="targetRir"
-            name="targetRir"
-            defaultValue="2"
-            className="mt-1 flex h-8 w-full border-2 border-foreground bg-transparent px-2.5 text-sm"
-          >
-            {[0, 1, 2, 3, 4].map((n) => (
-              <option key={n} value={n}>
-                {n} {n === 1 ? "rep" : "reps"} in reserve
-              </option>
-            ))}
-          </select>
+          <Select name="targetRir" defaultValue="2">
+            <SelectTrigger id="targetRir" className="mt-1 h-11 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[0, 1, 2, 3, 4].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} {n === 1 ? "rep" : "reps"} in reserve
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" size="sm">
-        Create program
+      <Button type="submit" size="sm" disabled={pending}>
+        {pending ? "Creating…" : "Create program"}
       </Button>
     </form>
   );

@@ -194,9 +194,13 @@ function LiftRow({
           {lift.goal ? (
             <div className="min-w-[140px]">
               <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide">
-                <span className={achieved ? "text-signal" : "text-muted-foreground"}>
-                  {achieved ? "Achieved" : "Goal"}
-                </span>
+                {achieved ? (
+                  <span className="border-2 border-foreground bg-signal px-1.5 py-0.5 text-signal-foreground">
+                    Achieved
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Goal</span>
+                )}
                 <span>→ {lift.goal.targetValue} kg</span>
               </div>
               <div className="mt-1 h-2.5 w-full border-2 border-foreground bg-card">

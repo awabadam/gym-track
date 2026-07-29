@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/shared/admin-sidebar";
 import { AdminNav } from "@/components/shared/admin-nav";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { SkipLink } from "@/components/shared/skip-link";
 import { Shield, ArrowLeft } from "lucide-react";
 
 export default async function AdminLayout({
@@ -20,6 +21,7 @@ export default async function AdminLayout({
 
   return (
     <TooltipProvider>
+      <SkipLink />
       <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
         <AdminSidebar />
         <SidebarInset>

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { getPrograms } from "@/data/programs";
-import { duplicateProgram, setActiveProgram } from "@/app/actions/programs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
-import { Plus, ArrowRight, Copy, ListChecks, Check } from "lucide-react";
+import { SetActiveButton } from "@/components/shared/set-active-button";
+import { DuplicateProgramButton } from "@/components/shared/duplicate-program-button";
+import { Plus, ArrowRight, ListChecks } from "lucide-react";
 
 export default async function ProgramsPage() {
   const programs = await getPrograms();
@@ -64,24 +65,10 @@ export default async function ProgramsPage() {
                 </Link>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {!p.isActive && (
-                    <form action={setActiveProgram.bind(null, p.id)}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        type="submit"
-                        aria-label={`Set ${p.name} as active`}
-                      >
-                        <Check className="h-3.5 w-3.5 mr-1" />
-                        Set active
-                      </Button>
-                    </form>
+                    <SetActiveButton programId={p.id} programName={p.name} />
                   )}
                   {p.canEdit && (
-                    <form action={duplicateProgram.bind(null, p.id)}>
-                      <Button variant="ghost" size="sm" className="h-10 w-10 p-0" type="submit" aria-label={`Duplicate ${p.name}`}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </form>
+                    <DuplicateProgramButton programId={p.id} programName={p.name} />
                   )}
                   <Button variant="ghost" size="sm" asChild className="h-10 w-10 p-0" aria-label={`View ${p.name}`}>
                     <Link href={`/programs/${p.slug}`}>

@@ -11,12 +11,12 @@ import {
   getSessionsInRange,
 } from "@/data/sessions";
 import { formatDate } from "@/lib/format";
-import { startSession } from "@/app/actions/sessions";
 import { Button } from "@/components/ui/button";
 import { Block } from "@/components/shared/block";
 import { WorkoutCalendar } from "@/components/shared/workout-calendar";
 import { StartWorkoutPicker } from "@/components/shared/start-workout-picker";
-import { ArrowRight, Clock, Moon, Play } from "lucide-react";
+import { StartWorkoutButton } from "@/components/shared/start-workout-button";
+import { ArrowRight, Clock, Moon } from "lucide-react";
 
 function repsLabel(e: { repRangeMin: number | null; repRangeMax: number | null }) {
   if (e.repRangeMin == null) return null;
@@ -294,19 +294,9 @@ export default async function HomePage() {
             })}
           </div>
           <div className="flex items-stretch border-t-2 border-foreground">
-            <form
-              action={startSession.bind(null, todayDay.id)}
-              className="flex-1"
-            >
-              <button
-                type="submit"
-                className="flex w-full items-center justify-center gap-2 bg-signal py-4 text-lg uppercase tracking-wide text-signal-foreground transition-colors hover:bg-foreground hover:text-background"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                <Play className="h-5 w-5 fill-current" />
-                Start Workout
-              </button>
-            </form>
+            <div className="flex-1">
+              <StartWorkoutButton programDayId={todayDay.id} />
+            </div>
             {program!.days.length > 1 && (
               <StartWorkoutPicker
                 days={program!.days}

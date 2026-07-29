@@ -7,6 +7,34 @@ import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/auth";
 import { parseForm, exerciseSchema } from "@/lib/validation";
 import { fineToCoarse } from "@/lib/muscles";
+import { getExercises } from "@/data/exercises";
+
+export interface PickerExercise {
+  id: string;
+  name: string;
+  muscleGroup: string | null;
+}
+
+/**
+ * Debounced server search for the program builder's exercise picker. Reuses the
+ * catalog search in `data/exercises.ts` (scoped to the caller's visible
+ * exercises) so the full ~1300-item catalog is never shipped to the client.
+ */
+export async function searchExercisesForPicker(
+  query: string
+): Promise<{ results: PickerExercise[]; total: number }> {
+  const term = query.trim();
+  if (!term) return { results: [], total: 0 };
+  const { rows, total } = await getExercises({ search: term, limit: 5 });
+  return {
+    results: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      muscleGroup: r.muscleGroup,
+    })),
+    total,
+  };
+}
 
 /**
  * Throws unless the exercise exists and is owned by the current user. Shared

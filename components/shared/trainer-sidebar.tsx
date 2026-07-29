@@ -14,6 +14,7 @@ export function TrainerSidebar() {
       brand={{ href: "/clients", icon: HeartHandshake, title: "GYMTRACK", subtitle: "Coach Console" }}
       navLabel="// Coaching"
       items={navItems}
+      showNumbers={false}
       footer={
         <Link
           href="/"

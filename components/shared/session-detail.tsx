@@ -1,17 +1,17 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionById, getLastSessionSets, getBestSet } from "@/data/sessions";
 import { getProgression, isUpperBody } from "@/lib/progression";
-import { completeSession } from "@/app/actions/sessions";
 import { formatDate } from "@/lib/format";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Block } from "@/components/shared/block";
 import { SetLogger } from "@/components/shared/set-logger";
 import { RestTimer } from "@/components/shared/rest-timer";
 import { WakeLock } from "@/components/shared/wake-lock";
-import { CheckCircle, Trophy, ArrowLeft, Pencil, Check } from "lucide-react";
+import { Trophy, ArrowLeft, Pencil, Check } from "lucide-react";
 import { CancelSessionButton } from "@/components/shared/cancel-session-button";
+import { FinishWorkoutButton } from "@/components/shared/finish-workout-button";
 import { MuscleVolumeMap } from "@/components/shared/muscle-volume-map";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import Link from "next/link";
@@ -109,7 +109,7 @@ export async function SessionDetail({
               </Link>
             </Button>
           )}
-          <h1 className="text-2xl font-bold">{session.dayName}</h1>
+          <h1 className="text-2xl sm:text-3xl">{session.dayName}</h1>
           <p className="text-sm text-muted-foreground">
             {session.dayCode} &mdash; {formatDate(session.date)}
             {edit && (
@@ -162,16 +162,10 @@ export async function SessionDetail({
         const loggedCount = ex.loggedSets.length;
 
         return (
-          <Card key={ex.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">{ex.exerciseName}</CardTitle>
-                <div className="flex items-center gap-2">
-                  {!isComplete && (
-                    <span className="text-xs text-muted-foreground font-mono tabular-nums">
-                      {loggedCount}/{ex.sets}
-                    </span>
-                  )}
+          <Block key={ex.id} title={ex.exerciseName}>
+            <div className="p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {ex.sets} &times; {ex.repRangeMin}-{ex.repRangeMax}
                   </Badge>
@@ -181,15 +175,18 @@ export async function SessionDetail({
                     </Badge>
                   )}
                 </div>
+                {!isComplete && (
+                  <span className="text-xs text-muted-foreground font-mono tabular-nums">
+                    {loggedCount}/{ex.sets}
+                  </span>
+                )}
               </div>
               {!isComplete && (
-                <p className="text-xs text-muted-foreground/80 mt-1">
+                <p className="text-sm text-muted-foreground mt-1.5">
                   {ex.progression.message}
                 </p>
               )}
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
+              <div className="space-y-1 mt-3">
                 {!editing ? (
                   ex.loggedSets.length > 0 ? (
                     ex.loggedSets
@@ -203,7 +200,7 @@ export async function SessionDetail({
                         return (
                           <div
                             key={s.id}
-                            className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg"
+                            className="flex items-center gap-3 py-1.5 px-2 -mx-2"
                           >
                             <Badge
                               variant="outline"
@@ -224,7 +221,7 @@ export async function SessionDetail({
                               </span>
                             )}
                             {isPR && (
-                              <Badge className="text-[11px] px-1.5 py-0 bg-yellow-500/20 text-yellow-500 border-yellow-500/30">
+                              <Badge className="text-[11px] px-1.5 py-0 border-2 border-foreground bg-signal text-signal-foreground">
                                 <Trophy className="h-2.5 w-2.5 mr-0.5" />
                                 PR
                               </Badge>
@@ -277,20 +274,13 @@ export async function SessionDetail({
                   <p className="text-xs text-muted-foreground">{ex.notes}</p>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </Block>
         );
       })}
       </div>
 
-      {!isComplete && (
-        <form action={completeSession.bind(null, sessionId)}>
-          <Button className="w-full" size="lg">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Finish workout
-          </Button>
-        </form>
-      )}
+      {!isComplete && <FinishWorkoutButton sessionId={sessionId} />}
 
       {isComplete && edit && (
         <Button asChild className="w-full" size="lg">

@@ -26,13 +26,36 @@ export default async function ExercisesPage({
   searchParams: Promise<{ q?: string; muscle?: string; page?: string }>;
 }) {
   const { q, muscle, page: pageStr } = await searchParams;
-  const page = Math.max(1, parseInt(pageStr ?? "1") || 1);
-  const offset = (page - 1) * PAGE_SIZE;
+  const requestedPage = Math.max(1, parseInt(pageStr ?? "1") || 1);
 
-  const [{ rows: exercises, total }, muscleGroups] = await Promise.all([
-    getExercises({ search: q, muscleGroup: muscle, limit: PAGE_SIZE, offset }),
+  let page = requestedPage;
+  const [{ rows: firstRows, total }, muscleGroups] = await Promise.all([
+    getExercises({
+      search: q,
+      muscleGroup: muscle,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    }),
     getMuscleGroups(),
   ]);
+  let exercises = firstRows;
+
+  // An out-of-range ?page= (e.g. after the result set shrinks, or a typed
+  // URL) would otherwise render an empty table under a dishonest "page N of
+  // totalPages". Clamp to the last real page and re-fetch so the list and
+  // pagination stay consistent.
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (total > 0 && page > totalPages) {
+    page = totalPages;
+    exercises = (
+      await getExercises({
+        search: q,
+        muscleGroup: muscle,
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+      })
+    ).rows;
+  }
 
   return (
     <div className="space-y-4">

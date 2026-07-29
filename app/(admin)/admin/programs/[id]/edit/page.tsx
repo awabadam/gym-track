@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getRecommendedProgramById, getAllRecommendedExercises } from "@/data/admin";
+import { getRecommendedProgramById } from "@/data/admin";
 import {
   updateRecommendedProgram,
   deleteRecommendedProgram,
@@ -27,10 +27,7 @@ export default async function EditRecommendedProgramPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [program, exercises] = await Promise.all([
-    getRecommendedProgramById(id),
-    getAllRecommendedExercises(),
-  ]);
+  const program = await getRecommendedProgramById(id);
 
   if (!program) notFound();
 
@@ -49,7 +46,6 @@ export default async function EditRecommendedProgramPage({
 
       <ProgramWeekBuilder
         program={program}
-        exercises={exercises}
         updateDetailsAction={updateRecommendedProgram.bind(null, programId)}
       />
 

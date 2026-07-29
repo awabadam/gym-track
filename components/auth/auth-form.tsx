@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { signIn, signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +81,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              aria-invalid={!!error}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -92,7 +94,12 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
               required
               minLength={8}
               autoComplete={isSignUp ? "new-password" : "current-password"}
+              aria-invalid={!!error}
+              aria-describedby="password-hint"
             />
+            <p id="password-hint" className="text-xs text-muted-foreground">
+              At least 8 characters
+            </p>
           </div>
 
           {error && (
@@ -102,11 +109,16 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           )}
 
           <Button type="submit" disabled={loading} className="mt-1">
-            {loading
-              ? "Please wait…"
-              : isSignUp
-                ? "Create account"
-                : "Sign in"}
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Please wait…
+              </>
+            ) : isSignUp ? (
+              "Create account"
+            ) : (
+              "Sign in"
+            )}
           </Button>
         </form>
 

@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import { getProgramBySlug } from "@/data/programs";
-import { getAllExercises } from "@/data/exercises";
 import {
   updateProgram,
   deleteProgram,
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ProgramWeekBuilder } from "@/components/shared/program-week-builder";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { PageHeader } from "@/components/shared/page-header";
 import { Trash2 } from "lucide-react";
 
 export default async function EditProgramPage({
@@ -30,10 +30,7 @@ export default async function EditProgramPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [program, exercises] = await Promise.all([
-    getProgramBySlug(slug),
-    getAllExercises(),
-  ]);
+  const program = await getProgramBySlug(slug);
 
   if (!program) notFound();
   // Clients can VIEW an assigned program but never reach its editor.
@@ -50,11 +47,10 @@ export default async function EditProgramPage({
           { label: "Edit" },
         ]}
       />
-      <h1 className="text-2xl font-bold">Edit program</h1>
+      <PageHeader title="Edit program" />
 
       <ProgramWeekBuilder
         program={program}
-        exercises={exercises}
         updateDetailsAction={updateProgram.bind(null, programId)}
       />
 
@@ -90,7 +86,10 @@ export default async function EditProgramPage({
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <form action={deleteProgram.bind(null, programId)}>
-                  <AlertDialogAction type="submit">
+                  <AlertDialogAction
+                    type="submit"
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
                     Delete program
                   </AlertDialogAction>
                 </form>

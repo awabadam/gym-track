@@ -46,7 +46,14 @@ interface AdminUserLite {
   banned?: boolean | null;
 }
 
-type ActiveDialog = "ban" | "password" | "remove" | "error" | null;
+type ActiveDialog =
+  | "ban"
+  | "password"
+  | "remove"
+  | "promote"
+  | "impersonate"
+  | "error"
+  | null;
 
 export function UserRowActions({
   user,
@@ -105,6 +112,38 @@ export function UserRowActions({
     }
   }
 
+  async function handlePromote() {
+    setError(null);
+    try {
+      await setUserRole(user.id, "admin");
+      close();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to promote user");
+    }
+  }
+
+  async function handleImpersonate() {
+    setError(null);
+    try {
+      await impersonateUser(user.id);
+      close();
+    } catch (e) {
+      // impersonateUser redirects on success, which throws a NEXT_REDIRECT
+      // control-flow signal — let it propagate instead of surfacing it as
+      // an error.
+      if (
+        e &&
+        typeof e === "object" &&
+        "digest" in e &&
+        typeof (e as { digest?: string }).digest === "string" &&
+        (e as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+      ) {
+        throw e;
+      }
+      setError(e instanceof Error ? e.message : "Failed to impersonate user");
+    }
+  }
+
   return (
     <>
       <DropdownMenu>
@@ -121,15 +160,25 @@ export function UserRowActions({
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem
             disabled={isSelf}
-            onSelect={run(() =>
-              setUserRole(user.id, isAdmin ? "user" : "admin"),
-            )}
+            onSelect={
+              isAdmin
+                ? run(() => setUserRole(user.id, "user"))
+                : (e) => {
+                    e.preventDefault();
+                    setError(null);
+                    setDialog("promote");
+                  }
+            }
           >
             {isAdmin ? "Demote to user" : "Promote to admin"}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={isSelf}
-            onSelect={() => impersonateUser(user.id)}
+            onSelect={(e) => {
+              e.preventDefault();
+              setError(null);
+              setDialog("impersonate");
+            }}
           >
             Impersonate
           </DropdownMenuItem>
@@ -263,6 +312,63 @@ export function UserRowActions({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Promote to admin */}
+      <AlertDialog
+        open={dialog === "promote"}
+        onOpenChange={(o) => !o && close()}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Promote {user.name} to admin?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Admins have full platform access: they can manage every
+              user&apos;s role, impersonate any account, and delete data
+              across the platform.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handlePromote();
+              }}
+            >
+              Promote to admin
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Impersonate */}
+      <AlertDialog
+        open={dialog === "impersonate"}
+        onOpenChange={(o) => !o && close()}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Impersonate {user.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You&apos;ll be signed in as {user.name} and can view and act on
+              their account until you stop impersonating.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleImpersonate();
+              }}
+            >
+              Impersonate
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

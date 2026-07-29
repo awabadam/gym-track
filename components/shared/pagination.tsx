@@ -1,7 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
@@ -42,7 +47,17 @@ export function Pagination({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 w-8 p-0"
+          className="h-11 w-11 p-0"
+          disabled={page <= 1}
+          onClick={() => navigate(1)}
+          aria-label="First page"
+        >
+          <ChevronsLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-11 w-11 p-0"
           disabled={page <= 1}
           onClick={() => navigate(page - 1)}
           aria-label="Previous page"
@@ -52,12 +67,22 @@ export function Pagination({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 w-8 p-0"
+          className="h-11 w-11 p-0"
           disabled={page >= totalPages}
           onClick={() => navigate(page + 1)}
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-11 w-11 p-0"
+          disabled={page >= totalPages}
+          onClick={() => navigate(totalPages)}
+          aria-label="Last page"
+        >
+          <ChevronsRight className="h-4 w-4" />
         </Button>
       </div>
     </div>

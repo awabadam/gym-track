@@ -5,7 +5,9 @@ import { auth } from "@/lib/auth";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { TrainerSidebar } from "@/components/shared/trainer-sidebar";
+import { TrainerNav } from "@/components/shared/trainer-nav";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { SkipLink } from "@/components/shared/skip-link";
 import { HeartHandshake, ArrowLeft } from "lucide-react";
 
 export default async function TrainerLayout({
@@ -20,6 +22,7 @@ export default async function TrainerLayout({
 
   return (
     <TooltipProvider>
+      <SkipLink />
       <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
         <TrainerSidebar />
         <SidebarInset>
@@ -53,6 +56,11 @@ export default async function TrainerLayout({
               </Link>
             </div>
           </header>
+
+          {/* Mobile section nav (the sidebar is hidden on mobile) */}
+          <div className="border-b-2 border-foreground px-3 py-2 md:hidden">
+            <TrainerNav />
+          </div>
 
           <main
             id="main-content"

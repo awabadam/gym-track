@@ -153,7 +153,7 @@ export function KineticLanding() {
         <div className="reveal mt-8 flex flex-wrap justify-center gap-3" style={{ animationDelay: "180ms" }}>
           <Link
             href="/sign-up"
-            className="group inline-flex items-center gap-2 border-2 border-foreground bg-foreground px-7 py-3.5 font-mono text-sm font-bold uppercase tracking-[0.1em] text-background shadow-[5px_5px_0_0_var(--signal)] transition-transform hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0_0_var(--signal)]"
+            className="group inline-flex items-center gap-2 border-2 border-foreground bg-foreground px-7 py-3.5 font-mono text-sm font-bold uppercase tracking-[0.1em] text-background shadow-[4px_4px_0_0_var(--signal)] transition-transform hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0_0_var(--signal)]"
           >
             Start free
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -225,7 +225,7 @@ export function KineticLanding() {
             return (
               <div
                 key={f.name}
-                className="group border-2 border-foreground bg-card p-7 shadow-[5px_5px_0_0_var(--shadow-color)] transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_var(--signal)]"
+                className="group border-2 border-foreground bg-card p-7 shadow-[4px_4px_0_0_var(--shadow-color)] transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_var(--signal)]"
               >
                 <div className="flex items-center justify-between">
                   <span className="flex h-12 w-12 items-center justify-center border-2 border-foreground transition-colors group-hover:bg-signal group-hover:text-signal-foreground">
@@ -293,7 +293,7 @@ export function KineticLanding() {
         </h2>
         <Link
           href="/sign-up"
-          className="mt-9 inline-flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-sm font-bold uppercase tracking-[0.1em] text-background shadow-[5px_5px_0_0_var(--signal)] transition-transform hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0_0_var(--signal)]"
+          className="mt-9 inline-flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-sm font-bold uppercase tracking-[0.1em] text-background shadow-[4px_4px_0_0_var(--signal)] transition-transform hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[0px_0px_0_0_var(--signal)]"
         >
           Create your account
           <ArrowRight className="h-4 w-4" />

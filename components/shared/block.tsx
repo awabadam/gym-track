@@ -28,12 +28,12 @@ export function Block({
       )}
     >
       <div className="flex items-center justify-between gap-3 border-b-2 border-foreground bg-foreground px-4 py-2.5 text-background">
-        <span
+        <h2
           className="text-sm uppercase tracking-wide leading-none"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {title}
-        </span>
+        </h2>
         {action
           ? action
           : tag && (

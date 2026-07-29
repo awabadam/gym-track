@@ -91,6 +91,20 @@
   --sidebar-accent-foreground: oklch(0.15 0 0);
   --sidebar-border: oklch(0.15 0 0);
   --sidebar-ring: oklch(0.15 0 0);
+
+  /* Muscle-volume heat ramp (components/shared/muscle-volume-map.tsx). Paper
+     is near-white, and --signal is itself a very light chartreuse (L≈0.9),
+     so pure --signal barely contrasts against the card (~1.3:1). Mixing
+     toward --foreground (near-black in this theme) is what buys contrast:
+     each step folds in more foreground, so the ramp reads pale→ink-green
+     while every stop clears ~3.4:1+ against --card. */
+  --muscle-tier-0: color-mix(in oklch, var(--foreground) 39%, var(--signal) 61%);
+  --muscle-tier-1: color-mix(in oklch, var(--foreground) 50%, var(--signal) 50%);
+  --muscle-tier-2: color-mix(in oklch, var(--foreground) 60%, var(--signal) 40%);
+  --muscle-tier-3: color-mix(in oklch, var(--foreground) 70%, var(--signal) 30%);
+  --muscle-tier-4: color-mix(in oklch, var(--foreground) 80%, var(--signal) 20%);
+  --muscle-tier-5: color-mix(in oklch, var(--foreground) 90%, var(--signal) 10%);
+  --muscle-unworked: var(--muted);
 }
 
 /* ============ DARK (INK) ============ */
@@ -130,6 +144,20 @@
   --sidebar-accent-foreground: oklch(0.92 0 0);
   --sidebar-border: oklch(0.92 0 0);
   --sidebar-ring: oklch(0.92 0 0);
+
+  /* Muscle-volume heat ramp, dark counterpart. Here --foreground and
+     --signal are both light (L≈0.9-0.92) against the dark --card, so
+     mixing toward --foreground wouldn't spread the ramp at all (~13:1 for
+     every stop, indistinguishable from each other). Instead mix --signal
+     down toward --muted (dark, near-card): each step folds in more signal,
+     so the ramp reads dim→vivid chartreuse while every stop still clears
+     ~3.7:1+ against --card. */
+  --muscle-tier-0: color-mix(in oklch, var(--signal) 48%, var(--muted) 52%);
+  --muscle-tier-1: color-mix(in oklch, var(--signal) 58%, var(--muted) 42%);
+  --muscle-tier-2: color-mix(in oklch, var(--signal) 68%, var(--muted) 32%);
+  --muscle-tier-3: color-mix(in oklch, var(--signal) 78%, var(--muted) 22%);
+  --muscle-tier-4: color-mix(in oklch, var(--signal) 89%, var(--muted) 11%);
+  --muscle-tier-5: var(--signal);
 }
 
 @layer base {
@@ -145,13 +173,28 @@
     @apply font-sans;
   }
 
-  /* Heavy condensed-impact display type for all headings */
+  /* Heavy condensed-impact display type for all headings. Tailwind's
+     preflight resets heading font-size to `inherit`, so without an explicit
+     step here any heading that doesn't carry its own text-* utility would
+     render at body-copy size. This modest scale only matters as a fallback:
+     virtually every heading in the app already carries an explicit text-*
+     class, which — being in Tailwind's utilities layer — always wins over
+     this base-layer rule. */
   h1, h2, h3 {
     font-family: var(--font-display);
     text-transform: uppercase;
     letter-spacing: -0.01em;
     line-height: 1;
     font-weight: 400;
+  }
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.375rem;
+  }
+  h3 {
+    font-size: 1.125rem;
   }
 
   ::selection {
@@ -217,6 +260,27 @@
   [data-slot="select-trigger"] {
     border-width: 2px !important;
     border-color: var(--foreground) !important;
+  }
+
+  /* Overlay surfaces (dialog/alert-dialog/sheet/select/dropdown) = hard
+     border + offset shadow, no soft shadow or rounding */
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"],
+  [data-slot="sheet-content"],
+  [data-slot="select-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="dropdown-menu-sub-content"] {
+    border: 2px solid var(--foreground) !important;
+    box-shadow: 4px 4px 0 0 var(--shadow-color) !important;
+  }
+
+  /* Tabs = hard border on active trigger (default variant only; "line"
+     variant keeps its underline-only treatment), no soft shadow */
+  [data-slot="tabs-list"][data-variant="default"]
+    [data-slot="tabs-trigger"][data-state="active"] {
+    border-width: 2px !important;
+    border-color: var(--foreground) !important;
+    box-shadow: none !important;
   }
 }
 

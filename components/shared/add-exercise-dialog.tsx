@@ -26,14 +26,26 @@ const exerciseTypes = ["main", "compound", "iso", "core"];
 
 export function AddExerciseDialog() {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(formData: FormData) {
-    await createExercise(formData);
-    setOpen(false);
+    setError(null);
+    try {
+      await createExercise(formData);
+      setOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create exercise");
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setError(null);
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="h-4 w-4 mr-1" />
@@ -69,6 +81,7 @@ export function AddExerciseDialog() {
             <Label htmlFor="notes">Notes</Label>
             <Input id="notes" name="notes" />
           </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full">
             Create exercise
           </Button>

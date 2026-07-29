@@ -17,7 +17,27 @@ export function AchievementsShowcase({
   variant?: "full" | "compact";
   limit?: number;
 }) {
-  if (achievements.length === 0) return null;
+  if (achievements.length === 0) {
+    // Compact strip keeps returning null (callers inline it beside other
+    // widgets); the full Goals variant shows a first-run prompt so an empty
+    // trophy case is oriented rather than invisible.
+    if (variant === "compact") return null;
+    return (
+      <Block title="Trophy Case" tag="// 0 goals hit">
+        <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+          <span className="flex h-11 w-11 items-center justify-center border-2 border-foreground bg-card text-muted-foreground">
+            <Medal className="h-5 w-5" strokeWidth={2.5} />
+          </span>
+          <p className="text-sm font-bold uppercase tracking-wide">
+            No goals hit yet
+          </p>
+          <p className="max-w-xs text-xs text-muted-foreground">
+            Set a strength target and clear it — the lifts you conquer land here.
+          </p>
+        </div>
+      </Block>
+    );
+  }
   const items = limit ? achievements.slice(0, limit) : achievements;
 
   if (variant === "compact") {

@@ -19,6 +19,7 @@ import { Block } from "@/components/shared/block";
 import { LineChart } from "@/components/shared/line-chart";
 import { Dumbbell, TrendingUp, Calendar, Hash, Zap, ExternalLink } from "lucide-react";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
 
 export default async function ExerciseDetailPage({
@@ -65,42 +66,42 @@ export default async function ExerciseDetailPage({
         ]}
       />
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1 min-w-0">
-          <h1 className="text-2xl font-bold truncate">{exercise.name}</h1>
-          <div className="flex flex-wrap items-center gap-2">
-            {exercise.primaryMuscle && (
-              <Badge variant="outline" className="text-xs">
-                {muscleLabel(exercise.primaryMuscle)}
-              </Badge>
-            )}
-            {(exercise.secondaryMuscles ?? []).map((m) => (
-              <Badge key={m} variant="outline" className="text-xs opacity-70">
-                {muscleLabel(m)}
-              </Badge>
-            ))}
-            {exercise.type && (
-              <Badge variant="secondary" className="capitalize text-xs">
-                {exercise.type}
-              </Badge>
-            )}
-          </div>
-          {exercise.notes && (
-            <p className="text-sm text-muted-foreground">{exercise.notes}</p>
+      <PageHeader
+        title={exercise.name}
+        action={exercise.isOwner ? <ExerciseActions exercise={exercise} /> : undefined}
+      />
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {exercise.primaryMuscle && (
+            <Badge variant="outline" className="text-xs">
+              {muscleLabel(exercise.primaryMuscle)}
+            </Badge>
           )}
-          <a
-            href={`https://www.google.com/search?q=${encodeURIComponent(
-              `how to perform ${exercise.name} exercise`,
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-2 hover:underline"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            How to perform
-          </a>
+          {(exercise.secondaryMuscles ?? []).map((m) => (
+            <Badge key={m} variant="outline" className="text-xs text-muted-foreground">
+              {muscleLabel(m)}
+            </Badge>
+          ))}
+          {exercise.type && (
+            <Badge variant="secondary" className="capitalize text-xs">
+              {exercise.type}
+            </Badge>
+          )}
         </div>
-        {exercise.isOwner && <ExerciseActions exercise={exercise} />}
+        {exercise.notes && (
+          <p className="text-sm text-muted-foreground">{exercise.notes}</p>
+        )}
+        <a
+          href={`https://www.google.com/search?q=${encodeURIComponent(
+            `how to perform ${exercise.name} exercise`,
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-2 hover:underline"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          How to perform
+        </a>
       </div>
 
       {/* Stats cards */}

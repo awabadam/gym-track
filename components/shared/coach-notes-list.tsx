@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { DeleteCoachNoteButton } from "@/components/shared/delete-coach-note-button";
 
 export interface DisplayNote {
   id: string;
@@ -21,10 +20,20 @@ function formatStamp(d: Date | null): string {
   });
 }
 
+/** Truncate a note body for use inside a confirm-dialog description. */
+function excerpt(body: string, max = 80): string {
+  const flat = body.replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max)}…` : flat;
+}
+
 /**
  * Renders a list of coaching notes. Pass `deleteAction` (the unbound
  * deleteCoachNote server action) to show a remove button — bound per note here.
  * Pass `sessionHref` to link a note's session context to a workout view.
+ *
+ * This stays a Server Component: the delete confirm (which needs client state)
+ * lives in the `DeleteCoachNoteButton` client child, so the plain `sessionHref`
+ * closure passed by server parents never has to cross a client boundary.
  */
 export function CoachNotesList({
   notes,
@@ -55,17 +64,10 @@ export function CoachNotesList({
                 {note.body}
               </p>
               {deleteAction && (
-                <form action={deleteAction.bind(null, note.id)}>
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 shrink-0 p-0 text-destructive hover:text-destructive"
-                    aria-label="Delete note"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </form>
+                <DeleteCoachNoteButton
+                  noteExcerpt={excerpt(note.body)}
+                  deleteAction={deleteAction.bind(null, note.id)}
+                />
               )}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
