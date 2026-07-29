@@ -92,7 +92,7 @@ export default async function ProgressPage() {
       />
 
       {/* Planned vs. actual, both on the body map. */}
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="reveal [animation-delay:120ms] grid items-start gap-6 lg:grid-cols-2">
         <MuscleVolumeMap
           entries={program.days.flatMap((d) =>
             d.exercises.map((e) => ({
@@ -113,8 +113,12 @@ export default async function ProgressPage() {
       </div>
 
       {/* Progress table grouped by muscle group */}
-      {sortedGroups.map(([group, exercises]) => (
-        <Card key={group}>
+      {sortedGroups.map(([group, exercises], i) => (
+        <Card
+          key={group}
+          className="reveal"
+          style={{ animationDelay: `${Math.min(200 + i * 50, 400)}ms` }}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-base capitalize flex items-center gap-2">
               {group}

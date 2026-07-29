@@ -66,7 +66,7 @@ export default async function ExercisesPage({
       />
 
       {/* Search & filter bar */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="reveal [animation-delay:100ms] flex flex-col sm:flex-row gap-2">
         <div className="flex-1">
           <Suspense>
             <SearchInput placeholder="Search exercises..." />
@@ -78,7 +78,7 @@ export default async function ExercisesPage({
       </div>
 
       {total === 0 ? (
-        <Card>
+        <Card className="reveal [animation-delay:160ms]">
           <CardContent className="py-12 text-center text-muted-foreground">
             <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-40" />
             <p className="font-medium">
@@ -93,7 +93,7 @@ export default async function ExercisesPage({
         </Card>
       ) : (
         <>
-          <Card>
+          <Card className="reveal [animation-delay:160ms]">
             <CardContent className="p-0">
               {/* Mobile: card list */}
               <div className="sm:hidden divide-y">

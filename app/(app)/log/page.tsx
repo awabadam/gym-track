@@ -63,8 +63,14 @@ export default async function LogPage({
         </Card>
       ) : (
         <>
-          {Object.entries(grouped).map(([date, daySessions]) => (
-            <Block key={date} title={formatDate(date)} tag={date}>
+          {Object.entries(grouped).map(([date, daySessions], i) => (
+            <Block
+              key={date}
+              title={formatDate(date)}
+              tag={date}
+              className="reveal"
+              style={{ animationDelay: `${Math.min(100 + i * 60, 340)}ms` }}
+            >
               {daySessions.map((s) => (
                 <div
                   key={s.id}
