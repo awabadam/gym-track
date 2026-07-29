@@ -158,82 +158,25 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-8 md:space-y-10">
-      {/* PAGE HEAD */}
-      <div className="flex flex-col gap-4 border-b-2 border-foreground pb-8 md:flex-row md:items-end md:justify-between">
-        <div className="reveal">
+      {/* PAGE HEAD — compact: the hero below is today's workout, not a title.
+          (The old giant title + right-side stats duplicated the stat strip.) */}
+      <div className="reveal flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b-2 border-foreground pb-4">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="inline-block border-2 border-foreground bg-signal px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-signal-foreground">
             {todayLabel}
           </span>
-          <h1 className="mt-3 text-6xl md:text-7xl">Dashboard</h1>
-          <p className="mt-2 text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            {program ? `Training on ${program.name}` : "No active program"}
-          </p>
+          <h1 className="text-2xl md:text-3xl">Dashboard</h1>
         </div>
-        {program && (
-          <div className="border-l-2 border-foreground pl-4 text-right text-[11px] uppercase leading-relaxed tracking-wide text-muted-foreground">
-            <div>
-              Days/wk{" "}
-              <span className="font-bold text-foreground">{program.days.length}</span>
-            </div>
-            <div>
-              This week{" "}
-              <span className="font-bold text-foreground">
-                {doneThisWeek}/{scheduledThisWeek}
-              </span>
-            </div>
-            <div>
-              Status <span className="font-bold text-foreground">On Track</span>
-            </div>
-          </div>
-        )}
+        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+          {program ? `Training on ${program.name}` : "No active program"}
+        </p>
       </div>
-
-      {/* STAT STRIP — one connected block, ink-line dividers */}
-      {program && (
-        <div className="reveal [animation-delay:80ms] grid grid-cols-2 gap-[2px] border-2 border-foreground bg-foreground shadow-[4px_4px_0_0_var(--shadow-color)] md:grid-cols-4">
-          {stats.map((s, i) => (
-            <div
-              key={s.label}
-              className="group bg-card p-4 transition-colors hover:bg-signal"
-            >
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground group-hover:text-signal-foreground">
-                <span>{s.label}</span>
-                <span className="font-mono">{String(i + 1).padStart(2, "0")}</span>
-              </div>
-              <div
-                className="mt-3 text-5xl tabular-nums group-hover:text-signal-foreground"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                {s.value}
-                <span
-                  className="ml-1 align-baseline text-sm font-bold lowercase tracking-normal text-muted-foreground group-hover:text-signal-foreground"
-                  style={{ fontFamily: "var(--font-mono)" }}
-                >
-                  {s.unit}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* CONSISTENCY — dual streaks + contribution grid */}
-      {program && (
-        <ConsistencyStrip
-          sessions={historySessions}
-          scheduledWeekdays={program.days
-            .map((d) => d.scheduledDay)
-            .filter((d): d is string => Boolean(d))}
-          today={todayISO}
-          className="reveal [animation-delay:110ms]"
-        />
-      )}
 
       {/* START AREA — anchor target for the mobile "Start" tab */}
       <div id="start" className="scroll-mt-20 space-y-6">
       {/* IN PROGRESS */}
       {inProgress && (
-        <Block title="Workout In Progress" tag="// Live" className="reveal [animation-delay:150ms]">
+        <Block title="Workout In Progress" tag="// Live" className="reveal [animation-delay:80ms]">
           <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span className="h-3 w-3 animate-pulse bg-signal" />
@@ -255,7 +198,7 @@ export default async function HomePage() {
 
       {/* TODAY'S WORKOUT — day-code hero */}
       {todayDay && !inProgress && (
-        <Block title="Today's Workout" tag="// Scheduled" className="reveal [animation-delay:150ms]">
+        <Block title="Today's Workout" tag="// Scheduled" className="reveal [animation-delay:80ms]">
           <div className="flex items-stretch border-b-2 border-foreground">
             <div className="flex min-w-[110px] flex-col items-center justify-center gap-2 border-r-2 border-foreground bg-signal px-5 py-5 text-signal-foreground sm:min-w-[150px]">
               <span
@@ -331,7 +274,7 @@ export default async function HomePage() {
 
       {/* REST DAY */}
       {!todayDay && !inProgress && (
-        <Block title="Rest Day" tag="// Recover" className="reveal [animation-delay:150ms]">
+        <Block title="Rest Day" tag="// Recover" className="reveal [animation-delay:80ms]">
           <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
             <Moon className="h-7 w-7 text-muted-foreground" />
             <p className="text-sm font-bold uppercase tracking-wide">
@@ -353,13 +296,54 @@ export default async function HomePage() {
       )}
       </div>
 
+      {/* STAT STRIP — one connected block, ink-line dividers */}
+      {program && (
+        <div className="reveal [animation-delay:150ms] grid grid-cols-2 gap-[2px] border-2 border-foreground bg-foreground shadow-[4px_4px_0_0_var(--shadow-color)] md:grid-cols-4">
+          {stats.map((s, i) => (
+            <div
+              key={s.label}
+              className="group bg-card p-4 transition-colors hover:bg-signal"
+            >
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground group-hover:text-signal-foreground">
+                <span>{s.label}</span>
+                <span className="font-mono">{String(i + 1).padStart(2, "0")}</span>
+              </div>
+              <div
+                className="mt-3 text-5xl tabular-nums group-hover:text-signal-foreground"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {s.value}
+                <span
+                  className="ml-1 align-baseline text-sm font-bold lowercase tracking-normal text-muted-foreground group-hover:text-signal-foreground"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {s.unit}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CONSISTENCY — dual streaks + contribution grid */}
+      {program && (
+        <ConsistencyStrip
+          sessions={historySessions}
+          scheduledWeekdays={program.days
+            .map((d) => d.scheduledDay)
+            .filter((d): d is string => Boolean(d))}
+          today={todayISO}
+          className="reveal [animation-delay:200ms]"
+        />
+      )}
+
       {/* WEEK + CALENDAR */}
       <div className="grid gap-6 md:grid-cols-2">
         {weekOverview && (
           <Block
             title="This Week"
             tag={`// ${scheduledThisWeek} Sessions`}
-            className="reveal [animation-delay:220ms]"
+            className="reveal [animation-delay:260ms]"
           >
             {weekOverview.map((day) => {
               const exercises = day.scheduledDay?.exercises ?? [];
@@ -443,7 +427,7 @@ export default async function HomePage() {
           </Block>
         )}
 
-        <Block title="Training Calendar" tag="// Sessions" className="reveal [animation-delay:260ms]">
+        <Block title="Training Calendar" tag="// Sessions" className="reveal [animation-delay:300ms]">
           <div className="p-4">
             <WorkoutCalendar
               sessions={calendarSessions}
@@ -455,7 +439,7 @@ export default async function HomePage() {
       </div>
 
       {/* RECENT SESSIONS */}
-      <Block title="Recent Sessions" tag="// Log" className="reveal [animation-delay:320ms]">
+      <Block title="Recent Sessions" tag="// Log" className="reveal [animation-delay:340ms]">
         {recentSessions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-10 text-center text-muted-foreground">
             <Clock className="h-7 w-7" />
