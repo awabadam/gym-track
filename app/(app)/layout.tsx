@@ -22,7 +22,7 @@ export default async function AppLayout({
     <>
       <SkipLink />
       <TooltipProvider>
-        <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
+        <SidebarProvider>
           <AppSidebar
             isAdmin={userIsAdmin(session.user)}
             isTrainer={session.user.role === "trainer"}
@@ -31,7 +31,7 @@ export default async function AppLayout({
             <AppHeader />
             <main
               id="main-content"
-              className="w-full flex-1 p-4 pb-24 md:p-7 md:pb-7"
+              className="w-full flex-1 p-4 pb-24 md:px-10 md:py-9 md:pb-9"
             >
               {children}
             </main>

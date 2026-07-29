@@ -34,7 +34,7 @@ export async function AppHeader() {
   return (
     <>
       {impersonating && (
-        <div className="flex items-center justify-between gap-2 border-b-2 border-foreground bg-destructive px-3 py-1.5 text-destructive-foreground md:px-5">
+        <div className="flex items-center justify-between gap-2 border-b-2 border-foreground bg-destructive px-4 py-1.5 text-destructive-foreground md:px-10">
           <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide">
             <UserX className="h-3.5 w-3.5" />
             Impersonating {session?.user?.name ?? "user"}
@@ -49,7 +49,7 @@ export async function AppHeader() {
           </form>
         </div>
       )}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b-2 border-foreground bg-background px-3 md:px-5">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b-2 border-foreground bg-background px-4 md:px-10">
       {/* Logo — mobile only */}
       <Link
         href="/"
