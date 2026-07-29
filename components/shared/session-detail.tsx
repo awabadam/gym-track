@@ -9,6 +9,7 @@ import { Block } from "@/components/shared/block";
 import { SetLogger } from "@/components/shared/set-logger";
 import { RestTimer } from "@/components/shared/rest-timer";
 import { WakeLock } from "@/components/shared/wake-lock";
+import { WorkoutRail } from "@/components/shared/workout-rail";
 import { Trophy, ArrowLeft, Pencil, Check } from "lucide-react";
 import { CancelSessionButton } from "@/components/shared/cancel-session-button";
 import { FinishWorkoutButton } from "@/components/shared/finish-workout-button";
@@ -94,10 +95,21 @@ export async function SessionDetail({
       ]
     : [{ label: sectionLabel, href: sectionHref }, { label: session.dayName }];
 
+  // Live workout keeps its focused single column, but on wide screens the
+  // empty canvas becomes a sticky progress rail instead of dead space.
+  const activeWorkout = !isComplete;
+
   return (
     <div
-      className={`mx-auto space-y-4 pb-20 ${editing ? "max-w-xl" : "max-w-5xl"}`}
+      className={`mx-auto pb-20 ${
+        activeWorkout
+          ? "max-w-xl xl:flex xl:max-w-none xl:items-start xl:justify-center xl:gap-8"
+          : edit
+            ? "max-w-xl"
+            : "max-w-5xl"
+      }`}
     >
+      <div className={`w-full space-y-4 ${activeWorkout ? "xl:max-w-xl" : ""}`}>
       <Breadcrumbs items={crumbs} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -181,7 +193,12 @@ export async function SessionDetail({
         const loggedCount = ex.loggedSets.length;
 
         return (
-          <Block key={ex.id} title={ex.exerciseName}>
+          <Block
+            key={ex.id}
+            id={`ex-${ex.exerciseId}`}
+            className="scroll-mt-20"
+            title={ex.exerciseName}
+          >
             <div className="p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
@@ -311,6 +328,22 @@ export async function SessionDetail({
       )}
 
       {!isComplete && <WakeLock />}
+      </div>
+
+      {activeWorkout && (
+        <aside className="hidden w-64 shrink-0 xl:block">
+          <div className="sticky top-20">
+            <WorkoutRail
+              exercises={exerciseData.map((ex) => ({
+                id: ex.exerciseId,
+                name: ex.exerciseName,
+                planned: ex.sets,
+                loggedSetNumbers: ex.loggedSets.map((s) => s.setNumber),
+              }))}
+            />
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

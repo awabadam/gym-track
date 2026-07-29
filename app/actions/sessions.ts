@@ -61,6 +61,10 @@ export async function startSession(programDayId: string) {
     })
     .returning();
 
+  // Invalidate the shared (app) layout — the header's Resume/Start affordance
+  // and the sidebar footer both depend on getInProgressSession() and are
+  // rendered by that layout, so a path-only revalidate wouldn't reach them.
+  revalidatePath("/", "layout");
   redirect(`/workout/${session.id}`);
 }
 
@@ -84,7 +88,7 @@ export async function startPastSession(programDayId: string, date: string) {
     })
     .returning();
 
-  revalidatePath("/log");
+  revalidatePath("/", "layout");
   redirect(`/workout/${session.id}`);
 }
 

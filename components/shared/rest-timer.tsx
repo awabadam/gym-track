@@ -322,6 +322,11 @@ export function RestTimer() {
           >
             {display}
           </span>
+          {!finished && (
+            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+              {mode === "down" ? "Rest" : "Elapsed"}
+            </span>
+          )}
           {finished && (
             <span className="text-[10px] font-bold uppercase tracking-wide text-destructive">
               Rest over

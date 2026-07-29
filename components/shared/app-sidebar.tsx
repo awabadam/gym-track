@@ -29,9 +29,11 @@ const navItems: NavItem[] = [
 export function AppSidebar({
   isAdmin = false,
   isTrainer = false,
+  inProgressSessionId = null,
 }: {
   isAdmin?: boolean;
   isTrainer?: boolean;
+  inProgressSessionId?: string | null;
 }) {
   const items = [...navItems];
   // Trainers manage the lifters they coach — authoring-adjacent, so it sits
@@ -55,12 +57,12 @@ export function AppSidebar({
       items={items}
       footer={
         <Link
-          href="/"
+          href={inProgressSessionId ? `/workout/${inProgressSessionId}` : "/"}
           className="group flex items-center justify-center gap-2 border-2 border-foreground bg-signal px-3 py-3.5 text-sm font-bold uppercase tracking-wide text-signal-foreground transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--foreground)]"
           style={{ fontFamily: "var(--font-display)" }}
         >
           <Play className="h-4 w-4 fill-current" strokeWidth={2.5} />
-          Start Workout
+          {inProgressSessionId ? "Resume Workout" : "Start Workout"}
         </Link>
       }
     />
