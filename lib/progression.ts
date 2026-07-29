@@ -43,7 +43,9 @@ export function getProgression(
     return {
       recommendation: "not_logged",
       suggestedWeight: 0,
-      message: "Not logged",
+      // First time on this lift: give guidance instead of dead "Not logged"
+      // noise under every exercise on a fresh program.
+      message: "First time — find a weight you can control for the full range",
     };
   }
 

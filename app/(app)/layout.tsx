@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/shared/app-sidebar";
 import { AppHeader } from "@/components/shared/app-header";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { SkipLink } from "@/components/shared/skip-link";
+import { getInProgressSession } from "@/data/sessions";
 
 export default async function AppLayout({
   children,
@@ -18,6 +19,8 @@ export default async function AppLayout({
   // landing page own their own layout/centering.
   if (!session) return <>{children}</>;
 
+  const inProgress = await getInProgressSession();
+
   return (
     <>
       <SkipLink />
@@ -26,6 +29,7 @@ export default async function AppLayout({
           <AppSidebar
             isAdmin={userIsAdmin(session.user)}
             isTrainer={session.user.role === "trainer"}
+            inProgressSessionId={inProgress?.id ?? null}
           />
           <SidebarInset>
             <AppHeader />

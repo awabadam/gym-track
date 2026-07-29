@@ -13,6 +13,7 @@ export function Block({
   className,
   bodyClassName,
   style,
+  id,
 }: {
   title: React.ReactNode;
   tag?: React.ReactNode;
@@ -21,10 +22,12 @@ export function Block({
   className?: string;
   bodyClassName?: string;
   style?: React.CSSProperties;
+  id?: string;
 }) {
   return (
     <div
       data-slot="block"
+      id={id}
       style={style}
       className={cn(
         "border-2 border-foreground bg-card shadow-[4px_4px_0_0_var(--shadow-color)]",

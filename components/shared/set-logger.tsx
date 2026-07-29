@@ -114,7 +114,13 @@ export function SetLogger({
     try {
       await logSet(sessionId, exerciseId, setNumber, w, r, rir);
       // Tell the rest timer a set was completed (auto-start).
-      window.dispatchEvent(new CustomEvent("gymtrack:set-logged"));
+      // detail lets listeners attribute the set (rest-timer ignores it; the
+      // workout rail uses it to keep per-exercise counts exact on re-saves).
+      window.dispatchEvent(
+        new CustomEvent("gymtrack:set-logged", {
+          detail: { exerciseId, setNumber },
+        })
+      );
       // Only reconcile "saved" state if the user hasn't edited (which starts a
       // newer save generation) since this request was dispatched. Otherwise
       // the on-screen values differ from what we just persisted, so leaving
@@ -191,7 +197,7 @@ export function SetLogger({
         {/* previous (reference) — visible at all breakpoints so the
             progressive-overload cue survives on phones. */}
         <span className="w-10 shrink-0 truncate text-right font-mono text-[11px] text-foreground/70">
-          {previousSet ? `${previousSet.weight}×${previousSet.reps}` : "—"}
+          {previousSet ? `${previousSet.weight}×${previousSet.reps}` : ""}
         </span>
 
         {/* weight */}
