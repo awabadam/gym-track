@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   Dumbbell,
+  Settings,
   LayoutDashboard,
   ListChecks,
   ClipboardList,
@@ -46,6 +47,7 @@ export function AppSidebar({
   if (isAdmin) {
     items.push({ title: "Admin", href: "/admin", icon: Shield, section: "// Admin" });
   }
+  items.push({ title: "Settings", href: "/settings", icon: Settings, section: "// Account" });
 
   return (
     <NavSidebar

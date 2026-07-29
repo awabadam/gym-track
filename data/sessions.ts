@@ -37,6 +37,8 @@ export async function getSessionById(sessionId: string) {
       date: sessions.date,
       status: sessions.status,
       notes: sessions.notes,
+      startedAt: sessions.startedAt,
+      completedAt: sessions.completedAt,
       programDayId: sessions.programDayId,
       dayName: programDays.name,
       dayCode: programDays.dayCode,

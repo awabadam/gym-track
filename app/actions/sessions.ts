@@ -137,7 +137,8 @@ export async function completeSession(sessionId: string) {
   revalidatePath("/");
   revalidatePath("/log");
   revalidatePath("/progress");
-  redirect("/log");
+  // Land on the post-workout summary (peak-end), not the plain history list.
+  redirect(`/workout/${sessionId}/done`);
 }
 
 export async function logSet(

@@ -30,7 +30,7 @@ export default async function LogPage({
 
   const today = new Date().toISOString().split("T")[0];
 
-  // Group by date
+  // Group by date, then by month so the history has scannable landmarks.
   const grouped = sessions.reduce(
     (acc, s) => {
       if (!acc[s.date]) acc[s.date] = [];
@@ -39,6 +39,17 @@ export default async function LogPage({
     },
     {} as Record<string, typeof sessions>
   );
+  const byMonth = new Map<string, [string, typeof sessions][]>();
+  for (const [date, daySessions] of Object.entries(grouped)) {
+    const key = date.slice(0, 7); // YYYY-MM
+    if (!byMonth.has(key)) byMonth.set(key, []);
+    byMonth.get(key)!.push([date, daySessions]);
+  }
+  const monthLabel = (key: string) =>
+    new Date(`${key}-15`).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
 
   return (
     <div className="space-y-6">
@@ -63,13 +74,34 @@ export default async function LogPage({
         </Card>
       ) : (
         <>
-          {Object.entries(grouped).map(([date, daySessions], i) => (
+          {[...byMonth.entries()].map(([month, dates], mi) => {
+            const monthSessions = dates.reduce((a, [, ds]) => a + ds.length, 0);
+            const monthSets = dates.reduce(
+              (a, [, ds]) => a + ds.reduce((b, s) => b + s.setCount, 0),
+              0
+            );
+            return (
+              <section key={month} className="space-y-4">
+                {/* Month landmark */}
+                <div
+                  className="reveal flex items-baseline justify-between gap-3 border-b-2 border-foreground pb-2"
+                  style={{ animationDelay: `${Math.min(80 + mi * 60, 300)}ms` }}
+                >
+                  <h2 className="text-lg uppercase md:text-xl">
+                    {monthLabel(month)}
+                  </h2>
+                  <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                    {monthSessions} {monthSessions === 1 ? "session" : "sessions"} ·{" "}
+                    {monthSets} sets
+                  </span>
+                </div>
+                {dates.map(([date, daySessions], i) => (
             <Block
               key={date}
               title={formatDate(date)}
               tag={date}
               className="reveal"
-              style={{ animationDelay: `${Math.min(100 + i * 60, 340)}ms` }}
+              style={{ animationDelay: `${Math.min(140 + mi * 60 + i * 40, 380)}ms` }}
             >
               {daySessions.map((s) => (
                 <div
@@ -108,7 +140,10 @@ export default async function LogPage({
                 </div>
               ))}
             </Block>
-          ))}
+                ))}
+              </section>
+            );
+          })}
 
           <Suspense>
             <Pagination total={total} pageSize={PAGE_SIZE} page={page} />
