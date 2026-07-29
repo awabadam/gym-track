@@ -126,7 +126,7 @@ export async function AppHeader() {
         </Button>
         <ThemeToggle />
         {inProgress ? (
-          <Button asChild size="sm" variant="default" className="h-8 gap-1.5">
+          <Button asChild variant="default" className="gap-1.5">
             <Link href={`/workout/${inProgress.id}`}>
               <span className="h-2 w-2 animate-pulse bg-signal" />
               Resume
@@ -134,7 +134,7 @@ export async function AppHeader() {
           </Button>
         ) : todayDay ? (
           <form action={startSession.bind(null, todayDay.id)} className="hidden md:block">
-            <Button type="submit" size="sm" variant="outline" className="h-8 gap-1.5">
+            <Button type="submit" variant="outline" className="gap-1.5">
               <Play className="h-3.5 w-3.5 fill-current" />
               Start {todayDay.dayCode}
             </Button>
