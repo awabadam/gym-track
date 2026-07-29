@@ -284,6 +284,25 @@
   }
 }
 
+/* ============ BRUTALIST FOCUS SIGNATURE ============ */
+/* One thick offset outline for every interactive element. The background-
+   colored rim under it keeps the outline legible on ink header bars and
+   signal fills, not just on paper/card surfaces. Thick outlines are part of
+   the design language here — this is a feature, not just compliance. */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 3px solid var(--foreground) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px var(--background) !important;
+}
+
+/* ============ QUIET SURFACE REGISTER ============ */
+/* Data-dense surfaces (Progress, Admin consoles): keep the hard 2px borders
+   but drop the offset block shadow so the data leads. Apply to a container. */
+.surface-quiet [data-slot="card"],
+.surface-quiet [data-slot="block"] {
+  box-shadow: none !important;
+}
+
 /* Bottom nav safe area for iOS notch/home indicator */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -334,4 +353,21 @@
 .reveal {
   opacity: 0;
   animation: brutalist-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Respect reduced-motion: skip the entrance entirely so content is present
+   immediately and never gets stranded at opacity:0 (also covers the staggered
+   animation-delay used across the dashboard/page headers). */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    animation: none;
+  }
+  /* Celebrations: show the stamp statically, skip the confetti entirely. */
+  .animate-pop {
+    animation: none;
+  }
+  .confetti-piece {
+    display: none;
+  }
 }

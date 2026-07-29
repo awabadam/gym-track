@@ -16,7 +16,7 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 border-b-2 border-foreground pb-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="reveal flex flex-col gap-4 border-b-2 border-foreground pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow && (
           <span className="mb-2 inline-block border-2 border-foreground bg-signal px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-signal-foreground">

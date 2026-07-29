@@ -22,6 +22,7 @@ export function Block({
 }) {
   return (
     <div
+      data-slot="block"
       className={cn(
         "border-2 border-foreground bg-card shadow-[4px_4px_0_0_var(--shadow-color)]",
         className

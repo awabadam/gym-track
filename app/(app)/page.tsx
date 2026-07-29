@@ -13,6 +13,7 @@ import {
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Block } from "@/components/shared/block";
+import { ConsistencyStrip } from "@/components/shared/consistency-strip";
 import { WorkoutCalendar } from "@/components/shared/workout-calendar";
 import { StartWorkoutPicker } from "@/components/shared/start-workout-picker";
 import { StartWorkoutButton } from "@/components/shared/start-workout-button";
@@ -65,13 +66,20 @@ export default async function HomePage() {
   const nextY = month + 2 > 12 ? year + 1 : year;
   const calEnd = `${nextY}-${String(nextM).padStart(2, "0")}-31`;
 
-  const [program, recentSessions, inProgress, weekSessions, calendarSessions] =
+  // Local ISO date + a trailing year of history for streak computation.
+  const todayISO = now.toLocaleDateString("en-CA");
+  const yearAgo = new Date(now);
+  yearAgo.setDate(yearAgo.getDate() - 364);
+  const yearAgoISO = yearAgo.toLocaleDateString("en-CA");
+
+  const [program, recentSessions, inProgress, weekSessions, calendarSessions, historySessions] =
     await Promise.all([
       getActiveProgram(),
       getRecentSessions(5),
       getInProgressSession(),
       getSessionsForCurrentWeek(),
       getSessionsInRange(calStart, calEnd),
+      getSessionsInRange(yearAgoISO, todayISO),
     ]);
 
   const today = new Date()
@@ -149,9 +157,9 @@ export default async function HomePage() {
     todayDay?.exercises.reduce((a, e) => a + e.sets, 0) ?? 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8 md:space-y-10">
       {/* PAGE HEAD */}
-      <div className="flex flex-col gap-4 border-b-2 border-foreground pb-6 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-4 border-b-2 border-foreground pb-8 md:flex-row md:items-end md:justify-between">
         <div className="reveal">
           <span className="inline-block border-2 border-foreground bg-signal px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-signal-foreground">
             {todayLabel}
@@ -182,7 +190,7 @@ export default async function HomePage() {
 
       {/* STAT STRIP — one connected block, ink-line dividers */}
       {program && (
-        <div className="reveal grid grid-cols-2 gap-[2px] border-2 border-foreground bg-foreground shadow-[4px_4px_0_0_var(--shadow-color)] md:grid-cols-4">
+        <div className="reveal [animation-delay:80ms] grid grid-cols-2 gap-[2px] border-2 border-foreground bg-foreground shadow-[4px_4px_0_0_var(--shadow-color)] md:grid-cols-4">
           {stats.map((s, i) => (
             <div
               key={s.label}
@@ -193,7 +201,7 @@ export default async function HomePage() {
                 <span className="font-mono">{String(i + 1).padStart(2, "0")}</span>
               </div>
               <div
-                className="mt-3 text-4xl tabular-nums group-hover:text-signal-foreground"
+                className="mt-3 text-5xl tabular-nums group-hover:text-signal-foreground"
                 style={{ fontFamily: "var(--font-display)" }}
               >
                 {s.value}
@@ -209,11 +217,23 @@ export default async function HomePage() {
         </div>
       )}
 
+      {/* CONSISTENCY — dual streaks + contribution grid */}
+      {program && (
+        <ConsistencyStrip
+          sessions={historySessions}
+          scheduledWeekdays={program.days
+            .map((d) => d.scheduledDay)
+            .filter((d): d is string => Boolean(d))}
+          today={todayISO}
+          className="reveal [animation-delay:110ms]"
+        />
+      )}
+
       {/* START AREA — anchor target for the mobile "Start" tab */}
-      <div id="start" className="scroll-mt-20 space-y-5">
+      <div id="start" className="scroll-mt-20 space-y-6">
       {/* IN PROGRESS */}
       {inProgress && (
-        <Block title="Workout In Progress" tag="// Live" className="reveal">
+        <Block title="Workout In Progress" tag="// Live" className="reveal [animation-delay:150ms]">
           <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span className="h-3 w-3 animate-pulse bg-signal" />
@@ -235,7 +255,7 @@ export default async function HomePage() {
 
       {/* TODAY'S WORKOUT — day-code hero */}
       {todayDay && !inProgress && (
-        <Block title="Today's Workout" tag="// Scheduled" className="reveal">
+        <Block title="Today's Workout" tag="// Scheduled" className="reveal [animation-delay:150ms]">
           <div className="flex items-stretch border-b-2 border-foreground">
             <div className="flex min-w-[110px] flex-col items-center justify-center gap-2 border-r-2 border-foreground bg-signal px-5 py-5 text-signal-foreground sm:min-w-[150px]">
               <span
@@ -272,19 +292,19 @@ export default async function HomePage() {
               return (
                 <div
                   key={`${e.exerciseName}-${i}`}
-                  className="group grid grid-cols-[36px_1fr_auto] items-center gap-3 border-b-2 border-foreground px-5 py-3 last:border-b-0 transition-colors hover:bg-signal"
+                  className="group grid grid-cols-[36px_1fr_auto] items-center gap-3 border-b-2 border-foreground px-5 py-3 last:border-b-0 transition-colors hover:bg-muted"
                 >
                   <span
-                    className="text-base text-muted-foreground group-hover:text-signal-foreground"
+                    className="text-base text-muted-foreground"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="truncate text-sm font-bold uppercase tracking-wide group-hover:text-signal-foreground">
+                  <span className="truncate text-sm font-bold uppercase tracking-wide">
                     {e.exerciseName}
                   </span>
                   <span
-                    className="shrink-0 border-2 border-foreground bg-signal px-2 py-0.5 text-sm text-signal-foreground group-hover:bg-foreground group-hover:text-background"
+                    className="shrink-0 border-2 border-foreground bg-foreground px-2 py-0.5 text-sm text-background"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {reps ? `${e.sets}×${reps}` : `${e.sets} sets`}
@@ -311,7 +331,7 @@ export default async function HomePage() {
 
       {/* REST DAY */}
       {!todayDay && !inProgress && (
-        <Block title="Rest Day" tag="// Recover" className="reveal">
+        <Block title="Rest Day" tag="// Recover" className="reveal [animation-delay:150ms]">
           <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
             <Moon className="h-7 w-7 text-muted-foreground" />
             <p className="text-sm font-bold uppercase tracking-wide">
@@ -334,12 +354,12 @@ export default async function HomePage() {
       </div>
 
       {/* WEEK + CALENDAR */}
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {weekOverview && (
           <Block
             title="This Week"
             tag={`// ${scheduledThisWeek} Sessions`}
-            className="reveal"
+            className="reveal [animation-delay:220ms]"
           >
             {weekOverview.map((day) => {
               const exercises = day.scheduledDay?.exercises ?? [];
@@ -423,7 +443,7 @@ export default async function HomePage() {
           </Block>
         )}
 
-        <Block title="Training Calendar" tag="// Sessions" className="reveal">
+        <Block title="Training Calendar" tag="// Sessions" className="reveal [animation-delay:260ms]">
           <div className="p-4">
             <WorkoutCalendar
               sessions={calendarSessions}
@@ -435,7 +455,7 @@ export default async function HomePage() {
       </div>
 
       {/* RECENT SESSIONS */}
-      <Block title="Recent Sessions" tag="// Log" className="reveal">
+      <Block title="Recent Sessions" tag="// Log" className="reveal [animation-delay:320ms]">
         {recentSessions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-10 text-center text-muted-foreground">
             <Clock className="h-7 w-7" />
@@ -464,15 +484,15 @@ export default async function HomePage() {
             <Link
               key={s.id}
               href={`/log/${s.id}`}
-              className="group grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b-2 border-foreground px-4 py-3 last:border-b-0 transition-colors hover:bg-signal"
+              className="group grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b-2 border-foreground px-4 py-3 last:border-b-0 transition-colors hover:bg-muted"
             >
               <span className="bg-foreground px-2 py-1 font-mono text-xs font-bold text-background">
                 {s.dayCode}
               </span>
-              <span className="text-sm font-bold uppercase tracking-wide group-hover:text-signal-foreground">
+              <span className="text-sm font-bold uppercase tracking-wide">
                 {s.dayName}
               </span>
-              <span className="font-mono text-xs tabular-nums text-muted-foreground group-hover:text-signal-foreground">
+              <span className="font-mono text-xs tabular-nums text-muted-foreground">
                 {formatDate(s.date)}
               </span>
             </Link>

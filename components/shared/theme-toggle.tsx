@@ -4,42 +4,42 @@ import * as React from "react";
 import { Sun, Moon } from "lucide-react";
 
 function subscribe(onChange: () => void) {
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["class"],
-  });
-  return () => observer.disconnect();
+ const observer = new MutationObserver(onChange);
+ observer.observe(document.documentElement, {
+ attributes: true,
+ attributeFilter: ["class"],
+ });
+ return () => observer.disconnect();
 }
 
 function getSnapshot() {
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+ return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
 export function ThemeToggle() {
-  const theme = React.useSyncExternalStore(subscribe, getSnapshot, () => "light");
+ const theme = React.useSyncExternalStore(subscribe, getSnapshot, () => "light");
 
-  function toggle() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
-    try {
-      localStorage.setItem("theme", next);
-    } catch {}
-  }
+ function toggle() {
+ const next = theme === "dark" ? "light" : "dark";
+ document.documentElement.classList.toggle("dark", next === "dark");
+ try {
+ localStorage.setItem("theme", next);
+ } catch {}
+ }
 
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label="Toggle light / dark mode"
-      title="Toggle theme"
-      className="flex size-11 items-center justify-center border-2 border-foreground bg-background text-foreground outline-none transition-transform hover:-translate-y-px hover:shadow-[3px_3px_0_0_var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
-    >
-      {theme === "dark" ? (
-        <Sun className="h-4 w-4" />
-      ) : (
-        <Moon className="h-4 w-4" />
-      )}
-    </button>
-  );
+ return (
+ <button
+ type="button"
+ onClick={toggle}
+ aria-label="Toggle light / dark mode"
+ title="Toggle theme"
+ className="flex size-11 items-center justify-center border-2 border-foreground bg-background text-foreground outline-none transition-transform hover:-translate-y-px hover:shadow-[3px_3px_0_0_var(--foreground)]"
+ >
+ {theme === "dark" ? (
+ <Sun className="h-4 w-4" />
+ ) : (
+ <Moon className="h-4 w-4" />
+ )}
+ </button>
+ );
 }

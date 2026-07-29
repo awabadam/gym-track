@@ -704,7 +704,7 @@ function ExercisePicker({
                 role="option"
                 aria-selected={false}
                 onClick={() => add(ex.id)}
-                className="flex w-full items-center justify-between gap-2 p-2 text-left hover:bg-signal hover:text-signal-foreground"
+                className="flex w-full items-center justify-between gap-2 p-2 text-left hover:bg-muted"
               >
                 <span className="font-medium">{ex.name}</span>
                 {ex.muscleGroup && (

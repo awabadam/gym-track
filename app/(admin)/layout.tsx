@@ -22,10 +22,10 @@ export default async function AdminLayout({
   return (
     <TooltipProvider>
       <SkipLink />
-      <SidebarProvider className="mx-auto max-w-[1440px] border-foreground md:border-x-2">
+      <SidebarProvider>
         <AdminSidebar />
         <SidebarInset>
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b-2 border-foreground bg-background px-3 md:px-5">
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b-2 border-foreground bg-background px-4 md:px-10">
             {/* Brand — mobile only (the sidebar carries it on desktop) */}
             <Link href="/admin" className="flex items-center gap-2 md:hidden">
               <span className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-signal text-signal-foreground">
@@ -63,7 +63,7 @@ export default async function AdminLayout({
 
           <main
             id="main-content"
-            className="w-full flex-1 p-4 pb-24 md:p-7 md:pb-7"
+            className="surface-quiet w-full flex-1 p-4 pb-24 md:px-10 md:py-9 md:pb-9"
           >
             {children}
           </main>
