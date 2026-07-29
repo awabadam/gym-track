@@ -24,7 +24,7 @@ export default async function ProgressPage() {
 
   if (!program) {
     return (
-      <div className="space-y-6">
+      <div className="surface-quiet space-y-6">
         <PageHeader title="Progress" />
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
@@ -72,7 +72,7 @@ export default async function ProgressPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="surface-quiet space-y-6">
       <PageHeader
         title="Progress"
         subtitle={program.name}

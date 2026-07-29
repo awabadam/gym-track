@@ -284,6 +284,14 @@
   }
 }
 
+/* ============ QUIET SURFACE REGISTER ============ */
+/* Data-dense surfaces (Progress, Admin consoles): keep the hard 2px borders
+   but drop the offset block shadow so the data leads. Apply to a container. */
+.surface-quiet [data-slot="card"],
+.surface-quiet [data-slot="block"] {
+  box-shadow: none !important;
+}
+
 /* Bottom nav safe area for iOS notch/home indicator */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
