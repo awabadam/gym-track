@@ -335,3 +335,13 @@
   opacity: 0;
   animation: brutalist-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
+
+/* Respect reduced-motion: skip the entrance entirely so content is present
+   immediately and never gets stranded at opacity:0 (also covers the staggered
+   animation-delay used across the dashboard/page headers). */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    animation: none;
+  }
+}
