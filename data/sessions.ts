@@ -43,6 +43,7 @@ export async function getSessionById(sessionId: string) {
       dayName: programDays.name,
       dayCode: programDays.dayCode,
       programId: programDays.programId,
+      programSlug: programs.slug,
       targetRir: programs.targetRir,
     })
     .from(sessions)
