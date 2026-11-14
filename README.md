@@ -62,3 +62,7 @@ The engineering wiki in [`docs/wiki/`](docs/wiki/README.md) covers the architect
 ## Author
 
 **Awab Elkhalil** · [awab.design](https://awab.design)
+
+## License
+
+MIT. See [LICENSE](LICENSE).
